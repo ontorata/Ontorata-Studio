@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "node scripts/ensure-ratary-sdk.mjs && npm install --include=dev",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
+}

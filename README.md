@@ -44,9 +44,22 @@ Open `http://localhost:5173`.
 | `npm run test` | Unit tests (mocked SDK) |
 | `npm run lint` | ESLint + SDK boundary check |
 
-## Deploy
+## Deploy (Vercel)
 
-Build static assets (`npm run build`) and host on Vercel, nginx, or any CDN. **Not** bundled into Ratary Server Docker image by default (Phase 27 engine-only image).
+1. Deploy [Ratary Server](https://github.com/ontorata/ratary) first; bootstrap an API key (`aic_...`).
+2. Import this repo in Vercel — **Framework: Vite**, **Output: `dist`** (or use repo `vercel.json`).
+3. Set **Environment Variables** (build-time — redeploy after changes):
+
+| Variable | Example |
+|----------|---------|
+| `VITE_RATARY_BASE_URL` | `https://ratary-xxx.vercel.app` |
+| `VITE_RATARY_API_KEY` | `aic_...` |
+
+`npm install` runs `scripts/ensure-ratary-sdk.mjs`, which clones `ontorata/ratary` into `.vendor/` when no sibling repo exists (CI/Vercel). Local dev reuses `../ai-brain` or `../ratary` automatically.
+
+**Security:** `VITE_*` values are embedded in the static bundle — use team/internal keys only, or add a BFF/OIDC path for production.
+
+Other hosts: `npm run build` → serve `dist/` on nginx or any CDN. **Not** bundled into Ratary Server Docker image by default.
 
 ## Feature gating
 

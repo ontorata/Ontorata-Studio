@@ -5,6 +5,7 @@
   "description": "Ontorata Studio — operator console for the Ratary memory brain",
   "type": "module",
   "scripts": {
+    "preinstall": "node scripts/ensure-ratary-sdk.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
@@ -13,7 +14,7 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@ratary/sdk": "file:../ai-brain/packages/sdk",
+    "@ratary/sdk": "file:.vendor/ratary/packages/sdk",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3"
