@@ -131,7 +131,7 @@ export class StudioRataryClient {
 }
 
 export function createStudioClientFromEnv(): StudioRataryClient {
-  const baseUrl = import.meta.env.VITE_RATARY_BASE_URL ?? 'http://localhost:3000';
+  const baseUrl = import.meta.env.VITE_RATARY_BASE_URL ?? 'http://localhost:9876';
   const apiKey = import.meta.env.VITE_RATARY_API_KEY || undefined;
   const workspaceId = import.meta.env.VITE_RATARY_WORKSPACE_ID || undefined;
   return new StudioRataryClient({ baseUrl, apiKey, workspaceId });
