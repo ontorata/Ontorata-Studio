@@ -1,7 +1,8 @@
 node_modules
-dist
+/dist
 .env
 *.local
 .DS_Store
 *.tsbuildinfo
 .vendor
+vendor/ratary-sdk/node_modules

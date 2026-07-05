@@ -55,7 +55,7 @@ Open `http://localhost:5173`.
 | `VITE_RATARY_BASE_URL` | `https://ratary-xxx.vercel.app` |
 | `VITE_RATARY_API_KEY` | `aic_...` |
 
-`npm install` runs `scripts/ensure-ratary-sdk.mjs`, which clones `ontorata/ratary` into `.vendor/` when no sibling repo exists (CI/Vercel). Local dev reuses `../ai-brain` or `../ratary` automatically.
+`npm install` links the **vendored** `@ratary/sdk` at `vendor/ratary-sdk/` (Ratary repo is private — no clone on CI). After SDK changes in Ratary, maintainers run `node scripts/sync-ratary-sdk.mjs` from a sibling clone.
 
 **Security:** `VITE_*` values are embedded in the static bundle — use team/internal keys only, or add a BFF/OIDC path for production.
 

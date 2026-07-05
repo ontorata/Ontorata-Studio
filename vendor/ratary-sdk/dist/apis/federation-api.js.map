@@ -1,0 +1,1 @@
+{"version":3,"file":"federation-api.js","sourceRoot":"","sources":["../../src/apis/federation-api.ts"],"names":[],"mappings":"AAGA,MAAM,OAAO,aAAa;IACK;IAA7B,YAA6B,MAAkB;QAAlB,WAAM,GAAN,MAAM,CAAY;IAAG,CAAC;IAEnD,KAAK,CAAC,SAAS;QACb,OAAO,IAAI,CAAC,MAAM,CAAC,OAAO,CAAC,EAAE,MAAM,EAAE,KAAK,EAAE,IAAI,EAAE,mBAAmB,EAAE,CAAC,CAAC;IAC3E,CAAC;CACF"}

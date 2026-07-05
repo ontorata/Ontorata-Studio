@@ -1,0 +1,1 @@
+{"version":3,"file":"context-api.d.ts","sourceRoot":"","sources":["../../src/apis/context-api.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,UAAU,EAAE,MAAM,yBAAyB,CAAC;AAC1D,OAAO,KAAK,EAAE,iBAAiB,EAAE,kBAAkB,EAAE,MAAM,aAAa,CAAC;AAEzE,qBAAa,UAAU;IACT,OAAO,CAAC,QAAQ,CAAC,MAAM;gBAAN,MAAM,EAAE,UAAU;IAEzC,KAAK,CAAC,KAAK,EAAE,iBAAiB,GAAG,OAAO,CAAC,kBAAkB,CAAC;CAGnE"}
