@@ -132,6 +132,14 @@ export class StudioRataryClient {
 
 const PRODUCTION_RATARY_URL = 'https://ratary.ontorata.com';
 
+/** Validate credentials by calling an authenticated capabilities endpoint. */
+export async function verifyStudioCredentials(
+  options: StudioClientOptions,
+): Promise<CapabilityManifestView> {
+  const client = new StudioRataryClient(options);
+  return client.getCapabilities();
+}
+
 export function createStudioClientFromEnv(): StudioRataryClient {
   const fromEnv = import.meta.env.VITE_RATARY_BASE_URL?.trim();
   const baseUrl =

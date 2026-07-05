@@ -20,9 +20,11 @@ export function HomePage() {
     <div className="page">
       <header className="page-header">
         <h1>Dashboard</h1>
-        <p>Operator view of your Ratary memory brain — data via <code>@ratary/sdk</code> only.</p>
+        <p>
+          Operator view of your Ratary memory brain — authenticated session via{' '}
+          <code>@ratary/sdk</code>.
+        </p>
       </header>
-
       <div className="grid two">
         <section className="card">
           <h2>Server health</h2>

@@ -1,10 +1,17 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { CapabilityGate } from './CapabilityGate';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? 'nav-link active' : 'nav-link';
 
+function maskApiKey(key: string): string {
+  if (key.length <= 12) return '••••••••';
+  return `${key.slice(0, 7)}…${key.slice(-4)}`;
+}
+
 export function Layout() {
+  const { session, logout } = useAuth();
   const ontoryUrl = import.meta.env.VITE_ONTORY_URL;
 
   return (
@@ -48,7 +55,16 @@ export function Layout() {
           )}
         </nav>
         <footer className="sidebar-foot">
-          Memory engine: <strong>Ratary</strong>
+          <div className="session-block">
+            <span className="session-label">Connected</span>
+            <code className="session-key">{session ? maskApiKey(session.apiKey) : '—'}</code>
+            <button type="button" className="btn logout-btn" onClick={logout}>
+              Sign out
+            </button>
+          </div>
+          <p className="engine-label">
+            Memory engine: <strong>Ratary</strong>
+          </p>
         </footer>
       </aside>
       <main className="main">
