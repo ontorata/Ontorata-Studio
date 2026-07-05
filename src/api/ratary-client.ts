@@ -130,9 +130,14 @@ export class StudioRataryClient {
   }
 }
 
+const PRODUCTION_RATARY_URL = 'https://ratary.ontorata.com';
+
 export function createStudioClientFromEnv(): StudioRataryClient {
-  const baseUrl = import.meta.env.VITE_RATARY_BASE_URL ?? 'http://localhost:9876';
-  const apiKey = import.meta.env.VITE_RATARY_API_KEY || undefined;
-  const workspaceId = import.meta.env.VITE_RATARY_WORKSPACE_ID || undefined;
+  const fromEnv = import.meta.env.VITE_RATARY_BASE_URL?.trim();
+  const baseUrl =
+    fromEnv ||
+    (import.meta.env.PROD ? PRODUCTION_RATARY_URL : 'http://localhost:9876');
+  const apiKey = import.meta.env.VITE_RATARY_API_KEY?.trim() || undefined;
+  const workspaceId = import.meta.env.VITE_RATARY_WORKSPACE_ID?.trim() || undefined;
   return new StudioRataryClient({ baseUrl, apiKey, workspaceId });
 }
