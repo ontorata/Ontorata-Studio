@@ -33,7 +33,17 @@ cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5173` — you will be prompted to **sign in** with your Ratary API key (`aic_...`).
+
+## Authentication
+
+Studio requires login before any page is shown. Credentials are verified against Ratary (`GET /api/v1/capabilities`) and stored in **sessionStorage** for the browser tab only — API keys are **not** embedded in the production bundle.
+
+| Field | Source |
+|-------|--------|
+| API key | Login form (`aic_...` from Ratary bootstrap) |
+| Server URL | `VITE_RATARY_BASE_URL` default, or advanced options on login |
+| Workspace | Optional — advanced options |
 
 ## Scripts
 
@@ -52,13 +62,13 @@ Open `http://localhost:5173`.
 
 | Variable | Example |
 |----------|---------|
-| `VITE_RATARY_BASE_URL` | `https://ratary-xxx.vercel.app` |
-| `VITE_RATARY_API_KEY` | `aic_...` |
+| `VITE_RATARY_BASE_URL` | `https://ratary.ontorata.com` |
+
+Do **not** set `VITE_RATARY_API_KEY` on Vercel — operators sign in at `/login`.
 
 `npm install` links the **vendored** `@ratary/sdk` at `vendor/ratary-sdk/` (Ratary repo is private — no clone on CI). After SDK changes in Ratary, maintainers run `node scripts/sync-ratary-sdk.mjs` from a sibling clone.
 
-**Security:** `VITE_*` values are embedded in the static bundle — use team/internal keys only, or add a BFF/OIDC path for production.
-
+**Security:** API keys live in sessionStorage after login, not in the static bundle.
 Other hosts: `npm run build` → serve `dist/` on nginx or any CDN. **Not** bundled into Ratary Server Docker image by default.
 
 ## Feature gating
