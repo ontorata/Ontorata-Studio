@@ -15,11 +15,15 @@ function buildUrl(baseUrl: string, path: string, query?: RequestOptions['query']
   return url.toString();
 }
 
+function defaultFetch(...args: Parameters<typeof fetch>): ReturnType<typeof fetch> {
+  return fetch(...args);
+}
+
 export class RestTransport implements IApiClient {
   private readonly fetchImpl: typeof fetch;
 
   constructor(private readonly config: RestTransportConfig) {
-    this.fetchImpl = config.fetchImpl ?? fetch;
+    this.fetchImpl = config.fetchImpl ?? defaultFetch;
   }
 
   async request<T>(options: RequestOptions): Promise<T> {

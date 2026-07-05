@@ -12,12 +12,15 @@ function buildUrl(baseUrl, path, query) {
     }
     return url.toString();
 }
+function defaultFetch(input, init) {
+    return fetch(input, init);
+}
 export class RestTransport {
     config;
     fetchImpl;
     constructor(config) {
         this.config = config;
-        this.fetchImpl = config.fetchImpl ?? fetch;
+        this.fetchImpl = config.fetchImpl ?? defaultFetch;
     }
     async request(options) {
         const url = buildUrl(this.config.baseUrl, options.path, options.query);
