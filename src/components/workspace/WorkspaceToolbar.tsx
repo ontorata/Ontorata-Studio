@@ -22,6 +22,9 @@ export function WorkspaceToolbar() {
     toggleAiPanel,
     toggleSidebar,
     setFolderName,
+    showTerminal,
+    showAiPanel,
+    showSidebar,
   } = useWorkspaceTabs();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -88,9 +91,21 @@ export function WorkspaceToolbar() {
     {
       label: 'View',
       items: [
-        { label: 'Toggle Sidebar', action: toggleSidebar, shortcut: 'Ctrl+B' },
-        { label: 'Toggle AI Panel', action: toggleAiPanel, shortcut: 'Ctrl+J' },
-        { label: 'Toggle Terminal', action: toggleTerminal, shortcut: 'Ctrl+`' },
+        {
+          label: showSidebar ? 'Hide Sidebar' : 'Show Sidebar',
+          action: toggleSidebar,
+          shortcut: 'Ctrl+B',
+        },
+        {
+          label: showAiPanel ? 'Hide AI Panel' : 'Show AI Panel',
+          action: toggleAiPanel,
+          shortcut: 'Ctrl+J',
+        },
+        {
+          label: showTerminal ? 'Hide Terminal' : 'Show Terminal',
+          action: toggleTerminal,
+          shortcut: 'Ctrl+`',
+        },
       ],
     },
     {
@@ -107,8 +122,14 @@ export function WorkspaceToolbar() {
     {
       label: 'Terminal',
       items: [
-        { label: 'New Terminal', action: toggleTerminal },
-        { label: 'Show Terminal Panel', action: toggleTerminal },
+        ...(showTerminal
+          ? []
+          : [{ label: 'New Terminal', action: toggleTerminal }]),
+        {
+          label: showTerminal ? 'Hide Terminal Panel' : 'Show Terminal Panel',
+          action: toggleTerminal,
+          shortcut: 'Ctrl+`',
+        },
       ],
     },
     {
