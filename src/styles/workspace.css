@@ -279,9 +279,17 @@ body:has(.ws-shell) #root {
   color: var(--ws-muted);
 }
 
-.ws-toolbar-search {
+.ws-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-left: auto;
   flex-shrink: 0;
+}
+
+.ws-toolbar-search {
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .ws-toolbar-search-btn {
@@ -310,6 +318,25 @@ body:has(.ws-shell) #root {
   border: 1px solid var(--ws-border);
   border-radius: 0.2rem;
   background: var(--ws-surface);
+}
+
+.ws-toolbar-signout {
+  border: 1px solid var(--ws-border);
+  background: var(--ws-bg);
+  color: var(--ws-muted);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ws-toolbar-signout:hover {
+  color: var(--ws-text);
+  border-color: var(--ws-primary);
+  background: var(--ws-primary-soft);
 }
 
 .ws-activity-bar {
@@ -939,5 +966,10 @@ body:has(.ws-shell) #root {
 @media (max-width: 640px) {
   .ws-toolbar-search {
     display: none;
+  }
+
+  .ws-toolbar-signout {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.55rem;
   }
 }

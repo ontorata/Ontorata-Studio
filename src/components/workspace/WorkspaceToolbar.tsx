@@ -61,7 +61,6 @@ export function WorkspaceToolbar() {
         { label: 'Open Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
         { label: 'Open Workspace', action: () => openTab(''), shortcut: 'Ctrl+O' },
         { label: 'Open Memory Bank', action: () => openTab('memories') },
-        { label: 'Sign out', action: () => void logout() },
       ],
     },
     {
@@ -145,14 +144,19 @@ export function WorkspaceToolbar() {
         ))}
       </nav>
 
-      <div className="ws-toolbar-search">
-        <button
-          type="button"
-          className="ws-toolbar-search-btn"
-          onClick={() => openTab('search', 'Search')}
-        >
-          <span>Search intelligence…</span>
-          <kbd>/</kbd>
+      <div className="ws-toolbar-actions">
+        <div className="ws-toolbar-search">
+          <button
+            type="button"
+            className="ws-toolbar-search-btn"
+            onClick={() => openTab('search', 'Search')}
+          >
+            <span>Search intelligence…</span>
+            <kbd>/</kbd>
+          </button>
+        </div>
+        <button type="button" className="ws-toolbar-signout" onClick={() => void logout()}>
+          Sign out
         </button>
       </div>
     </header>
