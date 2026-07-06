@@ -49,7 +49,7 @@ Studio requires login before any page is shown. Credentials are verified against
 
 | Command | Purpose |
 |---------|---------|
-| `npm run dev` | Vite dev server |
+| `npm run dev` | Vite dev server (`http://localhost:8765`) |
 | `npm run build` | Production static bundle |
 | `npm run test` | Unit tests (mocked SDK) |
 | `npm run lint` | ESLint + SDK boundary check |
