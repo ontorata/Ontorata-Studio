@@ -82,8 +82,8 @@ export function LoginPage() {
             <h1>Ontorata Studio</h1>
             <p>
               {authMode === 'oidc'
-                ? 'Sign in with GitHub, Google, or email — then connect your Ratary brain.'
-                : 'Sign in with your Ratary API key to access the operator console.'}
+                ? 'Sign in — then open apps from the home grid.'
+                : 'Sign in with your Ratary API key.'}
             </p>
           </div>
         </div>
