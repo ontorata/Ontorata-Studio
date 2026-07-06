@@ -93,16 +93,16 @@ body:has(.ws-shell) #root {
   background: var(--ws-bg);
 }
 
-/* Force min width on flex panel hosts (className is on inner child, not data-panel) */
-[data-panel][id='sidebar'] {
+/* Force min size on flex panel hosts when panel is open */
+.ws-shell[data-sidebar-open='true'] [data-panel][id='sidebar'] {
   min-width: var(--ws-sidebar-min) !important;
 }
 
-[data-panel][id='ai'] {
+.ws-shell[data-ai-open='true'] [data-panel][id='ai'] {
   min-width: var(--ws-ai-min) !important;
 }
 
-[data-panel][id='terminal'] {
+.ws-shell[data-terminal-open='true'] [data-panel][id='terminal'] {
   min-height: var(--ws-terminal-min) !important;
 }
 
@@ -359,13 +359,17 @@ body:has(.ws-shell) #root {
 }
 
 .ws-explorer-header {
-  padding: 0.55rem 0.85rem;
+  padding: 0.45rem 0.75rem;
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--ws-muted);
   border-bottom: 1px solid var(--ws-border);
   flex-shrink: 0;
+}
+
+.ws-explorer-header span {
+  color: var(--ws-muted);
 }
 
 .ws-tree-root {

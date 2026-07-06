@@ -89,7 +89,12 @@ function WorkspacePanels() {
     : '';
 
   return (
-    <div className="ws-shell">
+    <div
+      className="ws-shell"
+      data-sidebar-open={showSidebar ? 'true' : 'false'}
+      data-ai-open={showAiPanel ? 'true' : 'false'}
+      data-terminal-open={showTerminal ? 'true' : 'false'}
+    >
       <WorkspaceToolbar />
       <div className="ws-body">
         <WorkspaceActivityBar />

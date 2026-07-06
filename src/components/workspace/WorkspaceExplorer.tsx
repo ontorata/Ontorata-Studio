@@ -5,7 +5,7 @@ import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { NavIcon } from '../NavIcon';
 
 export function WorkspaceExplorer() {
-  const { openTab, folderName } = useWorkspaceTabs();
+  const { openTab, folderName, setShowSidebar } = useWorkspaceTabs();
   const { capabilities } = useCapabilities();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
@@ -15,8 +15,16 @@ export function WorkspaceExplorer() {
 
   return (
     <div className="ws-explorer">
-      <div className="ws-explorer-header">
+      <div className="ws-explorer-header ws-panel-header">
         <span>EXPLORER</span>
+        <button
+          type="button"
+          className="ws-panel-close"
+          aria-label="Close explorer"
+          onClick={() => setShowSidebar(false)}
+        >
+          ×
+        </button>
       </div>
 
       {folderName && (
