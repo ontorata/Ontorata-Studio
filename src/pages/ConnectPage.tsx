@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { GlassPanel } from '../components/GlassPanel';
 import { getDefaultRataryBaseUrl, getDefaultWorkspaceId } from '../config/env';
 import type { ConnectionMode } from '../domain/connection/connection';
 import { useAuth } from '../hooks/useAuth';
 import { useConnection } from '../hooks/useConnection';
-import { Button, Card, Input } from '../presentation/design-system/primitives';
+import { Button, Input } from '../presentation/design-system/primitives';
 
 /** Phase 05 — Ratary connection wizard after OIDC (or manual reconnect). */
 export function ConnectPage() {
@@ -89,8 +90,12 @@ export function ConnectPage() {
   }
 
   return (
-    <div className="login-screen">
-      <Card className="login-card connect-card">
+    <div className="auth-screen wallpaper-bg">
+      <GlassPanel
+        className="login-card connect-card"
+        onDismiss={() => navigate(`/workspace/${getDefaultWorkspaceId()}`)}
+        dismissHint="Drag down to skip"
+      >
         <div className="login-brand">
           <span className="brand-mark lg">R</span>
           <div>
@@ -162,7 +167,7 @@ export function ConnectPage() {
             </Button>
           </div>
         </form>
-      </Card>
+      </GlassPanel>
     </div>
   );
 }

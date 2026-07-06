@@ -1,8 +1,9 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { GlassPanel } from '../components/GlassPanel';
 import { getDefaultWorkspaceId } from '../config/env';
 import { defaultRataryBaseUrl } from '../infrastructure/storage/legacy-auth-session';
-import { Button, Card, Input } from '../presentation/design-system/primitives';
+import { Button, Input } from '../presentation/design-system/primitives';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {
@@ -23,7 +24,7 @@ export function LoginPage() {
 
   if (loading) {
     return (
-      <div className="login-screen">
+      <div className="auth-screen wallpaper-bg">
         <p>Loading…</p>
       </div>
     );
@@ -73,8 +74,8 @@ export function LoginPage() {
   }
 
   return (
-    <div className="login-screen">
-      <Card className="login-card">
+    <div className="auth-screen wallpaper-bg">
+      <GlassPanel className="login-card" onDismiss={() => window.history.back()} dismissHint="Drag down to go back">
         <div className="login-brand">
           <span className="brand-mark lg">O</span>
           <div>
@@ -165,7 +166,7 @@ export function LoginPage() {
           </a>
           .
         </p>
-      </Card>
+      </GlassPanel>
     </div>
   );
 }
