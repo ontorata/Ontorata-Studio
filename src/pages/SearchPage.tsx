@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
 import { useCapabilities } from '../hooks/useCapabilities';
 import { useStudioClient } from '../hooks/useStudioClient';
+import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 
 export function SearchPage() {
   const client = useStudioClient();
+  const base = useWorkspaceBasePath();
   const { capabilities } = useCapabilities();
   const [q, setQ] = useState('');
   const [results, setResults] = useState<MemoryRecord[]>([]);
@@ -54,7 +56,7 @@ export function SearchPage() {
       <ul className="memory-list">
         {results.map((m) => (
           <li key={m.id}>
-            <Link to={`/memories/${m.id}`}>
+            <Link to={`${base}/memories/${m.id}`}>
               <strong>{m.title}</strong>
             </Link>
             {m.summary && <p>{m.summary}</p>}

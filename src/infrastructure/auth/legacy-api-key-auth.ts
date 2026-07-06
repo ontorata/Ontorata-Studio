@@ -19,8 +19,9 @@ function toDomainSession(stored: NonNullable<ReturnType<typeof readLegacyStoredS
   };
 }
 
-/** v0.1 API-key auth behind AuthPort until Phase 04 OIDC. */
+/** v0.1 API-key auth behind AuthPort; parallel to OIDC in Phase 04+. */
 export class LegacyApiKeyAuthAdapter implements AuthPort {
+  readonly mode = 'legacy' as const;
   getSession(): AuthSession | null {
     const stored = readLegacyStoredSession();
     return stored ? toDomainSession(stored) : null;
@@ -30,7 +31,10 @@ export class LegacyApiKeyAuthAdapter implements AuthPort {
     return readLegacyStoredSession() !== null;
   }
 
-  async login(credentials: LegacyLoginCredentials): Promise<void> {
+  async login(credentials?: LegacyLoginCredentials): Promise<void> {
+    if (!credentials) {
+      throw new Error('API key credentials required for legacy auth');
+    }
     await verifyStudioCredentials(credentials);
     writeLegacyStoredSession(credentials);
   }

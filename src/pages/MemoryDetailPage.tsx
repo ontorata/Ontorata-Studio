@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
+import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { useStudioClient } from '../hooks/useStudioClient';
 
 export function MemoryDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const base = useWorkspaceBasePath();
   const client = useStudioClient();
   const navigate = useNavigate();
   const [memory, setMemory] = useState<MemoryRecord | null>(null);
@@ -34,7 +36,7 @@ export function MemoryDetailPage() {
   async function handleDelete() {
     if (!id || !confirm('Delete this memory?')) return;
     await client.deleteMemory(id);
-    navigate('/memories');
+    navigate(`${base}/memories`);
   }
 
   if (error) return <p className="error">{error}</p>;
@@ -43,7 +45,7 @@ export function MemoryDetailPage() {
   return (
     <div className="page">
       <p>
-        <Link to="/memories">← Memories</Link>
+        <Link to={`${base}/memories`}>← Memories</Link>
       </p>
       <header className="page-header row">
         <h1>{memory.title}</h1>

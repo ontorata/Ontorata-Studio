@@ -7,14 +7,21 @@ describe('route manifest', () => {
     expect(login?.requiresAuth).toBe(false);
   });
 
-  it('resolves dashboard route', () => {
-    const meta = findRouteMeta('/');
+  it('resolves workspace dashboard route', () => {
+    const meta = findRouteMeta('/workspace/personal-default');
     expect(meta?.requiresAuth).toBe(true);
-    expect(meta?.requiresConnection).toBe(false);
+    expect(meta?.requiresConnection).toBe(true);
   });
 
-  it('flags future workspace routes for connection gate', () => {
-    const meta = findRouteMeta('/workspace/home');
+  it('flags connect wizard before connection gate', () => {
+    const meta = findRouteMeta('/connect');
+    expect(meta?.requiresAuth).toBe(true);
+    expect(meta?.requiresConnection).toBe(false);
+    expect(meta?.phase).toBe(5);
+  });
+
+  it('flags workspace routes for connection gate', () => {
+    const meta = findRouteMeta('/workspace/home/memories');
     expect(meta?.requiresConnection).toBe(true);
   });
 });

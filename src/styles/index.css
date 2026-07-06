@@ -374,6 +374,128 @@ label.inline {
   opacity: 0.9;
 }
 
+.page.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  gap: 0.5rem;
+}
+
+.session-org {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.simple-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.simple-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.mode-fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--ds-radius-sm, 0.375rem);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.mode-fieldset label {
+  display: block;
+  margin: 0.35rem 0;
+  font-size: 0.9rem;
+}
+
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.ok-text {
+  color: var(--ok, #3dd68c);
+  font-size: 0.9rem;
+}
+
+.chat-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 360px;
+}
+
+.chat-messages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.chat-bubble {
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.5rem;
+  max-width: 85%;
+  white-space: pre-wrap;
+}
+
+.chat-bubble.user {
+  align-self: flex-end;
+  background: var(--accent-dim);
+}
+
+.chat-bubble.assistant {
+  align-self: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.chat-input-row .ds-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+}
+
+.page-header-actions {
+  margin-left: auto;
+}
+
 /* —— Design system primitives (Phase 01) —— */
 .ds-card {
   background: var(--surface);

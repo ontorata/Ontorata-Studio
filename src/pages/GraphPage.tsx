@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { GraphTraverseResult } from '../api/ratary-client';
 import { useStudioClient } from '../hooks/useStudioClient';
+import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 
 export function GraphPage() {
   const client = useStudioClient();
+  const base = useWorkspaceBasePath();
   const [memoryId, setMemoryId] = useState('');
   const [depth, setDepth] = useState(2);
   const [result, setResult] = useState<GraphTraverseResult | null>(null);
@@ -62,7 +64,7 @@ export function GraphPage() {
           <ul className="memory-list">
             {(result.nodes ?? []).map((n) => (
               <li key={n.id}>
-                <Link to={`/memories/${n.id}`}>{n.title ?? n.id}</Link>
+                <Link to={`${base}/memories/${n.id}`}>{n.title ?? n.id}</Link>
                 {n.depth !== undefined && <span className="tag">depth {n.depth}</span>}
               </li>
             ))}

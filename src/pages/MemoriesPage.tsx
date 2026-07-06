@@ -2,9 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
 import { useStudioClient } from '../hooks/useStudioClient';
+import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 
 export function MemoriesPage() {
   const client = useStudioClient();
+  const base = useWorkspaceBasePath();
   const [memories, setMemories] = useState<MemoryRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +73,7 @@ export function MemoriesPage() {
       <ul className="memory-list">
         {memories.map((m) => (
           <li key={m.id}>
-            <Link to={`/memories/${m.id}`}>
+            <Link to={`${base}/memories/${m.id}`}>
               <strong>{m.title}</strong>
               {m.project && <span className="tag">{m.project}</span>}
             </Link>
