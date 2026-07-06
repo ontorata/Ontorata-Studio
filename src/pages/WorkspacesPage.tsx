@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { AgentRecord, WorkspaceRecord } from '../api/ratary-client';
 import { useStudioClient } from '../hooks/useStudioClient';
+import { Card, EmptyState, PageHeader } from '../presentation/design-system/primitives';
 
 export function WorkspacesPage() {
   const client = useStudioClient();
@@ -28,36 +29,43 @@ export function WorkspacesPage() {
   }, [client, selected]);
 
   return (
-    <div className="page">
-      <header className="page-header">
-        <h1>Workspaces</h1>
-        <p>Admin view when enterprise workspace flags are enabled on Ratary Server.</p>
-      </header>
+    <div className="page studio-page">
+      <PageHeader
+        title="Workspaces"
+        description="Admin view when enterprise workspace flags are enabled on Ratary Server."
+      />
 
       {error && <p className="error">{error}</p>}
 
       <div className="grid two">
-        <section className="card">
+        <Card>
           <h2>Workspaces</h2>
-          <ul className="memory-list">
-            {workspaces.map((w) => (
-              <li key={w.id}>
-                <button
-                  type="button"
-                  className={selected === w.id ? 'linkish active' : 'linkish'}
-                  onClick={() => setSelected(w.id)}
-                >
-                  {w.name}
-                </button>
-                {w.slug && <span className="tag">{w.slug}</span>}
-              </li>
-            ))}
-          </ul>
-        </section>
+          {workspaces.length === 0 ? (
+            <EmptyState title="No workspaces" description="No workspaces returned from Ratary." />
+          ) : (
+            <ul className="memory-list">
+              {workspaces.map((w) => (
+                <li key={w.id}>
+                  <button
+                    type="button"
+                    className={selected === w.id ? 'linkish active' : 'linkish'}
+                    onClick={() => setSelected(w.id)}
+                  >
+                    {w.name}
+                  </button>
+                  {w.slug && <span className="tag">{w.slug}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
 
-        <section className="card">
+        <Card>
           <h2>Agents</h2>
-          {!selected && <p>Select a workspace.</p>}
+          {!selected && <p className="muted">Select a workspace to list agents.</p>}
+          {selected && agents.length === 0 && (
+            <p className="muted">No agents in this workspace.</p>
+          )}
           <ul className="memory-list">
             {agents.map((a) => (
               <li key={a.id}>
@@ -66,7 +74,7 @@ export function WorkspacesPage() {
               </li>
             ))}
           </ul>
-        </section>
+        </Card>
       </div>
     </div>
   );

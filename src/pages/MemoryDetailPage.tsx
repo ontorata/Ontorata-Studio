@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { useStudioClient } from '../hooks/useStudioClient';
+import { Button, Card, Input, PageHeader } from '../presentation/design-system/primitives';
 
 export function MemoryDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,7 @@ export function MemoryDetailPage() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -29,8 +31,13 @@ export function MemoryDetailPage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!id) return;
-    const updated = await client.updateMemory(id, { title, content });
-    setMemory(updated);
+    setSaving(true);
+    try {
+      const updated = await client.updateMemory(id, { title, content });
+      setMemory(updated);
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function handleDelete() {
@@ -39,33 +46,56 @@ export function MemoryDetailPage() {
     navigate(`${base}/memories`);
   }
 
-  if (error) return <p className="error">{error}</p>;
-  if (!memory) return <p>Loading…</p>;
+  if (error) {
+    return (
+      <div className="page studio-page">
+        <p className="error">{error}</p>
+      </div>
+    );
+  }
+
+  if (!memory) {
+    return (
+      <div className="page studio-page">
+        <p className="muted">Loading…</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="page">
-      <p>
-        <Link to={`${base}/memories`}>← Memories</Link>
+    <div className="page studio-page">
+      <p className="studio-back-link">
+        <Link to={`${base}/memories`}>← Memory Bank</Link>
       </p>
-      <header className="page-header row">
-        <h1>{memory.title}</h1>
-        <button type="button" className="btn danger" onClick={handleDelete}>
-          Delete
-        </button>
-      </header>
-      <form className="card form" onSubmit={handleSave}>
-        <label>
-          Title
-          <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        </label>
-        <label>
-          Content
-          <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={16} />
-        </label>
-        <button type="submit" className="btn primary">
-          Save changes
-        </button>
-      </form>
+
+      <PageHeader
+        title={memory.title}
+        actions={
+          <Button type="button" variant="ghost" className="studio-btn-danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        }
+      />
+
+      <Card>
+        <form className="form studio-form" onSubmit={handleSave}>
+          <Input label="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+          <label className="ds-field">
+            <span className="ds-field-label">Content</span>
+            <textarea
+              className="ds-input studio-textarea"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={16}
+            />
+          </label>
+          <div className="button-row">
+            <Button type="submit" variant="primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Save changes'}
+            </Button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }

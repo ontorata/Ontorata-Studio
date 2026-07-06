@@ -73,7 +73,7 @@ export function WorkspaceToolbar() {
     },
     {
       label: 'Go',
-      items: goItems.slice(0, 12),
+      items: goItems,
     },
     {
       label: 'Run',
