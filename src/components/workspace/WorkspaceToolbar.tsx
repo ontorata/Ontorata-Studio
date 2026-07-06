@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NAV_GROUPS } from '../../config/navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 
 interface MenuItem {
   label: string;
-  action: () => void;
+  action: () => void | Promise<void>;
   shortcut?: string;
 }
 
@@ -26,8 +26,33 @@ export function WorkspaceToolbar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  async function onOpenFolder() {
+  useEffect(() => {
+    if (!openMenu) return;
+
+    function onPointerDown(event: PointerEvent) {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setOpenMenu(null);
+      }
+    }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpenMenu(null);
+    }
+
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [openMenu]);
+
+  function runMenuItem(action: () => void | Promise<void>) {
     setOpenMenu(null);
+    void action();
+  }
+
+  async function onOpenFolder() {
     if ('showDirectoryPicker' in window) {
       try {
         const handle = await (
@@ -47,10 +72,7 @@ export function WorkspaceToolbar() {
   const goItems: MenuItem[] = NAV_GROUPS.flatMap((g) =>
     g.items.map((item) => ({
       label: item.label,
-      action: () => {
-        openTab(item.path, item.label);
-        setOpenMenu(null);
-      },
+      action: () => openTab(item.path, item.label),
     })),
   );
 
@@ -114,12 +136,9 @@ export function WorkspaceToolbar() {
             <button
               type="button"
               className={`ws-menu-trigger${openMenu === menu.label ? ' open' : ''}`}
+              aria-expanded={openMenu === menu.label}
+              aria-haspopup="menu"
               onClick={() => setOpenMenu((m) => (m === menu.label ? null : menu.label))}
-              onBlur={(e) => {
-                if (!e.currentTarget.parentElement?.contains(e.relatedTarget)) {
-                  setOpenMenu(null);
-                }
-              }}
             >
               {menu.label}
             </button>
@@ -131,7 +150,7 @@ export function WorkspaceToolbar() {
                       type="button"
                       role="menuitem"
                       className="ws-menu-item"
-                      onClick={item.action}
+                      onClick={() => runMenuItem(item.action)}
                     >
                       <span>{item.label}</span>
                       {item.shortcut && <kbd>{item.shortcut}</kbd>}
