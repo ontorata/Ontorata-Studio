@@ -1,6 +1,6 @@
 # ADR-001: Ecosystem repository boundaries
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-06  
 **Context:** Phase 01 — Workspace Foundation
 
@@ -10,7 +10,7 @@ The Ontorata ecosystem consists of **three independent repositories**:
 
 | Repository | Owns | Must not own |
 |------------|------|--------------|
-| `auth-ontorata` | Identity (Keycloak), OIDC, MFA, org SSO | AI data, Ratary credentials storage logic in Studio |
+| `auth-ontorata` | Identity (legacy Keycloak theme) | Production Studio uses **Zitadel Cloud** |
 | `Ontorata-Studio` | Workspace UI, configuration, connection metadata | Memory, embeddings, conversations, Ratary DB access |
 | `ratary` | AI runtime, memory, MCP, orchestration | Studio UI, end-user IdP (except validating AIC/OIDC) |
 

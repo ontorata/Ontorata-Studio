@@ -20,14 +20,30 @@ export interface CapabilityFlags {
   supportsPrecisionSearch?: boolean;
   supportsHybridRetrieval?: boolean;
   supportsOrganization?: boolean;
+  supportsEmbedding?: boolean;
+  supportsSemanticSearch?: boolean;
   [key: string]: unknown;
 }
 
 export interface CapabilityManifestView {
   protocolVersion?: string;
+  version?: string;
   capabilities?: CapabilityFlags;
-  deployment?: { sqlProvider?: string };
-  mcp?: { toolCount?: number };
+  deployment?: {
+    sqlProvider?: string;
+    vectorProvider?: string;
+    embeddingProvider?: string;
+  };
+  mcp?: { toolCount?: number; toolNames?: string[] };
+  transport?: {
+    rest?: { studioOidc?: { enabled?: boolean } };
+    mcp?: { remote?: { enabled?: boolean; publicUrl?: string; oauthEnabled?: boolean } };
+  };
+  knowledgeFabric?: {
+    enabled?: boolean;
+    connectors?: Array<{ id: string; configured: boolean }>;
+  };
+  precisionSearch?: { modes?: string[]; defaultMode?: string };
 }
 
 export interface GraphTraverseInput {
@@ -125,6 +141,14 @@ export class StudioRataryClient {
     return this.sdk.transport.request({
       method: 'GET',
       path: `/workspaces/${workspaceId}/agents`,
+    });
+  }
+
+  buildContext(input: { task: string; maxTokens?: number; project?: string }) {
+    return this.sdk.context.build({
+      task: input.task,
+      maxTokens: input.maxTokens,
+      project: input.project,
     });
   }
 }

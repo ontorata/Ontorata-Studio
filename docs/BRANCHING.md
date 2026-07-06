@@ -24,9 +24,14 @@ In Vercel project **Ontorata-Studio**:
 
 - **Production Branch:** `main`
 - Framework: Vite · Output: `dist` (see `vercel.json`)
-- Env: `VITE_RATARY_BASE_URL` — do **not** set `VITE_RATARY_API_KEY` in production
+- Env (Production):
+  - `VITE_AUTH_ISSUER` — Zitadel instance URL
+  - `VITE_AUTH_CLIENT_ID` — Zitadel SPA client ID
+  - `VITE_RATARY_BASE_URL` — e.g. `https://ratary.ontorata.com`
+- Do **not** set `VITE_RATARY_API_KEY` in production
 
 ## Related
 
 - [Architecture](./architecture/README.md)
-- [Auth repo](https://github.com/ontorata/auth) — Keycloak (`staging` / `main`)
+- [ZITADEL-SETUP.md](./ZITADEL-SETUP.md) — identity provider
+- [PHASES.md](./PHASES.md) — feature index

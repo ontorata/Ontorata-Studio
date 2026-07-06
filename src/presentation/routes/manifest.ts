@@ -27,7 +27,10 @@ export const routeManifest: RouteDefinition[] = [
   { path: '/workspace/:workspaceId/agents', requiresAuth: true, requiresConnection: true, phase: 14 },
   { path: '/workspace/:workspaceId/models', requiresAuth: true, requiresConnection: true, phase: 15 },
   { path: '/workspace/:workspaceId/coding', requiresAuth: true, requiresConnection: true, phase: 16 },
+  { path: '/workspace/:workspaceId/organization', requiresAuth: true, requiresConnection: true, phase: 17 },
   { path: '/workspace/:workspaceId/observability', requiresAuth: true, requiresConnection: true, phase: 18 },
+  { path: '/workspace/:workspaceId/enterprise', requiresAuth: true, requiresConnection: true, phase: 19 },
+  { path: '/workspace/:workspaceId/security', requiresAuth: true, requiresConnection: true, phase: 20 },
 ];
 
 export function findRouteMeta(pathname: string): RouteDefinition | undefined {

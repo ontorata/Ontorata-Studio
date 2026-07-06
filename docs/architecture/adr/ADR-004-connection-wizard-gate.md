@@ -1,30 +1,26 @@
 # ADR-004: Connection wizard gate
 
-**Status:** Proposed  
-**Date:** 2026-07-06  
-**Context:** Phase 01 — Workspace Foundation
+**Status:** Accepted  
+**Date:** 2026-07-06 · Updated 2026-07-06
 
 ## Decision
 
-After OIDC login (Phase 04), users **must not** enter the workspace dashboard until a Ratary connection passes automated validation:
+Users **must not** enter workspace routes without an active Ratary connection:
 
-- Health (`GET /health`)
-- API compatibility / capabilities manifest
-- Ratary version range
-- AIC authentication
-- Feature and permission scope check
-- Latency threshold (configurable)
+| Auth path | Connection |
+|-----------|------------|
+| OIDC + cloud Ratary | Auto — Zitadel access token (`isOidcCloudAutoConnect`) |
+| Legacy API key | Inline session credentials |
+| Self-hosted | `/connect` wizard with `aic_...` validation |
 
-Failed validation shows **actionable diagnostics** — no silent bypass.
+Validation checks health + capabilities via `@ratary/sdk`.
 
-Implementation: Phase 05. Phase 01 defines `ConnectionPort`, `ConnectionValidation`, route manifest flag `requiresConnection: true`.
+## Route guard chain
 
-## Consequences
+`authenticated → connected → workspace`
 
-- Route guard chain: `authenticated → connected → workspace`
-- Personal and organization workspaces use the same wizard; org Ratary URL may be pre-provisioned (Phase 17).
+`ConnectionGate` + `StudioClientProvider` enforce this.
 
-## Alternatives
+## Phase 17 note
 
-- **Optional Ratary connection:** rejected — Studio cannot operate without AI runtime per product vision.
-- **Studio proxies Ratary:** rejected — security principle C1/C2.
+Organization workspace pre-provision from OIDC org claims is **partial** — `OrganizationPage` lists Ratary workspaces; full org URL mapping is future work.

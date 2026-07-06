@@ -9,6 +9,7 @@ import { StudioClientProvider } from './hooks/useStudioClient';
 import { AgentManagerPage } from './pages/AgentManagerPage';
 import { CodingWorkspacePage } from './pages/CodingWorkspacePage';
 import { ConnectPage } from './pages/ConnectPage';
+import { EnterprisePage } from './pages/EnterprisePage';
 import { GraphPage } from './pages/GraphPage';
 import { HomePage } from './pages/HomePage';
 import { KnowledgePage } from './pages/KnowledgePage';
@@ -18,11 +19,13 @@ import { MemoryDetailPage } from './pages/MemoryDetailPage';
 import { McpManagerPage } from './pages/McpManagerPage';
 import { ModelProvidersPage } from './pages/ModelProvidersPage';
 import { ObservabilityPage } from './pages/ObservabilityPage';
+import { OrganizationPage } from './pages/OrganizationPage';
 import { OidcCallbackPage } from './pages/OidcCallbackPage';
 import { OntoryChatPage } from './pages/OntoryChatPage';
 import { OntoryPage } from './pages/OntoryPage';
 import { ProfilesPage } from './pages/ProfilesPage';
 import { SearchPage } from './pages/SearchPage';
+import { SecurityPage } from './pages/SecurityPage';
 import { StackBuilderPage } from './pages/StackBuilderPage';
 import { StacksPage } from './pages/StacksPage';
 import { WorkspacesPage } from './pages/WorkspacesPage';
@@ -73,6 +76,9 @@ export function App() {
                   <Route path="models" element={<ModelProvidersPage />} />
                   <Route path="coding" element={<CodingWorkspacePage />} />
                   <Route path="observability" element={<ObservabilityPage />} />
+                  <Route path="organization" element={<OrganizationPage />} />
+                  <Route path="enterprise" element={<EnterprisePage />} />
+                  <Route path="security" element={<SecurityPage />} />
                 </Route>
               </Route>
             </Route>

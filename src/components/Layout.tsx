@@ -22,9 +22,11 @@ export function Layout() {
   const ontoryUrl = import.meta.env.VITE_ONTORY_URL;
 
   const connectionLabel =
-    session?.legacyApiKey != null
-      ? maskApiKey(session.legacyApiKey)
-      : activeConnection?.label ?? activeConnection?.baseUrl ?? '—';
+    session?.accessToken && !activeConnection
+      ? 'OIDC cloud'
+      : session?.legacyApiKey != null
+        ? maskApiKey(session.legacyApiKey)
+        : activeConnection?.label ?? activeConnection?.baseUrl ?? '—';
 
   return (
     <div className="app-shell">
@@ -80,8 +82,17 @@ export function Layout() {
           <NavLink to={`${base}/coding`} className={linkClass}>
             Coding
           </NavLink>
+          <NavLink to={`${base}/organization`} className={linkClass}>
+            Organization
+          </NavLink>
+          <NavLink to={`${base}/enterprise`} className={linkClass}>
+            Enterprise
+          </NavLink>
           <NavLink to={`${base}/observability`} className={linkClass}>
             Observability
+          </NavLink>
+          <NavLink to={`${base}/security`} className={linkClass}>
+            Security
           </NavLink>
           {ontoryUrl ? (
             <a className="nav-link external" href={ontoryUrl} target="_blank" rel="noreferrer">

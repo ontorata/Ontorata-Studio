@@ -18,7 +18,7 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-/** Phase 17 — parse org context from OIDC access token (Keycloak claims). */
+/** Phase 17 — parse org context from OIDC access token (Zitadel / Keycloak claims). */
 export function useOrgContext(): OrgClaims | null {
   const { session } = useAuth();
 
@@ -28,12 +28,23 @@ export function useOrgContext(): OrgClaims | null {
     if (!payload) return null;
 
     const realmAccess = payload.realm_access as { roles?: string[] } | undefined;
-    const roles = realmAccess?.roles ?? [];
+    const zitadelRoles = payload['urn:zitadel:iam:org:project:roles'] as
+      | Record<string, Record<string, string>>
+      | undefined;
+    const rolesFromZitadel = zitadelRoles
+      ? Object.keys(zitadelRoles).flatMap((project) => Object.keys(zitadelRoles[project] ?? {}))
+      : [];
+    const roles = realmAccess?.roles ?? rolesFromZitadel;
 
-    return {
-      orgId: typeof payload.org_id === 'string' ? payload.org_id : undefined,
-      orgName: typeof payload.org_name === 'string' ? payload.org_name : undefined,
-      roles,
-    };
+    const zitadelOrgId = payload['urn:zitadel:iam:user:resourceowner:id'] as string | undefined;
+    const orgId =
+      (typeof payload.org_id === 'string' ? payload.org_id : undefined) ?? zitadelOrgId;
+    const orgName =
+      (typeof payload.org_name === 'string' ? payload.org_name : undefined) ??
+      (typeof payload['urn:zitadel:iam:user:resourceowner:name'] === 'string'
+        ? (payload['urn:zitadel:iam:user:resourceowner:name'] as string)
+        : undefined);
+
+    return { orgId, orgName, roles };
   }, [session?.accessToken]);
 }
