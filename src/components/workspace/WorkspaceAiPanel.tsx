@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStudioClient } from '../../hooks/useStudioClient';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
+import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { Button, Input } from '../../presentation/design-system/primitives';
 
 interface ChatMessage {
@@ -17,6 +18,7 @@ const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 export function WorkspaceAiPanel() {
   const client = useStudioClient();
   const base = useWorkspaceBasePath();
+  const { setShowAiPanel } = useWorkspaceTabs();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState(() => sessionStorage.getItem(DRAFT_KEY) ?? '');
@@ -91,8 +93,18 @@ export function WorkspaceAiPanel() {
   return (
     <div className="ws-ai-panel">
       <div className="ws-panel-header">
-        <span>ONTORY</span>
-        <small>AI Assistant</small>
+        <div className="ws-panel-header-title">
+          <span>ONTORY</span>
+          <small>AI Assistant</small>
+        </div>
+        <button
+          type="button"
+          className="ws-panel-close"
+          aria-label="Close AI panel"
+          onClick={() => setShowAiPanel(false)}
+        >
+          ×
+        </button>
       </div>
 
       <div className="ws-ai-messages" ref={scrollRef}>

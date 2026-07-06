@@ -644,6 +644,7 @@ body:has(.ws-shell) #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.45rem 0.75rem;
   font-size: 0.68rem;
   font-weight: 600;
@@ -652,21 +653,29 @@ body:has(.ws-shell) #root {
   background: var(--ws-surface);
   border-bottom: 1px solid var(--ws-border);
   flex-shrink: 0;
-  white-space: nowrap;
+}
+
+.ws-panel-header-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .ws-panel-header span {
   color: var(--ws-primary-dim);
+  white-space: nowrap;
 }
 
 .ws-panel-header small {
   font-weight: 400;
-  margin-left: 0.35rem;
   letter-spacing: normal;
   text-transform: none;
   color: var(--ws-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ws-panel-close {

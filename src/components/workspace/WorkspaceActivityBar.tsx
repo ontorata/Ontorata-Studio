@@ -3,7 +3,7 @@ import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 type ActivityId = 'explorer' | 'search' | 'ai' | 'terminal';
 
 export function WorkspaceActivityBar() {
-  const { openTab, toggleAiPanel, toggleTerminal, showSidebar, setShowSidebar } =
+  const { openTab, toggleTerminal, showSidebar, showAiPanel, setShowSidebar, setShowAiPanel } =
     useWorkspaceTabs();
 
   function onSelect(id: ActivityId) {
@@ -16,7 +16,7 @@ export function WorkspaceActivityBar() {
       return;
     }
     if (id === 'ai') {
-      toggleAiPanel();
+      setShowAiPanel(true);
       return;
     }
     if (id === 'terminal') {
@@ -27,7 +27,7 @@ export function WorkspaceActivityBar() {
   const items: Array<{ id: ActivityId; label: string; icon: string; active?: boolean }> = [
     { id: 'explorer', label: 'Explorer', icon: '▤', active: showSidebar },
     { id: 'search', label: 'Search', icon: '⌕' },
-    { id: 'ai', label: 'Ontory AI', icon: '◈' },
+    { id: 'ai', label: 'Ontory AI', icon: '◈', active: showAiPanel },
     { id: 'terminal', label: 'Terminal', icon: '▭' },
   ];
 
