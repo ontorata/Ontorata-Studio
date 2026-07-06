@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { defaultRataryBaseUrl } from '../auth/auth-session';
+import { defaultRataryBaseUrl } from '../infrastructure/storage/legacy-auth-session';
+import { Button, Card, Input } from '../presentation/design-system/primitives';
 import { useAuth } from '../hooks/useAuth';
 
 export function LoginPage() {
@@ -53,7 +54,7 @@ export function LoginPage() {
 
   return (
     <div className="login-screen">
-      <div className="login-card">
+      <Card className="login-card">
         <div className="login-brand">
           <span className="brand-mark lg">O</span>
           <div>
@@ -63,60 +64,59 @@ export function LoginPage() {
         </div>
 
         <form className="form login-form" onSubmit={onSubmit}>
-          <label>
-            API key
-            <input
-              type="password"
-              name="apiKey"
-              autoComplete="current-password"
-              placeholder="aic_..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              disabled={submitting}
-              required
-            />
-          </label>
+          <Input
+            label="API key"
+            type="password"
+            name="apiKey"
+            autoComplete="current-password"
+            placeholder="aic_..."
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            disabled={submitting}
+            required
+          />
 
           {showAdvanced && (
             <>
-              <label>
-                Ratary server URL
-                <input
-                  type="url"
-                  name="baseUrl"
-                  placeholder={defaultRataryBaseUrl()}
-                  value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
-                  disabled={submitting}
-                />
-              </label>
-              <label>
-                Workspace ID <span className="optional">(optional)</span>
-                <input
-                  type="text"
-                  name="workspaceId"
-                  placeholder="UUID"
-                  value={workspaceId}
-                  onChange={(e) => setWorkspaceId(e.target.value)}
-                  disabled={submitting}
-                />
-              </label>
+              <Input
+                label="Ratary server URL"
+                type="url"
+                name="baseUrl"
+                placeholder={defaultRataryBaseUrl()}
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                disabled={submitting}
+              />
+              <Input
+                label={
+                  <>
+                    Workspace ID <span className="optional">(optional)</span>
+                  </>
+                }
+                type="text"
+                name="workspaceId"
+                placeholder="UUID"
+                value={workspaceId}
+                onChange={(e) => setWorkspaceId(e.target.value)}
+                disabled={submitting}
+              />
             </>
           )}
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             className="linkish toggle-advanced"
             onClick={() => setShowAdvanced((v) => !v)}
           >
             {showAdvanced ? 'Hide advanced options' : 'Advanced options'}
-          </button>
+          </Button>
 
           {error && <p className="error login-error">{error}</p>}
 
-          <button type="submit" className="btn primary login-submit" disabled={submitting}>
+          <Button type="submit" variant="primary" className="login-submit" disabled={submitting}>
             {submitting ? 'Verifying…' : 'Sign in'}
-          </button>
+          </Button>
         </form>
 
         <p className="login-foot">
@@ -126,7 +126,7 @@ export function LoginPage() {
           </a>
           .
         </p>
-      </div>
+      </Card>
     </div>
   );
 }

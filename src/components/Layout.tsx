@@ -57,7 +57,9 @@ export function Layout() {
         <footer className="sidebar-foot">
           <div className="session-block">
             <span className="session-label">Connected</span>
-            <code className="session-key">{session ? maskApiKey(session.apiKey) : '—'}</code>
+            <code className="session-key">
+              {session?.legacyApiKey ? maskApiKey(session.legacyApiKey) : '—'}
+            </code>
             <button type="button" className="btn logout-btn" onClick={logout}>
               Sign out
             </button>

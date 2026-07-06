@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = path.join(root, 'src');
-const allowed = new Set([path.join(srcDir, 'api', 'ratary-client.ts')]);
+const rataryClient = path.join(srcDir, 'infrastructure', 'ratary', 'studio-ratary-client.ts');
+const allowed = new Set([rataryClient, path.join(srcDir, 'api', 'ratary-client.ts')]);
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -25,7 +26,9 @@ for (const file of walk(srcDir)) {
 }
 
 if (violations.length > 0) {
-  console.error('SDK boundary violation — fetch() only allowed in src/api/ratary-client.ts:');
+  console.error(
+    'SDK boundary violation — fetch() only allowed in src/infrastructure/ratary/studio-ratary-client.ts:',
+  );
   for (const v of violations) console.error(`  - ${v}`);
   process.exit(1);
 }

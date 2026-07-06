@@ -6,34 +6,31 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { verifyStudioCredentials } from '../api/ratary-client';
-import {
-  clearAuthSession,
-  readAuthSession,
-  writeAuthSession,
-  type AuthSession,
-} from '../auth/auth-session';
+import type { LegacyLoginCredentials } from '../application/auth/auth-port';
+import type { AuthSession } from '../domain/auth/session';
+import { createLegacyApiKeyAuth } from '../infrastructure/auth/legacy-api-key-auth';
 
 interface AuthContextValue {
   session: AuthSession | null;
   isAuthenticated: boolean;
-  login: (input: AuthSession) => Promise<void>;
+  login: (input: LegacyLoginCredentials) => Promise<void>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(() => readAuthSession());
+const authPort = createLegacyApiKeyAuth();
 
-  const login = useCallback(async (input: AuthSession) => {
-    await verifyStudioCredentials(input);
-    writeAuthSession(input);
-    setSession(readAuthSession());
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<AuthSession | null>(() => authPort.getSession());
+
+  const login = useCallback(async (input: LegacyLoginCredentials) => {
+    await authPort.login(input);
+    setSession(authPort.getSession());
   }, []);
 
   const logout = useCallback(() => {
-    clearAuthSession();
+    authPort.logout();
     setSession(null);
   }, []);
 

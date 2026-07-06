@@ -373,3 +373,65 @@ label.inline {
 .nav-link.external {
   opacity: 0.9;
 }
+
+/* —— Design system primitives (Phase 01) —— */
+.ds-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--ds-radius-md, 0.5rem);
+}
+
+.ds-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2, 0.5rem);
+  margin-bottom: 0.85rem;
+}
+
+.ds-field-label {
+  font-size: var(--ds-font-sm, 0.875rem);
+  color: var(--muted);
+}
+
+.ds-input {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--ds-radius-sm, 0.375rem);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.ds-input:focus {
+  outline: 2px solid var(--accent-dim);
+  border-color: var(--accent);
+}
+
+.ds-btn {
+  border: 1px solid var(--border);
+  border-radius: var(--ds-radius-sm, 0.375rem);
+  padding: 0.5rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.ds-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ds-btn-primary {
+  background: var(--accent);
+  border-color: var(--accent-dim);
+  color: #fff;
+}
+
+.ds-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--accent);
+  padding-left: 0;
+}

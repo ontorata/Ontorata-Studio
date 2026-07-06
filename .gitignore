@@ -9,3 +9,6 @@ vendor/ratary-sdk/node_modules
 
 .vercel
 .env*
+
+# Local governance — not pushed (owner decision 2026-07-06)
+.ai/
