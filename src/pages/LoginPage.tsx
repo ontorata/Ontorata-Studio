@@ -81,7 +81,7 @@ export function LoginPage() {
             <h1>Ontorata Studio</h1>
             <p>
               {authMode === 'oidc'
-                ? 'Sign in with your Ontorata identity, then connect Ratary.'
+                ? 'Sign in with GitHub, Google, or email — then connect your Ratary brain.'
                 : 'Sign in with your Ratary API key to access the operator console.'}
             </p>
           </div>
@@ -97,7 +97,7 @@ export function LoginPage() {
               disabled={submitting}
               onClick={onOidcSignIn}
             >
-              {submitting ? 'Redirecting…' : 'Sign in with Keycloak'}
+              {submitting ? 'Redirecting…' : 'Sign in'}
             </Button>
           </div>
         ) : (
