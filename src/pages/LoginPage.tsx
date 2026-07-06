@@ -1,6 +1,5 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { GlassPanel } from '../components/GlassPanel';
 import { getDefaultWorkspaceId } from '../config/env';
 import { defaultRataryBaseUrl } from '../infrastructure/storage/legacy-auth-session';
 import { Button, Input } from '../presentation/design-system/primitives';
@@ -24,8 +23,8 @@ export function LoginPage() {
 
   if (loading) {
     return (
-      <div className="auth-screen wallpaper-bg">
-        <p>Loading…</p>
+      <div className="auth-screen">
+        <p className="auth-loading">Preparing your workspace…</p>
       </div>
     );
   }
@@ -74,99 +73,108 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-screen wallpaper-bg">
-      <GlassPanel className="login-card" onDismiss={() => window.history.back()} dismissHint="Drag down to go back">
-        <div className="login-brand">
+    <div className="auth-screen">
+      <div className="auth-layout">
+        <section className="auth-intro">
           <span className="brand-mark lg">O</span>
-          <div>
-            <h1>Ontorata Studio</h1>
+          <h1>Enterprise intelligence, one calm workspace.</h1>
+          <p>
+            Ontorata Studio connects your team to organizational memory, agents, and governance —
+            without leaving a single trusted console.
+          </p>
+          <ul className="auth-benefits">
+            <li>Secure sign-in with your organization identity</li>
+            <li>Memory and knowledge in one place</li>
+            <li>Built for long, focused work sessions</li>
+          </ul>
+        </section>
+
+        <section className="auth-card">
+          <div className="auth-card-head">
+            <h2>Sign in to Studio</h2>
             <p>
               {authMode === 'oidc'
-                ? 'Sign in — then open apps from the home grid.'
-                : 'Sign in with your Ratary API key.'}
+                ? 'Use your organization account to continue.'
+                : 'Use your Ratary API key for self-hosted environments.'}
             </p>
           </div>
-        </div>
 
-        {authMode === 'oidc' ? (
-          <div className="form login-form">
-            {error && <p className="error login-error">{error}</p>}
-            <Button
-              type="button"
-              variant="primary"
-              className="login-submit"
-              disabled={submitting}
-              onClick={onOidcSignIn}
-            >
-              {submitting ? 'Redirecting…' : 'Sign in'}
-            </Button>
-          </div>
-        ) : (
-          <form className="form login-form" onSubmit={onSubmit}>
-            <Input
-              label="API key"
-              type="password"
-              name="apiKey"
-              autoComplete="current-password"
-              placeholder="aic_..."
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              disabled={submitting}
-              required
-            />
+          {authMode === 'oidc' ? (
+            <div className="form login-form">
+              {error && <p className="error login-error">{error}</p>}
+              <Button
+                type="button"
+                variant="primary"
+                className="login-submit"
+                disabled={submitting}
+                onClick={onOidcSignIn}
+              >
+                {submitting ? 'Redirecting…' : 'Continue with SSO'}
+              </Button>
+            </div>
+          ) : (
+            <form className="form login-form" onSubmit={onSubmit}>
+              <Input
+                label="API key"
+                type="password"
+                name="apiKey"
+                autoComplete="current-password"
+                placeholder="aic_..."
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                disabled={submitting}
+                required
+              />
 
-            {showAdvanced && (
-              <>
-                <Input
-                  label="Ratary server URL"
-                  type="url"
-                  name="baseUrl"
-                  placeholder={defaultRataryBaseUrl()}
-                  value={baseUrl}
-                  onChange={(e) => setBaseUrl(e.target.value)}
-                  disabled={submitting}
-                />
-                <Input
-                  label={
-                    <>
-                      Workspace ID <span className="optional">(optional)</span>
-                    </>
-                  }
-                  type="text"
-                  name="workspaceId"
-                  placeholder="UUID"
-                  value={workspaceId}
-                  onChange={(e) => setWorkspaceId(e.target.value)}
-                  disabled={submitting}
-                />
-              </>
-            )}
+              {showAdvanced && (
+                <>
+                  <Input
+                    label="Ratary server URL"
+                    type="url"
+                    name="baseUrl"
+                    placeholder={defaultRataryBaseUrl()}
+                    value={baseUrl}
+                    onChange={(e) => setBaseUrl(e.target.value)}
+                    disabled={submitting}
+                  />
+                  <Input
+                    label={
+                      <>
+                        Workspace ID <span className="optional">(optional)</span>
+                      </>
+                    }
+                    type="text"
+                    name="workspaceId"
+                    placeholder="UUID"
+                    value={workspaceId}
+                    onChange={(e) => setWorkspaceId(e.target.value)}
+                    disabled={submitting}
+                  />
+                </>
+              )}
 
-            <Button
-              type="button"
-              variant="ghost"
-              className="linkish toggle-advanced"
-              onClick={() => setShowAdvanced((v) => !v)}
-            >
-              {showAdvanced ? 'Hide advanced options' : 'Advanced options'}
-            </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="linkish toggle-advanced"
+                onClick={() => setShowAdvanced((v) => !v)}
+              >
+                {showAdvanced ? 'Hide advanced options' : 'Advanced options'}
+              </Button>
 
-            {error && <p className="error login-error">{error}</p>}
+              {error && <p className="error login-error">{error}</p>}
 
-            <Button type="submit" variant="primary" className="login-submit" disabled={submitting}>
-              {submitting ? 'Verifying…' : 'Sign in'}
-            </Button>
-          </form>
-        )}
+              <Button type="submit" variant="primary" className="login-submit" disabled={submitting}>
+                {submitting ? 'Verifying…' : 'Sign in'}
+              </Button>
+            </form>
+          )}
 
-        <p className="login-foot">
-          Keys are stored in this browser session only — not embedded in the build. Get a key from{' '}
-          <a href="https://github.com/ontorata/ratary" target="_blank" rel="noreferrer">
-            Ratary bootstrap
-          </a>
-          .
-        </p>
-      </GlassPanel>
+          <p className="login-foot">
+            Session credentials stay in this browser only. Managed by Ontorata — powered by Ratary memory.
+          </p>
+        </section>
+      </div>
     </div>
   );
 }

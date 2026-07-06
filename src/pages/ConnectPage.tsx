@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { GlassPanel } from '../components/GlassPanel';
 import { getDefaultRataryBaseUrl, getDefaultWorkspaceId } from '../config/env';
 import type { ConnectionMode } from '../domain/connection/connection';
 import { useAuth } from '../hooks/useAuth';
@@ -90,22 +89,15 @@ export function ConnectPage() {
   }
 
   return (
-    <div className="auth-screen wallpaper-bg">
-      <GlassPanel
-        className="login-card connect-card"
-        onDismiss={() => navigate(`/workspace/${getDefaultWorkspaceId()}`)}
-        dismissHint="Drag down to skip"
-      >
-        <div className="login-brand">
-          <span className="brand-mark lg">R</span>
-          <div>
-            <h1>Connect Ratary</h1>
-            <p>
-              {authMode === 'oidc'
-                ? 'Advanced: connect a self-hosted Ratary instance with an API key.'
-                : 'Configure your Ratary connection.'}
-            </p>
-          </div>
+    <div className="auth-screen">
+      <div className="auth-card connect-card auth-card-centered">
+        <div className="auth-card-head">
+          <h2>Connect memory engine</h2>
+          <p>
+            {authMode === 'oidc'
+              ? 'Optional — link a self-hosted Ratary instance with an API key.'
+              : 'Configure your Ratary connection to continue.'}
+          </p>
         </div>
 
         <form className="form login-form" onSubmit={onSave}>
@@ -159,15 +151,18 @@ export function ConnectPage() {
           {error && <p className="error login-error">{error}</p>}
 
           <div className="button-row">
+            <Button type="button" variant="ghost" onClick={() => navigate(`/workspace/${getDefaultWorkspaceId()}`)}>
+              Skip for now
+            </Button>
             <Button type="button" variant="ghost" onClick={onValidate} disabled={validating}>
-              {validating ? 'Testing…' : 'Test connection'}
+              {validating ? 'Testing…' : 'Test'}
             </Button>
             <Button type="submit" variant="primary" disabled={validating}>
               {validating ? 'Saving…' : 'Connect'}
             </Button>
           </div>
         </form>
-      </GlassPanel>
+      </div>
     </div>
   );
 }
