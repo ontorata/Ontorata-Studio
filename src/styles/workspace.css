@@ -593,6 +593,7 @@ body:has(.ws-shell) #root {
 
 .ws-editor-surface .form input,
 .ws-editor-surface .form textarea,
+.ws-editor-surface .form select,
 .ws-editor-surface .ds-input,
 .ws-editor-surface .studio-textarea {
   background: var(--ws-bg);
@@ -770,6 +771,17 @@ body:has(.ws-shell) #root {
   flex: 1 1 180px;
   margin-bottom: 0;
   min-width: 0;
+}
+
+.ws-editor-surface .filter-bar label {
+  flex: 0 0 160px;
+  margin-bottom: 0;
+  font-size: 0.85rem;
+  color: var(--ws-muted);
+}
+
+.ws-editor-surface .filter-bar select {
+  margin-top: 0.35rem;
 }
 
 .ws-editor-surface .memory-list,
