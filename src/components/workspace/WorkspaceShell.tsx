@@ -83,18 +83,10 @@ function WorkspacePanels() {
   const location = useLocation();
   const base = useWorkspaceBasePath();
   const { showTerminal, showAiPanel, showSidebar } = useWorkspaceTabs();
-  const terminalRef = usePanelRef();
 
   const pathSuffix = location.pathname.startsWith(`${base}/`)
     ? location.pathname.slice(base.length + 1)
     : '';
-
-  useEffect(() => {
-    const panel = terminalRef.current;
-    if (!panel) return;
-    if (showTerminal) panel.expand();
-    else panel.collapse();
-  }, [showTerminal, terminalRef]);
 
   return (
     <div className="ws-shell">
@@ -152,22 +144,16 @@ function WorkspacePanels() {
 
           <Separator id="sep-terminal" className="ws-resize-handle ws-resize-horizontal" />
 
-          <Panel
+          <CollapsiblePanel
+            show={showTerminal}
             id="terminal"
-            panelRef={terminalRef}
-            defaultSize={28}
-            minSize="120px"
-            maxSize="50%"
-            collapsible
-            collapsedSize={0}
             className="ws-panel-terminal"
+            defaultSize={28}
+            minSize="160px"
+            maxSize="55%"
           >
-            <div className="ws-panel-fill ws-panel-terminal">
-              <div className="ws-panel-inner">
-                <WorkspaceTerminal />
-              </div>
-            </div>
-          </Panel>
+            <WorkspaceTerminal />
+          </CollapsiblePanel>
         </Group>
       </div>
     </div>

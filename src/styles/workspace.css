@@ -31,7 +31,7 @@ body:has(.ws-shell) #root {
   --ws-activity-width: 48px;
   --ws-sidebar-min: 200px;
   --ws-ai-min: 280px;
-  --ws-terminal-min: 140px;
+  --ws-terminal-min: 160px;
 
   --bg: var(--ws-bg);
   --surface: var(--ws-surface);
@@ -102,6 +102,14 @@ body:has(.ws-shell) #root {
   min-width: var(--ws-ai-min) !important;
 }
 
+[data-panel][id='terminal'] {
+  min-height: var(--ws-terminal-min) !important;
+}
+
+[data-panel][id='main'] {
+  min-height: 35% !important;
+}
+
 .ws-panel-fill {
   display: flex;
   flex-direction: column;
@@ -135,6 +143,14 @@ body:has(.ws-shell) #root {
   max-width: 100%;
 }
 
+.ws-panel-terminal.ws-panel-fill,
+.ws-panel-terminal .ws-panel-inner {
+  min-height: var(--ws-terminal-min);
+  height: 100%;
+  touch-action: pan-y;
+  overflow: hidden;
+}
+
 [data-separator].ws-resize-handle {
   flex: 0 0 5px !important;
   background: var(--ws-border);
@@ -153,6 +169,7 @@ body:has(.ws-shell) #root {
 
 .ws-resize-horizontal {
   cursor: row-resize;
+  min-height: 5px;
 }
 
 .ws-toolbar {
