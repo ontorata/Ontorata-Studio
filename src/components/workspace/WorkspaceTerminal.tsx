@@ -5,6 +5,7 @@ import {
   TERMINAL_PROFILES,
   type ShellProfileId,
 } from '../../config/terminal-profiles';
+import { cloneDefaultPowerShellAliases } from '../../domain/terminal/powershell-aliases';
 import { tryRunShellCommand } from '../../domain/terminal/shell-commands';
 import {
   formatCommandNotFoundError,
@@ -13,8 +14,11 @@ import {
 import { useConnection } from '../../hooks/useConnection';
 import { useStudioClient } from '../../hooks/useStudioClient';
 import { expandBashHistory } from '../../config/git-bash-shortcuts';
+import type { OutputChannelId } from '../../config/output-channels';
+import { useOutputChannels } from '../../hooks/useOutputChannels';
 import { useTerminalInputKeyboard } from '../../hooks/useTerminalInputKeyboard';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
+import { WorkspaceOutputPanel } from './WorkspaceOutputPanel';
 
 type PanelTab = 'terminal' | 'output' | 'problems';
 
@@ -38,6 +42,7 @@ interface TerminalSession {
   title: string;
   cwd: string;
   lines: TerminalLine[];
+  aliases: Record<string, string>;
 }
 
 const PANEL_TABS: Array<{ id: PanelTab; label: string }> = [
@@ -77,6 +82,7 @@ function createSession(profileId: ShellProfileId = DEFAULT_TERMINAL_PROFILE): Te
     lines: profile.welcome
       ? [{ id: crypto.randomUUID(), kind: 'system', text: profile.welcome }]
       : [],
+    aliases: profileId === 'powershell' ? cloneDefaultPowerShellAliases() : {},
   };
 }
 
@@ -88,7 +94,7 @@ export function WorkspaceTerminal() {
   const [sessions, setSessions] = useState<TerminalSession[]>(() => [createSession()]);
   const [activeSessionId, setActiveSessionId] = useState(() => sessions[0]?.id ?? '');
   const [problems, setProblems] = useState<ProblemItem[]>([]);
-  const [outputLines, setOutputLines] = useState<TerminalLine[]>([]);
+  const output = useOutputChannels();
   const [command, setCommand] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [splitMenuOpen, setSplitMenuOpen] = useState(false);
@@ -122,7 +128,7 @@ export function WorkspaceTerminal() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [activeSession?.lines, activeTab, outputLines]);
+  }, [activeSession?.lines, activeTab, output.activeLines]);
 
   useEffect(() => {
     if (showTerminal && activeTab === 'terminal') {
@@ -144,8 +150,13 @@ export function WorkspaceTerminal() {
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [profileMenuOpen, splitMenuOpen]);
 
-  function appendOutput(kind: TerminalLine['kind'], text: string) {
-    setOutputLines((prev) => [...prev, { id: crypto.randomUUID(), kind, text }]);
+  useEffect(() => {
+    if (output.channelLines.studio.length > 0) return;
+    output.appendToChannel('studio', '[Ontorata Studio] Output channels ready.');
+  }, [output.appendToChannel, output.channelLines.studio.length]);
+
+  function appendOutputChannel(channelId: OutputChannelId, text: string) {
+    output.appendLinesToChannel(channelId, text);
   }
 
   function updateSession(sessionId: string, updater: (session: TerminalSession) => TerminalSession) {
@@ -162,7 +173,7 @@ export function WorkspaceTerminal() {
       ...session,
       lines: [...session.lines, { id: crypto.randomUUID(), kind, text, status }],
     }));
-    if (kind === 'output' || kind === 'system') appendOutput(kind, text);
+    if (kind === 'output' || kind === 'system') appendOutputChannel('terminal', text);
   }
 
   function appendInputLine(sessionId: string, text: string): string {
@@ -304,6 +315,18 @@ export function WorkspaceTerminal() {
     const shellResult = tryRunShellCommand(trimmed, {
       profileId: session.profileId,
       cwd: session.cwd,
+      aliases: session.profileId === 'powershell' ? session.aliases : undefined,
+      setAlias:
+        session.profileId === 'powershell'
+          ? (name, target) => {
+              updateSession(session.id, (s) => {
+                const next = { ...s.aliases };
+                if (target === null) delete next[name];
+                else next[name] = target;
+                return { ...s, aliases: next };
+              });
+            }
+          : undefined,
       appendOutput: (text) => {
         if (text) appendSessionLine(session.id, 'output', text);
       },
@@ -327,6 +350,7 @@ export function WorkspaceTerminal() {
 
     if (cmd === 'output') {
       setActiveTab('output');
+      output.setActiveChannelId('terminal');
       return;
     }
 
@@ -336,18 +360,20 @@ export function WorkspaceTerminal() {
     }
 
     if (cmd === 'status') {
-      appendSessionLine(
-        session.id,
-        'output',
-        `Ratary: ${hasActiveConnection ? 'connected' : 'offline'}\nWorkspace: ready\nShell: ${profile.label}\nCwd: ${session.cwd}`,
-      );
+      const statusText = `Ratary: ${hasActiveConnection ? 'connected' : 'offline'}\nWorkspace: ready\nShell: ${profile.label}\nCwd: ${session.cwd}`;
+      appendSessionLine(session.id, 'output', statusText);
+      appendOutputChannel('studio', statusText);
       return;
     }
 
     if (cmd === 'health') {
       try {
         const h = await client.getHealth();
-        appendSessionLine(session.id, 'output', JSON.stringify(h, null, 2));
+        const healthText = JSON.stringify(h, null, 2);
+        appendSessionLine(session.id, 'output', healthText);
+        appendOutputChannel('ratary', healthText);
+        output.setActiveChannelId('ratary');
+        setActiveTab('output');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Health check failed';
         markInputLineStatus(session.id, inputLineId, 'error');
@@ -361,10 +387,16 @@ export function WorkspaceTerminal() {
       try {
         const res = await client.searchMemories({ q: '', limit: 5 });
         const count = res.results?.length ?? 0;
-        appendSessionLine(session.id, 'output', `Latest memories: ${count} shown (max 5)`);
-        res.results?.forEach((m) =>
-          appendSessionLine(session.id, 'output', `  - ${m.title ?? m.id}`),
-        );
+        const header = `Latest memories: ${count} shown (max 5)`;
+        appendSessionLine(session.id, 'output', header);
+        appendOutputChannel('ratary', header);
+        res.results?.forEach((m) => {
+          const line = `  - ${m.title ?? m.id}`;
+          appendSessionLine(session.id, 'output', line);
+          appendOutputChannel('ratary', line);
+        });
+        output.setActiveChannelId('ratary');
+        setActiveTab('output');
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Search failed';
         markInputLineStatus(session.id, inputLineId, 'error');
@@ -403,7 +435,10 @@ export function WorkspaceTerminal() {
       if (!activeSession) return;
       appendSessionLine(activeSession.id, 'output', text);
     },
-    onGoToOutput: () => setActiveTab('output'),
+    onGoToOutput: () => {
+      setActiveTab('output');
+      output.setActiveChannelId('terminal');
+    },
     onSubmitCommand: (cmd) => {
       if (!activeSession) return;
       setCommand('');
@@ -531,6 +566,56 @@ export function WorkspaceTerminal() {
                   </li>
                 </ul>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'output' && (
+          <div className="ws-output-toolbar">
+            <label className="ws-output-channel-picker">
+              <select
+                className="ws-output-channel-select"
+                value={output.activeChannelId}
+                onChange={(e) => output.setActiveChannelId(e.target.value as OutputChannelId)}
+                aria-label="Output channel"
+              >
+                {output.channels.map((channel) => (
+                  <option key={channel.id} value={channel.id}>
+                    {channel.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="ws-output-actions">
+              <button
+                type="button"
+                className="ws-output-action"
+                title="Clear Output"
+                aria-label="Clear Output"
+                onClick={() => output.clearChannel(output.activeChannelId)}
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                className={`ws-output-action${output.scrollLock ? ' active' : ''}`}
+                title="Toggle Output Scroll Lock"
+                aria-label="Toggle Output Scroll Lock"
+                aria-pressed={output.scrollLock}
+                onClick={() => output.setScrollLock((v) => !v)}
+              >
+                Scroll Lock
+              </button>
+              <button
+                type="button"
+                className={`ws-output-action${output.wordWrap ? ' active' : ''}`}
+                title="Toggle Output Word Wrap"
+                aria-label="Toggle Output Word Wrap"
+                aria-pressed={output.wordWrap}
+                onClick={() => output.setWordWrap((v) => !v)}
+              >
+                Word Wrap
+              </button>
             </div>
           </div>
         )}
@@ -683,18 +768,12 @@ export function WorkspaceTerminal() {
       )}
 
       {activeTab === 'output' && (
-        <div className="ws-terminal-body ws-terminal-panel" role="tabpanel" aria-label="Output">
-          {outputLines.length === 0 ? (
-            <div className="ws-terminal-empty">No output yet. Run commands in the Terminal tab.</div>
-          ) : (
-            outputLines.map((line) => (
-              <div key={line.id} className={`ws-terminal-line ${line.kind}`}>
-                {line.text}
-              </div>
-            ))
-          )}
-          <div ref={bottomRef} />
-        </div>
+        <WorkspaceOutputPanel
+          channelId={output.activeChannelId}
+          lines={output.activeLines}
+          scrollLock={output.scrollLock}
+          wordWrap={output.wordWrap}
+        />
       )}
 
       {activeTab === 'problems' && (

@@ -1721,6 +1721,94 @@ body.ws-resizing-terminal-sessions * {
   flex-direction: column;
 }
 
+.ws-output-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ws-output-channel-picker {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.ws-output-channel-select {
+  min-width: 9rem;
+  max-width: 14rem;
+  border: 1px solid var(--ws-border);
+  border-radius: 0.25rem;
+  background: var(--ws-bg);
+  color: var(--ws-text);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+}
+
+.ws-output-channel-select:hover,
+.ws-output-channel-select:focus {
+  border-color: var(--ws-primary);
+  outline: none;
+}
+
+.ws-output-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+
+.ws-output-action {
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--ws-muted);
+  font: inherit;
+  font-size: 0.68rem;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ws-output-action:hover,
+.ws-output-action.active {
+  color: var(--ws-text);
+  background: var(--ws-primary-soft);
+  border-color: var(--ws-border);
+}
+
+.ws-output-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.35rem 0.75rem;
+}
+
+.ws-output-log {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: pre;
+}
+
+.ws-output-wrap .ws-output-log,
+.ws-output-wrap .ws-output-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ws-output-nowrap .ws-output-log,
+.ws-output-nowrap .ws-output-line {
+  white-space: pre;
+}
+
+.ws-output-line {
+  min-height: 1.35rem;
+}
+
 .ws-terminal-empty {
   color: var(--ws-muted);
   font-size: 0.78rem;

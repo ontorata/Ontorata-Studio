@@ -1,5 +1,9 @@
 import { formatPowerShellShortcutsHelp } from '../../config/powershell-shortcuts';
 import type { ShellProfileId } from '../../config/terminal-profiles';
+import {
+  formatGetChildItemListing,
+  resolvePowerShellAlias,
+} from './powershell-aliases';
 import { formatPathNotFoundError } from './powershell-errors';
 
 export type ShellCommandResult =
@@ -9,6 +13,8 @@ export type ShellCommandResult =
 interface ShellContext {
   profileId: ShellProfileId;
   cwd: string;
+  aliases?: Record<string, string>;
+  setAlias?: (name: string, target: string | null) => void;
   appendOutput: (text: string) => void;
   appendError: (text: string) => void;
   setCwd: (cwd: string) => void;
@@ -126,8 +132,18 @@ export function tryRunShellCommand(raw: string, ctx: ShellContext): ShellCommand
   const trimmed = raw.trim();
   if (!trimmed) return { kind: 'handled' };
 
+  if (ctx.profileId === 'powershell' && ctx.aliases && ctx.setAlias) {
+    const aliasResult = tryRunPowerShellAliasCommand(trimmed, ctx);
+    if (aliasResult) return aliasResult;
+  }
+
+  const resolved =
+    ctx.profileId === 'powershell' && ctx.aliases
+      ? resolvePowerShellAlias(trimmed, ctx.aliases)
+      : trimmed;
+
   const unix = isUnixCwd(ctx.cwd);
-  const [name, ...rest] = trimmed.split(/\s+/);
+  const [name, ...rest] = resolved.trim().split(/\s+/);
   const cmd = name.toLowerCase();
   const args = rest.join(' ');
 
@@ -167,9 +183,16 @@ export function tryRunShellCommand(raw: string, ctx: ShellContext): ShellCommand
 
   if (cmd === 'ls' || cmd === 'dir' || cmd === 'get-childitem') {
     const target = args ? (resolveCd(ctx.cwd, args, unix) ?? ctx.cwd) : ctx.cwd;
-    const listing = listDir(target, unix);
-    ctx.appendOutput(listing || `Cannot find path '${target}' because it does not exist.`);
-    if (!listing) return { kind: 'handled', failed: true };
+    const entries = listPathEntries(target, unix);
+    if (entries.length === 0) {
+      ctx.appendError(formatPathNotFoundError('Get-ChildItem', target, ctx.profileId));
+      return { kind: 'handled', failed: true };
+    }
+    const listing =
+      ctx.profileId === 'powershell' && !unix
+        ? formatGetChildItemListing(entries)
+        : listDir(target, unix);
+    ctx.appendOutput(listing);
     return { kind: 'handled' };
   }
 
@@ -189,6 +212,9 @@ export function tryRunShellCommand(raw: string, ctx: ShellContext): ShellCommand
         '',
         'STUDIO COMMANDS',
         '    status, health, memories, output, problems, shortcuts',
+        '',
+        'OUTPUT CHANNELS',
+        '    Ontorata Studio, Tasks, Ratary Memory, Terminal',
       ].join('\n'),
     );
     return { kind: 'handled' };
@@ -200,4 +226,54 @@ export function tryRunShellCommand(raw: string, ctx: ShellContext): ShellCommand
   }
 
   return { kind: 'unknown' };
+}
+
+function tryRunPowerShellAliasCommand(
+  raw: string,
+  ctx: ShellContext,
+): ShellCommandResult | null {
+  const trimmed = raw.trim();
+  const lower = trimmed.toLowerCase();
+
+  const removeMatch = lower.match(/^remove-item\s+alias:(\w+)$/);
+  if (removeMatch) {
+    const name = removeMatch[1].toLowerCase();
+    if (ctx.aliases![name]) {
+      ctx.setAlias!(name, null);
+    }
+    return { kind: 'handled' };
+  }
+
+  const setMatch = trimmed.match(/^set-alias\s+(\S+)\s+(.+)$/i);
+  if (setMatch) {
+    const name = setMatch[1].toLowerCase();
+    const target = setMatch[2].trim();
+    ctx.setAlias!(name, target);
+    return { kind: 'handled' };
+  }
+
+  const getMatch = trimmed.match(/^get-alias(?:\s+(\S+))?$/i);
+  if (getMatch) {
+    const name = getMatch[1]?.toLowerCase();
+    if (name) {
+      const target = ctx.aliases![name];
+      if (!target) {
+        ctx.appendError(`get-alias : This command cannot find a matching alias because an alias with the name '${name}' does not exist.`);
+        return { kind: 'handled', failed: true };
+      }
+      ctx.appendOutput(
+        ['', 'CommandType     Name                                               Version    Source', '-----------     ----                                               -------    ------', `Alias           ${name.padEnd(51)}${target}`].join('\n'),
+      );
+    } else {
+      const rows = Object.entries(ctx.aliases!)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([alias, target]) => `Alias           ${alias.padEnd(51)}${target}`);
+      ctx.appendOutput(
+        ['', 'CommandType     Name                                               Version    Source', '-----------     ----                                               -------    ------', ...rows].join('\n'),
+      );
+    }
+    return { kind: 'handled' };
+  }
+
+  return null;
 }
