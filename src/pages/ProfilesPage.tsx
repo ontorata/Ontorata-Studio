@@ -75,37 +75,45 @@ export function ProfilesPage() {
               </label>
             ))}
           </fieldset>
-          <Button type="submit" variant="primary">
-            Add profile
-          </Button>
+          <div className="form-actions">
+            <Button type="submit" variant="primary">
+              Add profile
+            </Button>
+          </div>
         </form>
-        <ul className="simple-list">
+        {profiles.length > 0 && (
+          <ul className="simple-list profile-list">
           {profiles.map((p) => (
             <li key={p.id}>
-              <strong>{p.name}</strong> <span className="muted">({p.scope})</span>
-              {p.description && <p className="muted">{p.description}</p>}
-              {p.capabilities && (
-                <div className="tag-row">
-                  {p.capabilities.map((c) => (
-                    <span key={c} className="tag">
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  deleteProfile(p.id);
-                  refresh();
-                }}
-              >
-                Remove
-              </Button>
+              <div>
+                <strong>{p.name}</strong> <span className="muted">({p.scope})</span>
+                {p.description && <p className="muted">{p.description}</p>}
+                {p.capabilities && (
+                  <div className="tag-row">
+                    {p.capabilities.map((c) => (
+                      <span key={c} className="tag">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="profile-actions">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    deleteProfile(p.id);
+                    refresh();
+                  }}
+                >
+                  Remove
+                </Button>
+              </div>
             </li>
           ))}
-        </ul>
+          </ul>
+        )}
       </Card>
     </div>
   );

@@ -550,6 +550,25 @@ a {
   padding: 0.5rem 0.65rem;
 }
 
+.form input[type='checkbox'],
+.form input[type='radio'] {
+  width: auto;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+}
+
+.mode-fieldset label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.35rem 0;
+  font-size: 0.9rem;
+  cursor: pointer;
+  width: fit-content;
+}
+
 .form.row-inline {
   display: flex;
   flex-wrap: wrap;
@@ -933,12 +952,6 @@ label.inline {
   border-radius: var(--ds-radius-sm, 0.375rem);
   padding: 0.75rem 1rem;
   margin-bottom: 0.85rem;
-}
-
-.mode-fieldset label {
-  display: block;
-  margin: 0.35rem 0;
-  font-size: 0.9rem;
 }
 
 .button-row {

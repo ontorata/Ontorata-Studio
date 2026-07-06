@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { NAV_GROUPS } from '../../config/navigation';
+import { APP_TITLE, ONTORATA_LOGO_URL } from '../../config/brand';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 
@@ -84,7 +85,7 @@ export function WorkspaceToolbar() {
       label: 'File',
       items: [
         { label: 'Open Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
-        { label: 'Open Workspace', action: () => openTab(''), shortcut: 'Ctrl+O' },
+        { label: 'Open Workspace', action: () => openTab(''), shortcut: 'Ctrl+Shift+O' },
         { label: 'Open Memory Bank', action: () => openTab('memories') },
       ],
     },
@@ -99,7 +100,7 @@ export function WorkspaceToolbar() {
         {
           label: showAiPanel ? 'Hide AI Panel' : 'Show AI Panel',
           action: toggleAiPanel,
-          shortcut: 'Ctrl+J',
+          shortcut: 'Ctrl+Alt+J',
         },
         {
           label: showTerminal ? 'Hide Terminal' : 'Show Terminal',
@@ -139,7 +140,7 @@ export function WorkspaceToolbar() {
           label: 'Documentation',
           action: () => window.open('https://ontorata.com', '_blank', 'noopener'),
         },
-        { label: 'About Ontorata Studio', action: () => openTab('') },
+        { label: `About ${APP_TITLE}`, action: () => openTab('') },
       ],
     },
   ];
@@ -147,8 +148,7 @@ export function WorkspaceToolbar() {
   return (
     <header className="ws-toolbar" ref={menuRef}>
       <div className="ws-toolbar-brand">
-        <span className="ws-toolbar-logo">O</span>
-        <span className="ws-toolbar-title">Ontorata Studio</span>
+        <img src={ONTORATA_LOGO_URL} alt="Ontorata" className="ws-toolbar-logo" />
       </div>
 
       <nav className="ws-menubar" aria-label="Application menu">

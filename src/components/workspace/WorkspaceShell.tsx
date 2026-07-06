@@ -1,13 +1,13 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Group, Panel, Separator, usePanelRef } from 'react-resizable-panels';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
+import { useWorkspaceKeyboard } from '../../hooks/useWorkspaceKeyboard';
 import { WorkspaceTabsProvider, useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { WorkspaceActivityBar } from './WorkspaceActivityBar';
 import { WorkspaceAiPanel } from './WorkspaceAiPanel';
 import { WorkspaceEditor } from './WorkspaceEditor';
 import { WorkspaceExplorer } from './WorkspaceExplorer';
-import { WorkspaceKeyboardShortcuts } from './WorkspaceKeyboardShortcuts';
 import { WorkspaceTerminal } from './WorkspaceTerminal';
 import { WorkspaceToolbar } from './WorkspaceToolbar';
 
@@ -80,9 +80,11 @@ function CollapsiblePanel({
 }
 
 function WorkspacePanels() {
+  const shellRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const base = useWorkspaceBasePath();
   const { showTerminal, showAiPanel, showSidebar } = useWorkspaceTabs();
+  useWorkspaceKeyboard(shellRef);
 
   const pathSuffix = location.pathname.startsWith(`${base}/`)
     ? location.pathname.slice(base.length + 1)
@@ -90,14 +92,15 @@ function WorkspacePanels() {
 
   return (
     <div
+      ref={shellRef}
       className="ws-shell"
+      tabIndex={-1}
       data-sidebar-open={showSidebar ? 'true' : 'false'}
       data-ai-open={showAiPanel ? 'true' : 'false'}
       data-terminal-open={showTerminal ? 'true' : 'false'}
     >
       <WorkspaceToolbar />
       <div className="ws-body">
-        <WorkspaceActivityBar />
         <Group
           id="ws-vertical"
           orientation="vertical"
@@ -119,7 +122,10 @@ function WorkspacePanels() {
                 minSize="200px"
                 maxSize="360px"
               >
-                <WorkspaceExplorer />
+                <div className="ws-sidebar-stack">
+                  <WorkspaceActivityBar />
+                  <WorkspaceExplorer />
+                </div>
               </CollapsiblePanel>
 
               <Separator id="sep-sidebar" className="ws-resize-handle ws-resize-vertical" />
@@ -184,7 +190,6 @@ function WorkspacePanelsWithSync() {
 export function WorkspaceShell() {
   return (
     <WorkspaceTabsProvider>
-      <WorkspaceKeyboardShortcuts />
       <WorkspacePanelsWithSync />
     </WorkspaceTabsProvider>
   );

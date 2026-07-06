@@ -1,34 +1,27 @@
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 
-type ActivityId = 'explorer' | 'search' | 'ai' | 'terminal';
+type ActivityId = 'explorer' | 'ontory' | 'terminal';
 
 export function WorkspaceActivityBar() {
-  const { openTab, toggleTerminal, showSidebar, showAiPanel, setShowSidebar, setShowAiPanel } =
+  const { toggleTerminal, toggleAiPanel, toggleSidebar, showSidebar, showAiPanel, showTerminal } =
     useWorkspaceTabs();
 
   function onSelect(id: ActivityId) {
     if (id === 'explorer') {
-      setShowSidebar(true);
+      toggleSidebar();
       return;
     }
-    if (id === 'search') {
-      openTab('search', 'Search');
+    if (id === 'ontory') {
+      toggleAiPanel();
       return;
     }
-    if (id === 'ai') {
-      setShowAiPanel(true);
-      return;
-    }
-    if (id === 'terminal') {
-      toggleTerminal();
-    }
+    toggleTerminal();
   }
 
-  const items: Array<{ id: ActivityId; label: string; icon: string; active?: boolean }> = [
+  const items: Array<{ id: ActivityId; label: string; icon: string; active: boolean }> = [
     { id: 'explorer', label: 'Explorer', icon: '▤', active: showSidebar },
-    { id: 'search', label: 'Search', icon: '⌕' },
-    { id: 'ai', label: 'Ontory AI', icon: '◈', active: showAiPanel },
-    { id: 'terminal', label: 'Terminal', icon: '▭' },
+    { id: 'ontory', label: 'Ontory', icon: '⌕', active: showAiPanel },
+    { id: 'terminal', label: 'Terminal', icon: '▭', active: showTerminal },
   ];
 
   return (
@@ -40,6 +33,7 @@ export function WorkspaceActivityBar() {
           className={`ws-activity-btn${item.active ? ' active' : ''}`}
           title={item.label}
           aria-label={item.label}
+          aria-pressed={item.active}
           onClick={() => onSelect(item.id)}
         >
           {item.icon}

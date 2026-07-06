@@ -1,4 +1,6 @@
 import { Outlet } from 'react-router-dom';
+import { APP_TITLE, ONTORATA_LOGO_URL } from '../../config/brand';
+import { WORKSPACE_SHORTCUTS } from '../../config/shortcuts';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 
 interface WorkspaceEditorProps {
@@ -58,18 +60,10 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
 function WorkspaceEmptyState() {
   const { openTab } = useWorkspaceTabs();
 
-  const shortcuts = [
-    { keys: 'Ctrl + O', label: 'Open Workspace' },
-    { keys: 'Ctrl + B', label: 'Toggle Sidebar' },
-    { keys: 'Ctrl + J', label: 'Toggle AI Panel' },
-    { keys: 'Ctrl + `', label: 'Toggle Terminal' },
-    { keys: '/', label: 'Search Intelligence' },
-  ];
-
   return (
     <div className="ws-empty">
-      <div className="ws-empty-logo">O</div>
-      <h2>Ontorata Studio</h2>
+      <img src={ONTORATA_LOGO_URL} alt="Ontorata" className="ws-empty-logo" />
+      <h2>{APP_TITLE}</h2>
       <p>Select a module from the explorer or use the menu to open your workspace.</p>
 
       <div className="ws-empty-actions">
@@ -85,7 +79,7 @@ function WorkspaceEmptyState() {
       </div>
 
       <ul className="ws-shortcuts">
-        {shortcuts.map((s) => (
+        {WORKSPACE_SHORTCUTS.map((s) => (
           <li key={s.keys}>
             <kbd>{s.keys}</kbd>
             <span>{s.label}</span>

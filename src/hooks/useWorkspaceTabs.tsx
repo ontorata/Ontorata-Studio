@@ -112,6 +112,10 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
     setActivePath(pathSuffix);
   }, []);
 
+  const toggleTerminal = useCallback(() => setShowTerminal((v) => !v), []);
+  const toggleAiPanel = useCallback(() => setShowAiPanel((v) => !v), []);
+  const toggleSidebar = useCallback(() => setShowSidebar((v) => !v), []);
+
   const value = useMemo(
     () => ({
       tabs,
@@ -128,9 +132,9 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       setShowAiPanel,
       showSidebar,
       setShowSidebar,
-      toggleTerminal: () => setShowTerminal((v) => !v),
-      toggleAiPanel: () => setShowAiPanel((v) => !v),
-      toggleSidebar: () => setShowSidebar((v) => !v),
+      toggleTerminal,
+      toggleAiPanel,
+      toggleSidebar,
     }),
     [
       tabs,
@@ -143,6 +147,9 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       showTerminal,
       showAiPanel,
       showSidebar,
+      toggleTerminal,
+      toggleAiPanel,
+      toggleSidebar,
     ],
   );
 
