@@ -93,6 +93,26 @@ body:has(.ws-shell) #root {
   background: var(--ws-bg);
 }
 
+/* Force min width on flex panel hosts (className is on inner child, not data-panel) */
+[data-panel][id='sidebar'] {
+  min-width: var(--ws-sidebar-min) !important;
+}
+
+[data-panel][id='ai'] {
+  min-width: var(--ws-ai-min) !important;
+}
+
+.ws-panel-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 .ws-panel-inner {
   display: flex;
   flex-direction: column;
@@ -104,12 +124,15 @@ body:has(.ws-shell) #root {
   overflow: hidden;
 }
 
+.ws-panel-sidebar.ws-panel-fill,
 .ws-panel-sidebar .ws-panel-inner {
   min-width: var(--ws-sidebar-min);
 }
 
+.ws-panel-ai.ws-panel-fill,
 .ws-panel-ai .ws-panel-inner {
   min-width: var(--ws-ai-min);
+  max-width: 100%;
 }
 
 [data-separator].ws-resize-handle {
@@ -608,13 +631,21 @@ body:has(.ws-shell) #root {
   background: var(--ws-surface);
   border-bottom: 1px solid var(--ws-border);
   flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ws-panel-header span {
+  color: var(--ws-primary-dim);
 }
 
 .ws-panel-header small {
   font-weight: 400;
-  margin-left: 0.5rem;
+  margin-left: 0.35rem;
   letter-spacing: normal;
   text-transform: none;
+  color: var(--ws-muted);
 }
 
 .ws-panel-close {
@@ -711,6 +742,7 @@ body:has(.ws-shell) #root {
 
 .ws-ai-input {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
   padding: 0.65rem;
   border-top: 1px solid var(--ws-border);
@@ -718,14 +750,20 @@ body:has(.ws-shell) #root {
   flex-shrink: 0;
 }
 
+.ws-ai-input .ds-field {
+  width: 100%;
+  margin: 0;
+}
+
 .ws-ai-input .ds-input-wrap {
   flex: 1;
   margin: 0;
   min-width: 0;
+  width: 100%;
 }
 
 .ws-ai-input .ds-btn {
-  align-self: flex-end;
+  align-self: stretch;
   flex-shrink: 0;
 }
 

@@ -33,9 +33,9 @@ function CollapsiblePanel({
   show: boolean;
   id: string;
   className?: string;
-  defaultSize: number;
-  minSize: number;
-  maxSize: number;
+  defaultSize: number | string;
+  minSize: number | string;
+  maxSize: number | string;
   children: React.ReactNode;
 }) {
   const panelRef = usePanelRef();
@@ -43,9 +43,22 @@ function CollapsiblePanel({
   useEffect(() => {
     const panel = panelRef.current;
     if (!panel) return;
-    if (show) panel.expand();
-    else panel.collapse();
-  }, [show, panelRef]);
+
+    if (!show) {
+      panel.collapse();
+      return;
+    }
+
+    panel.expand();
+    requestAnimationFrame(() => {
+      const size = panel.getSize();
+      const current = size.asPercentage;
+      const target = typeof defaultSize === 'number' ? defaultSize : 30;
+      if (current < target * 0.5) {
+        panel.resize(target);
+      }
+    });
+  }, [show, panelRef, defaultSize]);
 
   return (
     <Panel
@@ -56,9 +69,12 @@ function CollapsiblePanel({
       maxSize={maxSize}
       collapsible
       collapsedSize={0}
+      groupResizeBehavior="preserve-pixel-size"
       className={className}
     >
-      <div className="ws-panel-inner">{children}</div>
+      <div className={`ws-panel-fill ${className ?? ''}`}>
+        <div className="ws-panel-inner">{children}</div>
+      </div>
     </Panel>
   );
 }
@@ -103,17 +119,19 @@ function WorkspacePanels() {
                 id="sidebar"
                 className="ws-panel-sidebar"
                 defaultSize={18}
-                minSize={14}
-                maxSize={28}
+                minSize="200px"
+                maxSize="360px"
               >
                 <WorkspaceExplorer />
               </CollapsiblePanel>
 
               <Separator id="sep-sidebar" className="ws-resize-handle ws-resize-vertical" />
 
-              <Panel id="editor" minSize={32} className="ws-panel-editor">
-                <div className="ws-panel-inner">
-                  <WorkspaceEditor pathSuffix={pathSuffix} />
+              <Panel id="editor" minSize="28%" className="ws-panel-editor">
+                <div className="ws-panel-fill ws-panel-editor">
+                  <div className="ws-panel-inner">
+                    <WorkspaceEditor pathSuffix={pathSuffix} />
+                  </div>
                 </div>
               </Panel>
 
@@ -124,8 +142,8 @@ function WorkspacePanels() {
                 id="ai"
                 className="ws-panel-ai"
                 defaultSize={30}
-                minSize={18}
-                maxSize={42}
+                minSize="280px"
+                maxSize="480px"
               >
                 <WorkspaceAiPanel />
               </CollapsiblePanel>
@@ -138,14 +156,16 @@ function WorkspacePanels() {
             id="terminal"
             panelRef={terminalRef}
             defaultSize={28}
-            minSize={14}
-            maxSize={50}
+            minSize="120px"
+            maxSize="50%"
             collapsible
             collapsedSize={0}
             className="ws-panel-terminal"
           >
-            <div className="ws-panel-inner">
-              <WorkspaceTerminal />
+            <div className="ws-panel-fill ws-panel-terminal">
+              <div className="ws-panel-inner">
+                <WorkspaceTerminal />
+              </div>
             </div>
           </Panel>
         </Group>
