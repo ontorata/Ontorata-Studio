@@ -11,7 +11,6 @@ import { CodingWorkspacePage } from './pages/CodingWorkspacePage';
 import { ConnectPage } from './pages/ConnectPage';
 import { EnterprisePage } from './pages/EnterprisePage';
 import { GraphPage } from './pages/GraphPage';
-import { HomePage } from './pages/HomePage';
 import { KnowledgePage } from './pages/KnowledgePage';
 import { LoginPage } from './pages/LoginPage';
 import { MemoriesPage } from './pages/MemoriesPage';
@@ -29,6 +28,10 @@ import { SecurityPage } from './pages/SecurityPage';
 import { StackBuilderPage } from './pages/StackBuilderPage';
 import { StacksPage } from './pages/StacksPage';
 import { WorkspacesPage } from './pages/WorkspacesPage';
+
+function WorkspaceIndex() {
+  return null;
+}
 
 function LegacyPathRedirect() {
   const location = useLocation();
@@ -59,7 +62,7 @@ export function App() {
               <Route path="/connect" element={<ConnectPage />} />
               <Route element={<ConnectionGate />}>
                 <Route path="/workspace/:workspaceId" element={<AuthenticatedShell />}>
-                  <Route index element={<HomePage />} />
+                  <Route index element={<WorkspaceIndex />} />
                   <Route path="memories" element={<MemoriesPage />} />
                   <Route path="memories/:id" element={<MemoryDetailPage />} />
                   <Route path="search" element={<SearchPage />} />

@@ -37,6 +37,10 @@ body {
   min-height: 100vh;
 }
 
+#root {
+  min-height: 100vh;
+}
+
 a {
   color: var(--accent);
 }
@@ -681,7 +685,7 @@ label.inline {
   }
 }
 
-/* —— Login / auth —— */
+/* —— Login / auth (light) —— */
 .auth-screen,
 .login-screen {
   min-height: 100vh;
@@ -689,9 +693,8 @@ label.inline {
   align-items: center;
   justify-content: center;
   padding: 2rem 1.25rem 3rem;
-  background:
-    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(22, 196, 127, 0.06), transparent),
-    var(--bg);
+  background: #f8faf9;
+  color: #111827;
 }
 
 .auth-loading {
@@ -750,11 +753,11 @@ label.inline {
 }
 
 .auth-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: #ffffff;
+  border: 1px solid #e2e8e5;
   border-radius: 1rem;
   padding: 2rem;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
 }
 
 .auth-card-centered {
