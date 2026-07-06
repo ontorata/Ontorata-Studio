@@ -13,6 +13,9 @@ IDE     → ratary MCP ───────────────────
 
 All data plane traffic goes through **`@ratary/sdk`** only. No direct SQL, D1, or Ratary server imports in the SPA.
 
+**Branches:** push to `staging` · production Vercel deploy from `main` — see [docs/BRANCHING.md](docs/BRANCHING.md).  
+**Architecture (Phase 01):** [docs/architecture/](docs/architecture/).
+
 ## Prerequisites
 
 - Node.js 20+
