@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { getDefaultRataryBaseUrl } from '../config/env';
+import { getDefaultRataryBaseUrl, getDefaultWorkspaceId } from '../config/env';
 import type { ConnectionMode } from '../domain/connection/connection';
 import { useAuth } from '../hooks/useAuth';
 import { useConnection } from '../hooks/useConnection';
@@ -21,10 +21,10 @@ export function ConnectPage() {
   const [validation, setValidation] = useState<string | null>(null);
 
   useEffect(() => {
-    if (hasActiveConnection && authMode === 'legacy') {
-      navigate('/', { replace: true });
+    if (hasActiveConnection) {
+      navigate(`/workspace/${getDefaultWorkspaceId()}`, { replace: true });
     }
-  }, [hasActiveConnection, authMode, navigate]);
+  }, [hasActiveConnection, navigate]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -97,7 +97,7 @@ export function ConnectPage() {
             <h1>Connect Ratary</h1>
             <p>
               {authMode === 'oidc'
-                ? 'Identity verified. Link your Ratary memory brain to continue.'
+                ? 'Advanced: connect a self-hosted Ratary instance with an API key.'
                 : 'Configure your Ratary connection.'}
             </p>
           </div>

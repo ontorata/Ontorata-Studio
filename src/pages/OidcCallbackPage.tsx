@@ -18,7 +18,7 @@ export function OidcCallbackPage() {
     void (async () => {
       try {
         await completeOidcRedirect();
-        navigate(`/connect`, { replace: true });
+        navigate(`/workspace/${getDefaultWorkspaceId()}`, { replace: true });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'OIDC callback failed');
       }

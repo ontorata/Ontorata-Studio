@@ -38,7 +38,7 @@ if (existsSync(tsconfig)) {
             target: 'ES2022',
             module: 'NodeNext',
             moduleResolution: 'NodeNext',
-            lib: ['ES2022'],
+            lib: ['ES2022', 'DOM'],
             rootDir: 'src',
             outDir: 'dist',
             strict: true,

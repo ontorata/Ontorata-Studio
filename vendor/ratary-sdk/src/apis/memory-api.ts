@@ -10,7 +10,9 @@ import type {
 export class MemoryApi {
   constructor(private readonly client: IApiClient) {}
 
-  async list(params: ListMemoriesParams = {}): Promise<{ memories: MemoryRecord[]; total?: number }> {
+  async list(
+    params: ListMemoriesParams = {},
+  ): Promise<{ memories: MemoryRecord[]; total?: number }> {
     return this.client.request({
       method: 'GET',
       path: '/memory',

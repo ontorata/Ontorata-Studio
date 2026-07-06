@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { RataryConnection } from '../domain/connection/connection';
+import { isOidcCloudAutoConnect } from '../config/env';
 import { createLocalConnectionPort } from '../infrastructure/connection/local-connection-port';
 import {
   getActiveConnectionId,
@@ -54,6 +55,13 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 
   const hasActiveConnection = useMemo(() => {
     if (session?.legacyApiKey && session.legacyBaseUrl) return true;
+    if (
+      session?.accessToken &&
+      isOidcCloudAutoConnect() &&
+      session.expiresAt > Date.now()
+    ) {
+      return true;
+    }
     if (!activeConnection) return false;
     return Boolean(getApiKey(activeConnection.id));
   }, [session, activeConnection, getApiKey]);

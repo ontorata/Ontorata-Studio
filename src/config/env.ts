@@ -27,6 +27,13 @@ export function isOidcEnabled(): boolean {
   return Boolean(getAuthIssuer());
 }
 
+/** Phase 2 — OIDC users auto-connect to configured cloud Ratary (no AIC wizard). */
+export function isOidcCloudAutoConnect(): boolean {
+  if (!isOidcEnabled()) return false;
+  if (import.meta.env.VITE_STUDIO_OIDC_AUTO_CONNECT === 'false') return false;
+  return Boolean(getDefaultRataryBaseUrl());
+}
+
 export function getDefaultWorkspaceId(): string {
   return import.meta.env.VITE_RATARY_WORKSPACE_ID?.trim() || DEFAULT_WORKSPACE_ID;
 }

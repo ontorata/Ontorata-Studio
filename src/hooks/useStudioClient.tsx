@@ -1,4 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { getDefaultRataryBaseUrl, getDefaultWorkspaceId, isOidcCloudAutoConnect } from '../config/env';
 import { StudioRataryClient } from '../infrastructure/ratary';
 import { toLegacyCredentials } from '../presentation/routes/manifest';
 import { useAuth } from './useAuth';
@@ -19,6 +20,14 @@ export function StudioClientProvider({ children }: { children: ReactNode }) {
         baseUrl: legacy.baseUrl,
         apiKey: legacy.apiKey,
         workspaceId: legacy.workspaceId,
+      });
+    }
+
+    if (session.accessToken && isOidcCloudAutoConnect() && session.expiresAt > Date.now()) {
+      return new StudioRataryClient({
+        baseUrl: getDefaultRataryBaseUrl(),
+        accessToken: session.accessToken,
+        workspaceId: getDefaultWorkspaceId(),
       });
     }
 

@@ -4,6 +4,7 @@ import type { MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
 export interface StudioClientOptions {
   baseUrl: string;
   apiKey?: string;
+  accessToken?: string;
   workspaceId?: string;
 }
 
@@ -62,16 +63,14 @@ export class StudioRataryClient {
 
   constructor(options: StudioClientOptions) {
     const serverUrl = options.baseUrl.replace(/\/$/, '').replace(/\/api\/v1$/, '');
-    this.sdk = new RataryClient({
+    const transportConfig = {
       baseUrl: serverUrl,
       apiKey: options.apiKey,
+      accessToken: options.accessToken,
       workspaceId: options.workspaceId,
-    });
-    this.rootTransport = new RestTransport({
-      baseUrl: serverUrl,
-      apiKey: options.apiKey,
-      workspaceId: options.workspaceId,
-    });
+    };
+    this.sdk = new RataryClient(transportConfig);
+    this.rootTransport = new RestTransport(transportConfig);
   }
 
   getHealth(): Promise<HealthStatus> {
