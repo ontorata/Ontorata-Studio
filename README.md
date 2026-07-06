@@ -33,7 +33,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173` — you will be prompted to **sign in** with your Ratary API key (`aic_...`).
+Open `http://localhost:8765` — you will be prompted to **sign in** with your Ratary API key (`aic_...`).
 
 ## Authentication
 

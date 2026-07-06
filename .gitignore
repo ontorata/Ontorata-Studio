@@ -6,3 +6,6 @@ node_modules
 *.tsbuildinfo
 .vendor
 vendor/ratary-sdk/node_modules
+
+.vercel
+.env*
