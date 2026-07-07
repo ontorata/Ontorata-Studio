@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { NativeWorkspaceBootstrap } from './components/NativeWorkspaceBootstrap';
 import { getDefaultWorkspaceId } from './config/env';
 import { AuthProvider } from './hooks/useAuth';
 import { ConnectionProvider } from './hooks/useConnection';
@@ -36,7 +37,9 @@ function LegacyPathRedirect() {
 function WorkspaceShell() {
   return (
     <StudioClientProvider>
-      <Layout />
+      <NativeWorkspaceBootstrap>
+        <Layout />
+      </NativeWorkspaceBootstrap>
     </StudioClientProvider>
   );
 }
