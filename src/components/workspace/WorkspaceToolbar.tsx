@@ -19,10 +19,11 @@ export function WorkspaceToolbar() {
   const { logout } = useAuth();
   const {
     openTab,
+    openFolder,
+    openWorkspace,
     toggleTerminal,
     toggleAiPanel,
     toggleSidebar,
-    setFolderName,
     showTerminal,
     showAiPanel,
     showSidebar,
@@ -57,20 +58,11 @@ export function WorkspaceToolbar() {
   }
 
   async function onOpenFolder() {
-    if ('showDirectoryPicker' in window) {
-      try {
-        const handle = await (
-          window as Window & {
-            showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>;
-          }
-        ).showDirectoryPicker();
-        setFolderName(handle.name);
-      } catch {
-        /* user cancelled */
-      }
-      return;
-    }
-    setFolderName('Ontorata Studio');
+    await openFolder();
+  }
+
+  async function onOpenWorkspace() {
+    await openWorkspace();
   }
 
   const goItems: MenuItem[] = NAV_GROUPS.flatMap((g) =>
@@ -85,7 +77,7 @@ export function WorkspaceToolbar() {
       label: 'File',
       items: [
         { label: 'Open Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
-        { label: 'Open Workspace', action: () => openTab(''), shortcut: 'Ctrl+Shift+O' },
+        { label: 'Open Workspace', action: onOpenWorkspace, shortcut: 'Ctrl+Shift+O' },
         { label: 'Open Memory Bank', action: () => openTab('memories') },
       ],
     },

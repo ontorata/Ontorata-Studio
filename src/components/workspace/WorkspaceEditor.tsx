@@ -58,7 +58,7 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
 }
 
 function WorkspaceEmptyState() {
-  const { openTab } = useWorkspaceTabs();
+  const { openTab, openWorkspace } = useWorkspaceTabs();
 
   return (
     <div className="ws-empty">
@@ -67,6 +67,9 @@ function WorkspaceEmptyState() {
       <p>Select a module from the explorer or use the menu to open your workspace.</p>
 
       <div className="ws-empty-actions">
+        <button type="button" onClick={() => void openWorkspace()}>
+          Open Workspace
+        </button>
         <button type="button" onClick={() => openTab('memories', 'Memory Bank')}>
           Open Memory Bank
         </button>

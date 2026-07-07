@@ -26,14 +26,29 @@ function isSlash(event: KeyboardEvent): boolean {
 
 /** Global workspace keyboard shortcuts with browser-safe fallbacks. */
 export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
-  const { openTab, toggleSidebar, toggleAiPanel, toggleTerminal } = useWorkspaceTabs();
-  const actionsRef = useRef({ openTab, toggleSidebar, toggleAiPanel, toggleTerminal });
+  const { openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal } =
+    useWorkspaceTabs();
+  const actionsRef = useRef({
+    openFolder,
+    openWorkspace,
+    openTab,
+    toggleSidebar,
+    toggleAiPanel,
+    toggleTerminal,
+  });
   const chordRef = useRef(false);
   const chordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    actionsRef.current = { openTab, toggleSidebar, toggleAiPanel, toggleTerminal };
-  }, [openTab, toggleSidebar, toggleAiPanel, toggleTerminal]);
+    actionsRef.current = {
+      openFolder,
+      openWorkspace,
+      openTab,
+      toggleSidebar,
+      toggleAiPanel,
+      toggleTerminal,
+    };
+  }, [openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal]);
 
   useEffect(() => {
     const root = shellRef.current;
@@ -68,7 +83,8 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
       if (isTerminalInputShortcut(event)) return false;
 
       const mod = hasPrimaryMod(event);
-      const { openTab, toggleSidebar, toggleAiPanel, toggleTerminal } = actionsRef.current;
+      const { openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal } =
+        actionsRef.current;
 
       if (mod && !event.altKey && !event.shiftKey && event.code === 'KeyK') {
         armChord();
@@ -77,7 +93,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
 
       if (chordRef.current && mod && !event.altKey && event.code === 'KeyO') {
         disarmChord();
-        openTab('');
+        void openFolder();
         return true;
       }
       if (chordRef.current && mod && !event.altKey && event.code === 'KeyJ') {
@@ -112,7 +128,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
       if (isEditableTarget(event.target)) return false;
 
       if (mod && event.shiftKey && event.code === 'KeyO') {
-        openTab('');
+        void openWorkspace();
         return true;
       }
       if (mod && !event.altKey && !event.shiftKey && event.code === 'KeyO') {

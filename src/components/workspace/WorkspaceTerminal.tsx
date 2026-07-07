@@ -777,22 +777,36 @@ export function WorkspaceTerminal() {
       )}
 
       {activeTab === 'problems' && (
-        <div className="ws-terminal-body ws-terminal-panel" role="tabpanel" aria-label="Problems">
+        <div
+          className="ws-terminal-body ws-terminal-body-cursor ws-terminal-panel"
+          role="tabpanel"
+          aria-label="Problems"
+        >
           {problems.length === 0 ? (
-            <div className="ws-terminal-empty">No problems detected.</div>
+            <div className="ws-terminal-row">
+              <span className="ws-terminal-gutter" aria-hidden />
+              <div className="ws-terminal-empty">No problems detected.</div>
+            </div>
           ) : (
             <>
-              <div className="ws-problems-toolbar">
-                <span>
-                  {problems.length} problem{problems.length === 1 ? '' : 's'}
-                </span>
-                <button type="button" className="ws-problems-clear" onClick={clearProblems}>
-                  Clear all
-                </button>
+              <div className="ws-terminal-row ws-problems-toolbar-row">
+                <span className="ws-terminal-gutter" aria-hidden />
+                <div className="ws-problems-toolbar">
+                  <span>
+                    {problems.length} problem{problems.length === 1 ? '' : 's'}
+                  </span>
+                  <button type="button" className="ws-problems-clear" onClick={clearProblems}>
+                    Clear all
+                  </button>
+                </div>
               </div>
               <ul className="ws-problems-list">
                 {problems.map((problem) => (
-                  <li key={problem.id} className={`ws-problem ws-problem-${problem.severity}`}>
+                  <li
+                    key={problem.id}
+                    className={`ws-terminal-row ws-problem ws-problem-${problem.severity}`}
+                  >
+                    <span className="ws-terminal-gutter" aria-hidden />
                     <span className="ws-problem-icon" aria-hidden>
                       {problem.severity === 'error' ? '✕' : '⚠'}
                     </span>

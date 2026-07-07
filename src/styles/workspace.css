@@ -1780,33 +1780,13 @@ body.ws-resizing-terminal-sessions * {
   border-color: var(--ws-border);
 }
 
-.ws-output-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 0.35rem 0.75rem;
-}
-
-.ws-output-log {
-  margin: 0;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  white-space: pre;
-}
-
-.ws-output-wrap .ws-output-log,
-.ws-output-wrap .ws-output-line {
+.ws-output-wrap .ws-terminal-text {
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.ws-output-nowrap .ws-output-log,
-.ws-output-nowrap .ws-output-line {
+.ws-output-nowrap .ws-terminal-text {
   white-space: pre;
-}
-
-.ws-output-line {
-  min-height: 1.35rem;
 }
 
 .ws-terminal-empty {
@@ -1815,12 +1795,18 @@ body.ws-resizing-terminal-sessions * {
   padding: 0.25rem 0;
 }
 
+.ws-problems-toolbar-row {
+  padding-bottom: 0.15rem;
+}
+
 .ws-problems-toolbar {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--ws-border);
   color: var(--ws-muted);
@@ -1850,10 +1836,10 @@ body.ws-resizing-terminal-sessions * {
 }
 
 .ws-problem {
-  display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  padding: 0.35rem 0;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--ws-border);
   font-size: 0.78rem;
 }

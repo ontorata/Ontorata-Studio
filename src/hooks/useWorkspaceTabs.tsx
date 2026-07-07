@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { pickWorkspaceFolder } from '../domain/workspace/pick-folder';
 import { resolveNavTitle } from '../config/navigation';
 import { useWorkspaceBasePath } from './useWorkspacePath';
 
@@ -25,6 +26,8 @@ interface WorkspaceTabsContextValue {
   syncRoute: (pathSuffix: string) => void;
   folderName: string | null;
   setFolderName: (name: string | null) => void;
+  openFolder: () => Promise<void>;
+  openWorkspace: () => Promise<void>;
   showTerminal: boolean;
   setShowTerminal: (show: boolean) => void;
   showAiPanel: boolean;
@@ -116,6 +119,28 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
   const toggleAiPanel = useCallback(() => setShowAiPanel((v) => !v), []);
   const toggleSidebar = useCallback(() => setShowSidebar((v) => !v), []);
 
+  const openFolder = useCallback(async () => {
+    const name = await pickWorkspaceFolder();
+    if (!name) return;
+    setFolderName(name);
+    setShowSidebar(true);
+  }, []);
+
+  const openWorkspace = useCallback(async () => {
+    const name = await pickWorkspaceFolder();
+    if (!name) return;
+    setFolderName(name);
+    setShowSidebar(true);
+    const normalized = '';
+    const title = 'Welcome';
+    setTabs((prev) => {
+      if (prev.some((t) => t.path === normalized)) return prev;
+      return [...prev, { id: 'welcome', path: normalized, label: title }];
+    });
+    setActivePath(normalized);
+    navigate(base);
+  }, [base, navigate]);
+
   const value = useMemo(
     () => ({
       tabs,
@@ -126,6 +151,8 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       syncRoute,
       folderName,
       setFolderName,
+      openFolder,
+      openWorkspace,
       showTerminal,
       setShowTerminal,
       showAiPanel,
@@ -144,6 +171,8 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       activateTab,
       syncRoute,
       folderName,
+      openFolder,
+      openWorkspace,
       showTerminal,
       showAiPanel,
       showSidebar,

@@ -24,21 +24,23 @@ export function WorkspaceOutputPanel({
 
   return (
     <div
-      className={`ws-output-body ws-terminal-body ws-terminal-panel${wordWrap ? ' ws-output-wrap' : ' ws-output-nowrap'}`}
+      className={`ws-terminal-body ws-terminal-body-cursor ws-terminal-panel${wordWrap ? ' ws-output-wrap' : ' ws-output-nowrap'}`}
       role="tabpanel"
       aria-label="Output"
       data-output-channel={channelId}
     >
       {lines.length === 0 ? (
-        <div className="ws-terminal-empty">The selected output channel has no messages yet.</div>
+        <div className="ws-terminal-row">
+          <span className="ws-terminal-gutter" aria-hidden />
+          <div className="ws-terminal-empty">The selected output channel has no messages yet.</div>
+        </div>
       ) : (
-        <pre className="ws-output-log" aria-live="polite">
-          {lines.map((line) => (
-            <div key={line.id} className="ws-output-line">
-              {line.text}
-            </div>
-          ))}
-        </pre>
+        lines.map((line) => (
+          <div key={line.id} className="ws-terminal-row">
+            <span className="ws-terminal-gutter" aria-hidden />
+            <pre className="ws-terminal-text ws-terminal-line output">{line.text}</pre>
+          </div>
+        ))
       )}
       <div ref={bottomRef} />
     </div>
