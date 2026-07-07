@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { getDefaultRataryBaseUrl } from '../config/env';
+import { getDefaultRataryBaseUrl, getDefaultWorkspaceId } from '../config/env';
 import type { ConnectionMode } from '../domain/connection/connection';
 import { useAuth } from '../hooks/useAuth';
 import { useConnection } from '../hooks/useConnection';
-import { Button, Card, Input } from '../presentation/design-system/primitives';
+import { Button, Input } from '../presentation/design-system/primitives';
 
 /** Phase 05 — Ratary connection wizard after OIDC (or manual reconnect). */
 export function ConnectPage() {
@@ -21,13 +21,13 @@ export function ConnectPage() {
   const [validation, setValidation] = useState<string | null>(null);
 
   useEffect(() => {
-    if (hasActiveConnection && authMode === 'legacy') {
-      navigate('/', { replace: true });
+    if (hasActiveConnection) {
+      navigate(`/workspace/${getDefaultWorkspaceId()}`, { replace: true });
     }
-  }, [hasActiveConnection, authMode, navigate]);
+  }, [hasActiveConnection, navigate]);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/workspace/${getDefaultWorkspaceId()}`} replace />;
   }
 
   async function onValidate() {
@@ -89,18 +89,15 @@ export function ConnectPage() {
   }
 
   return (
-    <div className="login-screen">
-      <Card className="login-card connect-card">
-        <div className="login-brand">
-          <span className="brand-mark lg">R</span>
-          <div>
-            <h1>Connect Ratary</h1>
-            <p>
-              {authMode === 'oidc'
-                ? 'Identity verified. Link your Ratary memory brain to continue.'
-                : 'Configure your Ratary connection.'}
-            </p>
-          </div>
+    <div className="auth-screen">
+      <div className="auth-card connect-card auth-card-centered">
+        <div className="auth-card-head">
+          <h2>Connect memory engine</h2>
+          <p>
+            {authMode === 'oidc'
+              ? 'Optional — link a self-hosted Ratary instance with an API key.'
+              : 'Configure your Ratary connection to continue.'}
+          </p>
         </div>
 
         <form className="form login-form" onSubmit={onSave}>
@@ -154,15 +151,18 @@ export function ConnectPage() {
           {error && <p className="error login-error">{error}</p>}
 
           <div className="button-row">
+            <Button type="button" variant="ghost" onClick={() => navigate(`/workspace/${getDefaultWorkspaceId()}`)}>
+              Skip for now
+            </Button>
             <Button type="button" variant="ghost" onClick={onValidate} disabled={validating}>
-              {validating ? 'Testing…' : 'Test connection'}
+              {validating ? 'Testing…' : 'Test'}
             </Button>
             <Button type="submit" variant="primary" disabled={validating}>
               {validating ? 'Saving…' : 'Connect'}
             </Button>
           </div>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }

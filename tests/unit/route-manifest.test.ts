@@ -9,8 +9,8 @@ describe('route manifest', () => {
 
   it('resolves workspace dashboard route', () => {
     const meta = findRouteMeta('/workspace/personal-default');
-    expect(meta?.requiresAuth).toBe(true);
-    expect(meta?.requiresConnection).toBe(true);
+    expect(meta?.requiresAuth).toBe(false);
+    expect(meta?.requiresConnection).toBe(false);
   });
 
   it('flags connect wizard before connection gate', () => {
@@ -20,8 +20,8 @@ describe('route manifest', () => {
     expect(meta?.phase).toBe(5);
   });
 
-  it('flags workspace routes for connection gate', () => {
+  it('flags feature routes as requiring auth in-app', () => {
     const meta = findRouteMeta('/workspace/home/memories');
-    expect(meta?.requiresConnection).toBe(true);
+    expect(meta?.requiresAuth).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 # Phase 01 — Workspace Foundation
 
-**Status:** Draft — pending owner approval  
+**Status:** Closed — superseded by [PHASES.md](../../PHASES.md) for phases 02–20  
 **Scope:** Ontorata-Studio structural foundation + ecosystem boundaries  
 **Out of scope:** Keycloak deployment (Phase 02), OIDC login flow (Phase 04), Connection Wizard UI (Phase 05)
 

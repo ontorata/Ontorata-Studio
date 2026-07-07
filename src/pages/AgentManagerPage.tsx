@@ -1,37 +1,74 @@
-import { useEffect, useState } from 'react';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { useCallback, useEffect, useState } from 'react';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import type { AgentRecord } from '../infrastructure/ratary/studio-ratary-client';
 import { useWorkspaceId } from '../hooks/useWorkspacePath';
-import { Card, PageHeader } from '../presentation/design-system/primitives';
+import { Button, Card, PageHeader } from '../presentation/design-system/primitives';
 
-/** Phase 14 — Agent registry per workspace. */
+/** Phase 14 — Agent registry per workspace with refresh. */
 export function AgentManagerPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const workspaceId = useWorkspaceId();
   const [agents, setAgents] = useState<AgentRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    if (!client) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     client
       .listAgents(workspaceId)
-      .then((res) => setAgents(res.agents ?? []))
-      .catch((err: Error) => setError(err.message))
+      .then((res) => {
+        setAgents(res.agents ?? []);
+        setError(null);
+      })
+      .catch((err: Error) => setError(formatRataryApiError(err)))
       .finally(() => setLoading(false));
   }, [client, workspaceId]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Agents" />;
+  }
+
   return (
     <div className="page">
-      <PageHeader title="Agents" description={`Registered agents in workspace ${workspaceId}.`} />
+      <PageHeader
+        title="Agents"
+        description={`Registered agents in workspace ${workspaceId}.`}
+        actions={
+          <Button type="button" variant="ghost" onClick={load} disabled={loading}>
+            Refresh
+          </Button>
+        }
+      />
       <Card>
         {loading && <p>Loading agents…</p>}
         {error && <p className="error">{error}</p>}
-        {!loading && !error && agents.length === 0 && <p>No agents registered yet.</p>}
+        {!loading && !error && agents.length === 0 && (
+          <p className="muted">No agents registered yet. Agents are created via Ratary API or MCP clients.</p>
+        )}
         <ul className="simple-list">
           {agents.map((a) => (
             <li key={a.id}>
               <strong>{a.name}</strong>
-              {a.clientType && <span className="muted"> — {a.clientType}</span>}
+              <span className="muted"> — {a.id}</span>
+              {a.clientType && <span className="tag">{a.clientType}</span>}
             </li>
           ))}
         </ul>

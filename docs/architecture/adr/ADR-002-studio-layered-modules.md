@@ -1,6 +1,6 @@
 # ADR-002: Studio layered module architecture
 
-**Status:** Proposed  
+**Status:** Accepted  
 **Date:** 2026-07-06  
 **Context:** Phase 01 — Workspace Foundation
 

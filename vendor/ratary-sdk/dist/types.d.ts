@@ -32,11 +32,13 @@ export interface ListMemoriesParams {
     project?: string;
     limit?: number;
     offset?: number;
+    [key: string]: string | number | boolean | undefined;
 }
 export interface SearchMemoriesParams {
     q: string;
     limit?: number;
     project?: string;
+    [key: string]: string | number | boolean | undefined;
 }
 export interface BuildContextInput {
     task: string;

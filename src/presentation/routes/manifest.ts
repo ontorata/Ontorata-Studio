@@ -13,8 +13,8 @@ export const routeManifest: RouteDefinition[] = [
   { path: '/login', requiresAuth: false, requiresConnection: false },
   { path: '/callback', requiresAuth: false, requiresConnection: false, phase: 4 },
   { path: '/connect', requiresAuth: true, requiresConnection: false, phase: 5 },
-  { path: '/workspace/:workspaceId', requiresAuth: true, requiresConnection: true, phase: 6 },
-  { path: '/workspace/:workspaceId/memories', requiresAuth: true, requiresConnection: true, phase: 11 },
+  { path: '/workspace/:workspaceId', requiresAuth: false, requiresConnection: false, phase: 6 },
+  { path: '/workspace/:workspaceId/memories', requiresAuth: true, requiresConnection: false, phase: 11 },
   { path: '/workspace/:workspaceId/memories/:id', requiresAuth: true, requiresConnection: true, phase: 11 },
   { path: '/workspace/:workspaceId/search', requiresAuth: true, requiresConnection: true, phase: 11 },
   { path: '/workspace/:workspaceId/graph', requiresAuth: true, requiresConnection: true, phase: 11 },
@@ -27,7 +27,10 @@ export const routeManifest: RouteDefinition[] = [
   { path: '/workspace/:workspaceId/agents', requiresAuth: true, requiresConnection: true, phase: 14 },
   { path: '/workspace/:workspaceId/models', requiresAuth: true, requiresConnection: true, phase: 15 },
   { path: '/workspace/:workspaceId/coding', requiresAuth: true, requiresConnection: true, phase: 16 },
+  { path: '/workspace/:workspaceId/organization', requiresAuth: true, requiresConnection: true, phase: 17 },
   { path: '/workspace/:workspaceId/observability', requiresAuth: true, requiresConnection: true, phase: 18 },
+  { path: '/workspace/:workspaceId/enterprise', requiresAuth: true, requiresConnection: true, phase: 19 },
+  { path: '/workspace/:workspaceId/security', requiresAuth: true, requiresConnection: true, phase: 20 },
 ];
 
 export function findRouteMeta(pathname: string): RouteDefinition | undefined {

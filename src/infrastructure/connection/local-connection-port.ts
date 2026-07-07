@@ -17,12 +17,28 @@ function newConnectionId(): string {
 /** Phase 05 — browser-local connection registry with obfuscated AIC storage. */
 export class LocalConnectionPort implements ConnectionPort {
   async validate(
-    input: Pick<RataryConnection, 'baseUrl'> & { apiKey: string },
+    input: Pick<RataryConnection, 'baseUrl'> & { apiKey?: string; accessToken?: string },
   ): Promise<ConnectionValidation> {
     const started = Date.now();
+    if (!input.apiKey && !input.accessToken) {
+      return {
+        ok: false,
+        health: false,
+        apiCompatible: false,
+        latencyMs: Date.now() - started,
+        errors: [
+          {
+            code: 'missing_credentials',
+            message: 'API key or OIDC access token required.',
+            action: 'Provide aic_... or sign in with OIDC.',
+          },
+        ],
+      };
+    }
+
     const client = new StudioRataryClient({
       baseUrl: input.baseUrl,
-      apiKey: input.apiKey,
+      ...(input.accessToken ? { accessToken: input.accessToken } : { apiKey: input.apiKey }),
     });
 
     try {

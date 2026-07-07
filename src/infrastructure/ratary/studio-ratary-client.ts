@@ -4,6 +4,7 @@ import type { MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
 export interface StudioClientOptions {
   baseUrl: string;
   apiKey?: string;
+  accessToken?: string;
   workspaceId?: string;
 }
 
@@ -19,14 +20,30 @@ export interface CapabilityFlags {
   supportsPrecisionSearch?: boolean;
   supportsHybridRetrieval?: boolean;
   supportsOrganization?: boolean;
+  supportsEmbedding?: boolean;
+  supportsSemanticSearch?: boolean;
   [key: string]: unknown;
 }
 
 export interface CapabilityManifestView {
   protocolVersion?: string;
+  version?: string;
   capabilities?: CapabilityFlags;
-  deployment?: { sqlProvider?: string };
-  mcp?: { toolCount?: number };
+  deployment?: {
+    sqlProvider?: string;
+    vectorProvider?: string;
+    embeddingProvider?: string;
+  };
+  mcp?: { toolCount?: number; toolNames?: string[] };
+  transport?: {
+    rest?: { studioOidc?: { enabled?: boolean } };
+    mcp?: { remote?: { enabled?: boolean; publicUrl?: string; oauthEnabled?: boolean } };
+  };
+  knowledgeFabric?: {
+    enabled?: boolean;
+    connectors?: Array<{ id: string; configured: boolean }>;
+  };
+  precisionSearch?: { modes?: string[]; defaultMode?: string };
 }
 
 export interface GraphTraverseInput {
@@ -62,16 +79,14 @@ export class StudioRataryClient {
 
   constructor(options: StudioClientOptions) {
     const serverUrl = options.baseUrl.replace(/\/$/, '').replace(/\/api\/v1$/, '');
-    this.sdk = new RataryClient({
+    const transportConfig = {
       baseUrl: serverUrl,
       apiKey: options.apiKey,
+      accessToken: options.accessToken,
       workspaceId: options.workspaceId,
-    });
-    this.rootTransport = new RestTransport({
-      baseUrl: serverUrl,
-      apiKey: options.apiKey,
-      workspaceId: options.workspaceId,
-    });
+    };
+    this.sdk = new RataryClient(transportConfig);
+    this.rootTransport = new RestTransport(transportConfig);
   }
 
   getHealth(): Promise<HealthStatus> {
@@ -126,6 +141,14 @@ export class StudioRataryClient {
     return this.sdk.transport.request({
       method: 'GET',
       path: `/workspaces/${workspaceId}/agents`,
+    });
+  }
+
+  buildContext(input: { task: string; maxTokens?: number; project?: string }) {
+    return this.sdk.context.build({
+      task: input.task,
+      maxTokens: input.maxTokens,
+      project: input.project,
     });
   }
 }

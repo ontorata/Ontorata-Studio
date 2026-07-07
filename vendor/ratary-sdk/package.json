@@ -1,7 +1,7 @@
 {
   "name": "@ratary/sdk",
-  "version": "1.0.0",
-  "description": "TypeScript client for Ratary REST API (Phase 16 reference SDK)",
+  "version": "1.1.0",
+  "description": "TypeScript client for Ratary REST API",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,14 +14,22 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ontorata/ratary.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/ontorata/ratary/tree/main/packages/sdk",
+  "bugs": "https://github.com/ontorata/ratary/issues",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
-  },
-  "devDependencies": {
-    "typescript": "^5.8.3"
   },
   "license": "MIT"
 }

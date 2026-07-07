@@ -1,19 +1,29 @@
-# Ontorata Studio — Architecture
+# Studio architecture docs
 
-Long-term architecture for the Ontorata AI Operating System workspace.
+**Last updated:** 2026-07-06 · Phases 01–20 shipped (MVP).
 
-| Phase | Document | Status |
-|-------|----------|--------|
-| 01 | [PHASE-01-WORKSPACE-FOUNDATION.md](./PHASE-01-WORKSPACE-FOUNDATION.md) | Draft — pending approval |
-| 02 | auth-ontorata (Keycloak) — see `auth-ontorata` repo | Not started |
-| 03+ | TBD after Phase 01 gate | Blocked |
+| Doc | Purpose |
+|-----|---------|
+| [PHASES.md](../PHASES.md) | Phase index 01–20 |
+| [PHASE-01-WORKSPACE-FOUNDATION.md](PHASE-01-WORKSPACE-FOUNDATION.md) | Layered module baseline |
+| [SECURITY.md](SECURITY.md) | Token storage, CSP, boundaries |
+| [adr/](adr/) | Architecture decision records |
 
-**Ecosystem repos**
+## Current stack
 
-| Repo | Role |
-|------|------|
-| [Ontorata-Studio](https://github.com/ontorata/Ontorata-Studio) | AI Workspace & control plane (this repo) |
-| [auth-ontorata](https://github.com/ontorata/auth-ontorata) | Identity platform (Keycloak) — **to be bootstrapped** |
-| [ratary](https://github.com/ontorata/ratary) | AI runtime, memory, MCP — API only from Studio |
+| Layer | Technology |
+|-------|------------|
+| Identity | Zitadel Cloud (OIDC PKCE) |
+| Studio SPA | React 19 + Vite on Vercel |
+| Data plane | Ratary REST via `@ratary/sdk` |
+| Auth to Ratary | Zitadel JWT (`STUDIO_OIDC_ENABLED`) or `aic_` API key |
 
-**Rule:** Studio never stores customer AI data and never accesses Ratary databases.
+## Phase status
+
+| Range | Status |
+|-------|--------|
+| 01–06 | Foundation, OIDC, connection, shell — **done** |
+| 07–16 | Operator features — **MVP done** |
+| 17–20 | Org, observability, enterprise, security — **MVP done** |
+
+Legacy Keycloak (`auth` repo) is not used in Studio production; see ADR-003.

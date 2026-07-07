@@ -33,9 +33,13 @@ export class RestTransport implements IApiClient {
       ...this.config.defaultHeaders,
     };
 
-    if (options.auth !== false && this.config.apiKey) {
-      headers.Authorization = `Bearer ${this.config.apiKey}`;
-      headers['X-API-Key'] = this.config.apiKey;
+    if (options.auth !== false) {
+      if (this.config.accessToken) {
+        headers.Authorization = `Bearer ${this.config.accessToken}`;
+      } else if (this.config.apiKey) {
+        headers.Authorization = `Bearer ${this.config.apiKey}`;
+        headers['X-API-Key'] = this.config.apiKey;
+      }
     }
     if (this.config.workspaceId) {
       headers['X-Workspace-Id'] = this.config.workspaceId;

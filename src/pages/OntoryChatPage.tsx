@@ -1,24 +1,36 @@
-import { FormEvent, useState } from 'react';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { FormEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
+import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'tool';
   text: string;
+  memoryIds?: string[];
 }
 
-/** Phase 07 — Ontory chat MVP (memory search as response proxy). */
+const DRAFT_KEY = 'ontorata-studio-ontory-draft';
+
+/** Phase 07 — Ontory chat with memory search + context build. */
 export function OntoryChatPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
+  const base = useWorkspaceBasePath();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(() => sessionStorage.getItem(DRAFT_KEY) ?? '');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    sessionStorage.setItem(DRAFT_KEY, input);
+  }, [input]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const query = input.trim();
-    if (!query) return;
+    if (!query || !client) return;
 
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: query };
     setMessages((prev) => [...prev, userMsg]);
@@ -26,17 +38,38 @@ export function OntoryChatPage() {
     setLoading(true);
 
     try {
-      const results = await client.searchMemories({ q: query, limit: 3 });
-      const hits = results.results ?? [];
-      const summary =
-        hits.length > 0
-          ? hits
-              .map((m) => `• ${m.title ?? m.id}: ${(m.content ?? '').slice(0, 120)}…`)
-              .join('\n')
-          : 'No matching memories found in your Ratary brain.';
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'assistant', text: summary },
+        { id: crypto.randomUUID(), role: 'tool', text: `search_memories("${query}")` },
+      ]);
+
+      const [searchRes, contextRes] = await Promise.all([
+        client.searchMemories({ q: query, limit: 5 }),
+        client.buildContext({ task: query, maxTokens: 2048 }).catch(() => null),
+      ]);
+
+      const hits = searchRes.results ?? [];
+      const memoryIds = hits.map((m) => m.id);
+      const hitLines =
+        hits.length > 0
+          ? hits
+              .map((m) => `• ${m.title ?? m.id}: ${(m.content ?? m.summary ?? '').slice(0, 160)}`)
+              .join('\n')
+          : 'No matching memories found.';
+
+      const contextBlock =
+        contextRes && 'context' in contextRes && typeof contextRes.context === 'string'
+          ? `\n\nContext (${contextRes.context.length} chars):\n${contextRes.context.slice(0, 800)}${contextRes.context.length > 800 ? '…' : ''}`
+          : '';
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          text: `${hitLines}${contextBlock}`,
+          memoryIds,
+        },
       ]);
     } catch (err) {
       setMessages((prev) => [
@@ -44,7 +77,7 @@ export function OntoryChatPage() {
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: err instanceof Error ? err.message : 'Search failed',
+          text: formatRataryApiError(err),
         },
       ]);
     } finally {
@@ -52,20 +85,44 @@ export function OntoryChatPage() {
     }
   }
 
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Ontory Chat" />;
+  }
+
   return (
     <div className="page">
       <PageHeader
         title="Ontory Chat"
-        description="MVP assistant — answers grounded in your Ratary memories (full agent loop in Ontory product)."
+        description="Memory-grounded assistant — searches and builds context from your Ratary brain."
       />
       <Card className="chat-panel">
         {messages.length === 0 ? (
-          <EmptyState title="Start a conversation" description="Ask about your project memories." />
+          <EmptyState
+            title="Start a conversation"
+            description="Ask about your project memories. Responses cite Ratary search + context APIs."
+          />
         ) : (
           <ul className="chat-messages">
             {messages.map((m) => (
               <li key={m.id} className={`chat-bubble ${m.role}`}>
                 {m.text}
+                {m.memoryIds && m.memoryIds.length > 0 && (
+                  <div className="chat-links">
+                    {m.memoryIds.map((id) => (
+                      <Link key={id} to={`${base}/memories/${id}`}>
+                        View memory
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

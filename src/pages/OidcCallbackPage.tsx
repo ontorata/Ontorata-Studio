@@ -3,37 +3,39 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { getDefaultWorkspaceId } from '../config/env';
 import { useAuth } from '../hooks/useAuth';
 
-/** Phase 04 — OIDC redirect callback handler. */
+/** OIDC redirect callback handler. */
 export function OidcCallbackPage() {
   const { completeOidcRedirect, authMode } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
+  const workspacePath = `/workspace/${getDefaultWorkspaceId()}`;
+
   useEffect(() => {
     if (authMode !== 'oidc') {
-      navigate('/login', { replace: true });
+      navigate(workspacePath, { replace: true });
       return;
     }
 
     void (async () => {
       try {
         await completeOidcRedirect();
-        navigate(`/connect`, { replace: true });
+        navigate(workspacePath, { replace: true });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'OIDC callback failed');
       }
     })();
-  }, [authMode, completeOidcRedirect, navigate]);
+  }, [authMode, completeOidcRedirect, navigate, workspacePath]);
 
   if (authMode !== 'oidc') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={workspacePath} replace />;
   }
 
   if (error) {
     return (
       <div className="page center">
         <p className="error">{error}</p>
-        <a href="/login">Back to login</a>
+        <a href={workspacePath}>Back to workspace</a>
       </div>
     );
   }

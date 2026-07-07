@@ -1,29 +1,29 @@
-# ADR-003: External Keycloak authentication
+# ADR-003: External OIDC authentication (Zitadel)
 
-**Status:** Proposed  
-**Date:** 2026-07-06  
-**Context:** Phase 01 — Workspace Foundation
+**Status:** Accepted  
+**Date:** 2026-07-06 · Updated 2026-07-06 (Zitadel production)
 
 ## Decision
 
-All user authentication flows through **`auth-ontorata`** (Keycloak). Studio is an OIDC public client (PKCE). Studio:
+All production user authentication flows through **Zitadel Cloud** (OIDC). Studio is a public SPA client (PKCE). Studio:
 
-- Redirects to Keycloak for login
-- Validates JWT via JWKS (`jose` or equivalent)
-- Never implements password storage, MFA, or registration UI beyond redirect
+- Redirects to Zitadel for login
+- Stores access token in sessionStorage (`oidc-client-ts`)
+- Never implements password storage or registration UI
 
-Implementation lands in **Phase 04**; Phase 01 defines `AuthPort` only.
+Legacy **Keycloak** (`auth` repo) remains for MCP OAuth experiments; Studio production uses Zitadel.
 
-## Current state
+## Implementation
 
-Keycloak runs at `auth.ontorata.com` from `ratary/infra/keycloak` with realm `ratary` tuned for MCP OAuth. Studio integration requires a dedicated client (`studio-spa`) and likely a `studio` or `ontorata` realm.
+- Phase 04: `OidcAuthAdapter`, `/callback`, CSP for `*.zitadel.cloud`
+- Phase 02 extension: Ratary `STUDIO_OIDC_ENABLED` — JWT per user, no `aic_` wizard
 
 ## Consequences
 
-- `LoginPage` API-key form becomes legacy/dev path, then removed or hidden behind feature flag.
-- Studio `.env` gains `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID`, redirect URI config.
+- `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` on Vercel
+- Legacy API-key login when `VITE_AUTH_ISSUER` unset (local dev)
 
 ## Alternatives
 
-- **Supabase Auth:** rejected — master prompt mandates Keycloak; Ratary MCP already uses KC.
-- **Ratary bootstrap as login:** rejected — conflates identity with AI runtime credentials.
+- **Keycloak self-host:** deferred — Zitadel Cloud chosen for zero-ops
+- **Ratary bootstrap as login:** rejected — conflates identity with AI credentials

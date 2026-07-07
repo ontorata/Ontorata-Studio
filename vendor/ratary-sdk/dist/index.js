@@ -1,3 +1,4 @@
+import { AdminClient } from './admin/index.js';
 import { CapabilitiesApi } from './apis/capabilities-api.js';
 import { ContextApi } from './apis/context-api.js';
 import { EcosystemApi } from './apis/ecosystem-api.js';
@@ -9,6 +10,9 @@ export class AiBrainClient {
     context;
     capabilities;
     ecosystem;
+    /** Phase 28 — admin REST surfaces (cloud, observability, infrastructure, platform, fabric, federation). */
+    admin;
+    /** @deprecated Use admin.federation */
     federation;
     transport;
     constructor(options) {
@@ -20,14 +24,18 @@ export class AiBrainClient {
         this.context = new ContextApi(this.transport);
         this.capabilities = new CapabilitiesApi(this.transport);
         this.ecosystem = new EcosystemApi(this.transport);
+        this.admin = new AdminClient(this.transport);
         if (options.federation) {
             this.federation = new FederationApi(this.transport);
         }
     }
 }
+export { AdminClient } from './admin/index.js';
 export { AiBrainApiError, AiBrainApiError as RataryApiError } from './errors.js';
 export { RestTransport } from './transports/rest-transport.js';
 export * from './types.js';
+export * from './types/admin.types.js';
+export * from './types/connector.types.js';
 /** @deprecated Use RataryClient — alias kept for SDK migration. */
 export { AiBrainClient as RataryClient };
 //# sourceMappingURL=index.js.map

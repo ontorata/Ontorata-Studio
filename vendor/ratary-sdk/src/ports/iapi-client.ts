@@ -13,6 +13,8 @@ export interface IApiClient {
 export interface RestTransportConfig {
   baseUrl: string;
   apiKey?: string;
+  /** OIDC access token (e.g. Zitadel) — sent as Bearer without X-API-Key. */
+  accessToken?: string;
   workspaceId?: string;
   fetchImpl?: typeof fetch;
   defaultHeaders?: Record<string, string>;
