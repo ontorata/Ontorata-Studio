@@ -1,18 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import type { AgentRecord } from '../infrastructure/ratary/studio-ratary-client';
 import { useWorkspaceId } from '../hooks/useWorkspacePath';
 import { Button, Card, PageHeader } from '../presentation/design-system/primitives';
 
 /** Phase 14 — Agent registry per workspace with refresh. */
 export function AgentManagerPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const workspaceId = useWorkspaceId();
   const [agents, setAgents] = useState<AgentRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
+    if (!client) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     client
       .listAgents(workspaceId)
@@ -20,13 +26,25 @@ export function AgentManagerPage() {
         setAgents(res.agents ?? []);
         setError(null);
       })
-      .catch((err: Error) => setError(err.message))
+      .catch((err: Error) => setError(formatRataryApiError(err)))
       .finally(() => setLoading(false));
   }, [client, workspaceId]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Agents" />;
+  }
 
   return (
     <div className="page">

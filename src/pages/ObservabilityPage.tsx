@@ -3,7 +3,9 @@ import { isOidcCloudAutoConnect } from '../config/env';
 import { useAuth } from '../hooks/useAuth';
 import { useConnection } from '../hooks/useConnection';
 import { useOrgContext } from '../hooks/useOrgContext';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import type { HealthStatus } from '../infrastructure/ratary/studio-ratary-client';
 import { useCapabilities } from '../hooks/useCapabilities';
 import { Button, Card, PageHeader } from '../presentation/design-system/primitives';
@@ -13,13 +15,14 @@ export function ObservabilityPage() {
   const { session, authMode } = useAuth();
   const { activeConnection, connections } = useConnection();
   const org = useOrgContext();
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const { manifest, loading: capsLoading } = useCapabilities();
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
   const [polledAt, setPolledAt] = useState<string | null>(null);
 
   const pollHealth = useCallback(() => {
+    if (!client) return;
     client
       .getHealth()
       .then((h) => {
@@ -27,7 +30,7 @@ export function ObservabilityPage() {
         setHealthError(null);
         setPolledAt(new Date().toISOString());
       })
-      .catch((err: Error) => setHealthError(err.message));
+      .catch((err: Error) => setHealthError(formatRataryApiError(err)));
   }, [client]);
 
   useEffect(() => {
@@ -43,6 +46,18 @@ export function ObservabilityPage() {
       : session?.legacyApiKey
         ? 'Legacy inline API key'
         : 'Unknown';
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="System Health" />;
+  }
 
   return (
     <div className="page">

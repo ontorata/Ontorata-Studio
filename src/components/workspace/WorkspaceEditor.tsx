@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { WorkspaceFileEditor } from './WorkspaceFileEditor';
 import { WorkspaceLoginForm } from './WorkspaceLoginForm';
+import { TabErrorBoundary } from '../TabErrorBoundary';
 
 interface WorkspaceEditorProps {
   pathSuffix: string;
@@ -59,7 +60,11 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
       )}
 
       <div className="ws-editor-surface">
-        {!activeFilePath && <Outlet />}
+        {!activeFilePath && (
+          <TabErrorBoundary>
+            <Outlet />
+          </TabErrorBoundary>
+        )}
         {fileTabs.map((tab) => (
           <div
             key={tab.id}

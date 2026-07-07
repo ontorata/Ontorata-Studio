@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
-import { useStudioClient } from '../hooks/useStudioClient';
 import { Button, Card, Input, PageHeader } from '../presentation/design-system/primitives';
 
 export function MemoryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const base = useWorkspaceBasePath();
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const navigate = useNavigate();
   const [memory, setMemory] = useState<MemoryRecord | null>(null);
   const [title, setTitle] = useState('');
@@ -17,7 +19,7 @@ export function MemoryDetailPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !client) return;
     client
       .getMemory(id)
       .then((m) => {
@@ -25,12 +27,12 @@ export function MemoryDetailPage() {
         setTitle(m.title);
         setContent(m.content);
       })
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => setError(formatRataryApiError(err)));
   }, [client, id]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!id) return;
+    if (!id || !client) return;
     setSaving(true);
     try {
       const updated = await client.updateMemory(id, { title, content });
@@ -41,15 +43,29 @@ export function MemoryDetailPage() {
   }
 
   async function handleDelete() {
-    if (!id || !confirm('Delete this memory?')) return;
+    if (!id || !client || !confirm('Delete this memory?')) return;
     await client.deleteMemory(id);
     navigate(`${base}/memories`);
+  }
+
+  if (authLoading) {
+    return (
+      <div className="page studio-page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Memory detail" />;
   }
 
   if (error) {
     return (
       <div className="page studio-page">
-        <p className="error">{error}</p>
+        <Card className="ratary-connection-notice">
+          <p className="error">{error}</p>
+        </Card>
       </div>
     );
   }

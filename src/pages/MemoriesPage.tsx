@@ -1,7 +1,9 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
@@ -9,7 +11,7 @@ const PAGE_SIZE = 50;
 
 /** Phase 11 — Memory explorer with filters and pagination. */
 export function MemoriesPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const base = useWorkspaceBasePath();
   const [memories, setMemories] = useState<MemoryRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,10 @@ export function MemoriesPage() {
   const [hasMore, setHasMore] = useState(false);
 
   const reload = useCallback(() => {
+    if (!client) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     client
       .listMemories({ limit: PAGE_SIZE, offset, project: projectFilter || undefined })
@@ -31,7 +37,7 @@ export function MemoriesPage() {
         setHasMore((res.memories?.length ?? 0) >= PAGE_SIZE);
         setError(null);
       })
-      .catch((err: Error) => setError(err.message))
+      .catch((err: Error) => setError(formatRataryApiError(err)))
       .finally(() => setLoading(false));
   }, [client, offset, projectFilter]);
 
@@ -57,12 +63,25 @@ export function MemoriesPage() {
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
+    if (!client) return;
     await client.createMemory({ title, content, project: projectFilter || undefined });
     setTitle('');
     setContent('');
     setShowForm(false);
     setOffset(0);
     reload();
+  }
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Memories" />;
   }
 
   return (
@@ -114,7 +133,11 @@ export function MemoriesPage() {
       )}
 
       {loading && <p>Loading…</p>}
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <Card className="ratary-connection-notice">
+          <p className="error">{error}</p>
+        </Card>
+      )}
       {!loading && !error && filtered.length === 0 && (
         <EmptyState title="No memories" description="Create your first memory or adjust filters." />
       )}

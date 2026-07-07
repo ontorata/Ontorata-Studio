@@ -1,10 +1,25 @@
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
 import { useCapabilities } from '../hooks/useCapabilities';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { Card, PageHeader } from '../presentation/design-system/primitives';
 
 /** Phase 15 — Model and embedding provider policy from Ratary manifest. */
 export function ModelProvidersPage() {
+  const { authLoading, missingConnection } = useRataryTabClient();
   const { manifest, capabilities, loading, error } = useCapabilities();
   const deployment = manifest?.deployment;
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Model Policy" />;
+  }
 
   return (
     <div className="page">
@@ -14,7 +29,11 @@ export function ModelProvidersPage() {
       />
       <Card>
         {loading && <p>Loading…</p>}
-        {error && <p className="error">{error}</p>}
+        {error && (
+          <Card className="ratary-connection-notice">
+            <p className="error">{error}</p>
+          </Card>
+        )}
         {manifest && (
           <dl className="kv">
             <dt>Embedding</dt>

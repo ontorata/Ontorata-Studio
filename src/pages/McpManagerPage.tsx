@@ -1,11 +1,26 @@
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
 import { useCapabilities } from '../hooks/useCapabilities';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { Card, PageHeader } from '../presentation/design-system/primitives';
 
 /** Phase 13 — MCP tool inventory and remote transport status. */
 export function McpManagerPage() {
+  const { authLoading, missingConnection } = useRataryTabClient();
   const { manifest, loading, error } = useCapabilities();
   const toolNames = manifest?.mcp?.toolNames ?? [];
   const remote = manifest?.transport?.mcp?.remote;
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Tool Protocol" />;
+  }
 
   return (
     <div className="page">
@@ -16,7 +31,11 @@ export function McpManagerPage() {
       <div className="grid two">
         <Card>
           {loading && <p>Loading manifest…</p>}
-          {error && <p className="error">{error}</p>}
+          {error && (
+            <Card className="ratary-connection-notice">
+              <p className="error">{error}</p>
+            </Card>
+          )}
           {manifest && (
             <dl className="kv">
               <dt>Protocol version</dt>

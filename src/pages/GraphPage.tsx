@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { GraphTraverseResult } from '../infrastructure/ratary/studio-ratary-client';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
@@ -62,7 +64,7 @@ function GraphViz({ result }: { result: GraphTraverseResult }) {
 
 /** Phase 11 — Graph explorer with mini visualization. */
 export function GraphPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const base = useWorkspaceBasePath();
   const [memoryId, setMemoryId] = useState('');
   const [depth, setDepth] = useState(2);
@@ -72,6 +74,7 @@ export function GraphPage() {
 
   async function handleTraverse(e: React.FormEvent) {
     e.preventDefault();
+    if (!client) return;
     setError(null);
     setLoading(true);
     try {
@@ -83,10 +86,22 @@ export function GraphPage() {
       setResult(data);
     } catch (err) {
       setResult(null);
-      setError(err instanceof Error ? err.message : 'Traverse failed');
+      setError(formatRataryApiError(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="page studio-page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Knowledge Graph" />;
   }
 
   const nodeCount = result?.nodes?.length ?? 0;
@@ -127,7 +142,11 @@ export function GraphPage() {
         </form>
       </Card>
 
-      {error && <p className="error graph-error">{error}</p>}
+      {error && (
+        <Card className="ratary-connection-notice">
+          <p className="error graph-error">{error}</p>
+        </Card>
+      )}
 
       {!result && !error && !loading && (
         <EmptyState

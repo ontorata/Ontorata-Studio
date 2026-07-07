@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useCapabilities } from '../hooks/useCapabilities';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
 export function SearchPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const base = useWorkspaceBasePath();
   const { capabilities } = useCapabilities();
   const [q, setQ] = useState('');
@@ -18,6 +20,7 @@ export function SearchPage() {
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
+    if (!client) return;
     setError(null);
     setSearched(true);
     setLoading(true);
@@ -25,10 +28,22 @@ export function SearchPage() {
       const res = await client.searchMemories({ q, limit: 30 });
       setResults(res.results ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(formatRataryApiError(err));
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="page studio-page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Search" />;
   }
 
   return (
@@ -62,7 +77,11 @@ export function SearchPage() {
         </form>
       </Card>
 
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <Card className="ratary-connection-notice">
+          <p className="error">{error}</p>
+        </Card>
+      )}
 
       {searched && !error && results.length === 0 && (
         <EmptyState title="No results" description="Try a different query or broaden your search terms." />

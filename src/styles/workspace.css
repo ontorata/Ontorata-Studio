@@ -2902,3 +2902,18 @@ body.ws-resizing-terminal-sessions * {
     max-width: none;
   }
 }
+
+.ratary-connection-notice {
+  margin-top: 0.75rem;
+  border-color: color-mix(in srgb, var(--ws-danger, #c53030) 35%, var(--ws-border));
+  background: color-mix(in srgb, var(--ws-danger, #c53030) 6%, var(--ws-surface));
+}
+
+.ratary-connection-notice .error {
+  margin: 0 0 0.5rem;
+}
+
+.ratary-connection-notice .muted {
+  margin: 0;
+  font-size: 0.85rem;
+}

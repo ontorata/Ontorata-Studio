@@ -1,13 +1,14 @@
 import { FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { MemoryRecord } from '@ratary/sdk';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { Button, Card, Input, PageHeader } from '../presentation/design-system/primitives';
 
 /** Phase 16 — Coding workspace with memory sidebar and Ontory bridge. */
 export function CodingWorkspacePage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const base = useWorkspaceBasePath();
   const [code, setCode] = useState('// Ask Ratary memories while you code\n');
   const [query, setQuery] = useState('');
@@ -17,7 +18,7 @@ export function CodingWorkspacePage() {
   async function searchMemories(event: FormEvent) {
     event.preventDefault();
     const q = query.trim();
-    if (!q) return;
+    if (!q || !client) return;
     setLoading(true);
     try {
       const res = await client.searchMemories({ q, limit: 8 });
@@ -29,6 +30,18 @@ export function CodingWorkspacePage() {
 
   function insertSnippet(text: string) {
     setCode((prev) => `${prev}\n// From memory:\n${text}\n`);
+  }
+
+  if (authLoading) {
+    return (
+      <div className="page studio-page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Development" />;
   }
 
   return (

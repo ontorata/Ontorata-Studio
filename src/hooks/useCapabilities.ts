@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CapabilityManifestView } from '../api/ratary-client';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useOptionalStudioClient } from './useStudioClient';
 
 export function useCapabilities() {
@@ -11,7 +12,7 @@ export function useCapabilities() {
   useEffect(() => {
     if (!client) {
       setManifest(null);
-      setError(null);
+      setError('Ratary connection is not available for this tab.');
       setLoading(false);
       return;
     }
@@ -27,7 +28,7 @@ export function useCapabilities() {
         }
       })
       .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
+        if (!cancelled) setError(formatRataryApiError(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

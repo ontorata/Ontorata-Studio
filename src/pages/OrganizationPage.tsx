@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useOrgContext } from '../hooks/useOrgContext';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import type { WorkspaceRecord } from '../infrastructure/ratary/studio-ratary-client';
 import { useWorkspaceBasePath, useWorkspaceId } from '../hooks/useWorkspacePath';
 import { Card, PageHeader } from '../presentation/design-system/primitives';
@@ -9,18 +11,31 @@ import { Card, PageHeader } from '../presentation/design-system/primitives';
 /** Phase 17 — Organization context and workspace switcher. */
 export function OrganizationPage() {
   const org = useOrgContext();
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const workspaceId = useWorkspaceId();
   const base = useWorkspaceBasePath();
   const [workspaces, setWorkspaces] = useState<WorkspaceRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!client) return;
     client
       .listWorkspaces()
       .then((res) => setWorkspaces(res.workspaces ?? []))
-      .catch((err: Error) => setError(err.message));
+      .catch((err: Error) => setError(formatRataryApiError(err)));
   }, [client]);
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Organization" />;
+  }
 
   return (
     <div className="page">
@@ -49,7 +64,11 @@ export function OrganizationPage() {
           <p>
             Active: <code>{workspaceId}</code>
           </p>
-          {error && <p className="error">{error}</p>}
+          {error && (
+            <Card className="ratary-connection-notice">
+              <p className="error">{error}</p>
+            </Card>
+          )}
           <ul className="simple-list">
             {workspaces.map((w) => (
               <li key={w.id}>

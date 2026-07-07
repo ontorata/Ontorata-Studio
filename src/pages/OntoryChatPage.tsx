@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
@@ -15,7 +17,7 @@ const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 
 /** Phase 07 — Ontory chat with memory search + context build. */
 export function OntoryChatPage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const base = useWorkspaceBasePath();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState(() => sessionStorage.getItem(DRAFT_KEY) ?? '');
@@ -28,7 +30,7 @@ export function OntoryChatPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const query = input.trim();
-    if (!query) return;
+    if (!query || !client) return;
 
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: query };
     setMessages((prev) => [...prev, userMsg]);
@@ -75,12 +77,24 @@ export function OntoryChatPage() {
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: err instanceof Error ? err.message : 'Request failed',
+          text: formatRataryApiError(err),
         },
       ]);
     } finally {
       setLoading(false);
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Ontory Chat" />;
   }
 
   return (

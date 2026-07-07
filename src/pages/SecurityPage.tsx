@@ -1,5 +1,7 @@
 import { isOidcEnabled } from '../config/env';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
 import { useCapabilities } from '../hooks/useCapabilities';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { Card, PageHeader } from '../presentation/design-system/primitives';
 
 const PRODUCTION_CHECKLIST = [
@@ -14,7 +16,8 @@ const PRODUCTION_CHECKLIST = [
 
 /** Phase 20 — Production hardening checklist and security posture. */
 export function SecurityPage() {
-  const { manifest } = useCapabilities();
+  const { authLoading, missingConnection } = useRataryTabClient();
+  const { manifest, error } = useCapabilities();
   const studioOidc = manifest?.transport?.rest?.studioOidc?.enabled;
 
   const items = PRODUCTION_CHECKLIST.map((item) =>
@@ -22,12 +25,29 @@ export function SecurityPage() {
   );
   const doneCount = items.filter((i) => i.done).length;
 
+  if (authLoading) {
+    return (
+      <div className="page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Security & Production" />;
+  }
+
   return (
     <div className="page">
       <PageHeader
         title="Security & Production"
         description="Phase 20 hardening checklist — verify before GA marketing."
       />
+      {error && (
+        <Card className="ratary-connection-notice">
+          <p className="error">{error}</p>
+        </Card>
+      )}
       <Card>
         <p>
           <strong>{doneCount}</strong> / {items.length} checks passing (server flags read live from Ratary).

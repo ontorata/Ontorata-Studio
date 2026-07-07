@@ -61,10 +61,6 @@ export function useOptionalStudioClient(): StudioRataryClient | null {
   return useContext(StudioClientContext);
 }
 
-export function useStudioClient(): StudioRataryClient {
-  const client = useContext(StudioClientContext);
-  if (!client) {
-    throw new Error('StudioClientProvider requires an active Ratary connection');
-  }
-  return client;
+export function useStudioClient(): StudioRataryClient | null {
+  return useContext(StudioClientContext);
 }

@@ -5,7 +5,8 @@ import { NAV_GROUPS } from '../config/navigation';
 import { useCapabilities } from '../hooks/useCapabilities';
 import { useConnection } from '../hooks/useConnection';
 import { useOrgContext } from '../hooks/useOrgContext';
-import { useStudioClient } from '../hooks/useStudioClient';
+import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
 import { NavIcon } from '../components/NavIcon';
 import type { NavIconName } from '../config/navigation';
@@ -26,7 +27,7 @@ const QUICK_ACTIONS: Array<{ label: string; path: string; icon: NavIconName; des
 
 /** Home — welcoming overview with quick paths into the platform. */
 export function HomePage() {
-  const client = useStudioClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const base = useWorkspaceBasePath();
   const { hasActiveConnection } = useConnection();
   const org = useOrgContext();
@@ -34,10 +35,23 @@ export function HomePage() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
 
   useEffect(() => {
+    if (!client) return;
     client.getHealth().then(setHealth).catch(() => setHealth(null));
   }, [client]);
 
   const enabledCount = Object.values(capabilities).filter((v) => v === true).length;
+
+  if (authLoading) {
+    return (
+      <div className="page home-page">
+        <p>Loading session…</p>
+      </div>
+    );
+  }
+
+  if (missingConnection) {
+    return <RataryConnectionNotice title="Home" />;
+  }
 
   return (
     <div className="page home-page">
