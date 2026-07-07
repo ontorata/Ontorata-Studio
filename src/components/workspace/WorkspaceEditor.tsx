@@ -1,8 +1,10 @@
 import { Outlet } from 'react-router-dom';
 import { APP_TITLE, ONTORATA_LOGO_URL } from '../../config/brand';
 import { WORKSPACE_SHORTCUTS } from '../../config/shortcuts';
+import { isWorkspaceFilePath } from '../../domain/workspace/workspace-file-path';
 import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
+import { WorkspaceFileEditor } from './WorkspaceFileEditor';
 import { WorkspaceLoginForm } from './WorkspaceLoginForm';
 
 interface WorkspaceEditorProps {
@@ -12,7 +14,8 @@ interface WorkspaceEditorProps {
 export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
   const { isAuthenticated, loading } = useAuth();
   const { tabs, activePath, activateTab, closeTab } = useWorkspaceTabs();
-  const isEmpty = !pathSuffix;
+  const activeFilePath = isWorkspaceFilePath(activePath) ? activePath : null;
+  const isEmpty = !pathSuffix && !activeFilePath;
   const showLogin = !loading && !isAuthenticated;
 
   return (
@@ -50,7 +53,8 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
       )}
 
       <div className="ws-editor-surface">
-        <Outlet />
+        {!activeFilePath && <Outlet />}
+        {activeFilePath && <WorkspaceFileEditor filePath={activeFilePath} />}
         {showLogin && isEmpty && (
           <div className="ws-empty-overlay">
             <WorkspaceLoginForm variant="welcome" />

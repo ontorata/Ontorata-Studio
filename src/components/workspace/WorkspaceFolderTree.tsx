@@ -2,24 +2,73 @@ import { useCallback, useEffect, useState } from 'react';
 import type { FsDirectoryEntry } from '../../domain/workspace/list-directory';
 import { listDirectoryEntries } from '../../domain/workspace/list-directory';
 import type { PickedWorkspaceFolder } from '../../domain/workspace/pick-folder';
+import { resolveFileHandle } from '../../domain/workspace/resolve-file-handle';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 
+import { getFileExtension } from '../../domain/workspace/text-file-types';
+
 function fileIcon(name: string): string {
-  const ext = name.includes('.') ? name.split('.').pop()?.toLowerCase() : '';
+  const ext = getFileExtension(name);
+  const base = name.split(/[/\\]/).pop()?.toLowerCase() ?? '';
   switch (ext) {
     case 'ts':
     case 'tsx':
       return '◆';
     case 'js':
     case 'jsx':
+    case 'mjs':
+    case 'cjs':
       return '◇';
     case 'json':
+    case 'jsonc':
+    case 'geojson':
+    case 'topojson':
       return '{ }';
     case 'md':
+    case 'mdx':
+    case 'markdown':
       return '▸';
     case 'css':
+    case 'scss':
+    case 'sass':
+    case 'less':
       return '#';
+    case 'html':
+    case 'htm':
+      return '<>';
+    case 'py':
+    case 'pyw':
+      return 'py';
+    case 'php':
+      return 'php';
+    case 'java':
+    case 'kt':
+      return 'Jv';
+    case 'go':
+      return 'go';
+    case 'rs':
+      return 'rs';
+    case 'sql':
+      return 'SQL';
+    case 'vue':
+      return 'vu';
+    case 'yaml':
+    case 'yml':
+    case 'toml':
+      return 'Y';
+    case 'xml':
+    case 'svg':
+      return '<>';
+    case 'sh':
+    case 'bash':
+    case 'zsh':
+      return '$';
+    case 'dockerfile':
+    case 'gitignore':
+    case 'htaccess':
+      return '⚙';
     default:
+      if (base === 'dockerfile' || base === 'makefile') return '⚙';
       return '·';
   }
 }
@@ -27,9 +76,15 @@ function fileIcon(name: string): string {
 function FsTreeNode({
   entry,
   depth,
+  parentPath,
+  onOpenFile,
+  workspaceRoot,
 }: {
   entry: FsDirectoryEntry;
   depth: number;
+  parentPath: string;
+  onOpenFile: (relativePath: string, name: string, handle: FileSystemFileHandle) => void;
+  workspaceRoot: FileSystemDirectoryHandle | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [children, setChildren] = useState<FsDirectoryEntry[] | null>(null);
@@ -37,6 +92,7 @@ function FsTreeNode({
 
   const isDir = entry.kind === 'directory';
   const pad = 0.4 + depth * 0.85;
+  const relativePath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
 
   const loadChildren = useCallback(async () => {
     if (!isDir || entry.handle.kind !== 'directory') return;
@@ -57,13 +113,31 @@ function FsTreeNode({
     setExpanded((v) => !v);
   }
 
+  async function onClick() {
+    if (isDir) {
+      await onToggle();
+      return;
+    }
+    if (entry.handle.kind !== 'file') return;
+
+    try {
+      const handle =
+        workspaceRoot !== null
+          ? await resolveFileHandle(workspaceRoot, relativePath)
+          : entry.handle;
+      onOpenFile(relativePath, entry.name, handle);
+    } catch {
+      // Permission denied or folder no longer accessible — skip opening.
+    }
+  }
+
   return (
     <div className="ws-fs-node">
       <button
         type="button"
         className={`ws-tree-row ws-fs-row${isDir ? '' : ' ws-fs-file'}`}
         style={{ paddingLeft: `${pad}rem` }}
-        onClick={() => void onToggle()}
+        onClick={onClick}
         aria-expanded={isDir ? expanded : undefined}
       >
         <span className="ws-tree-chevron">
@@ -75,7 +149,14 @@ function FsTreeNode({
       {isDir && expanded && children && (
         <div className="ws-fs-children">
           {children.map((child) => (
-            <FsTreeNode key={child.name} entry={child} depth={depth + 1} />
+            <FsTreeNode
+              key={child.name}
+              entry={child}
+              depth={depth + 1}
+              parentPath={relativePath}
+              onOpenFile={onOpenFile}
+              workspaceRoot={workspaceRoot}
+            />
           ))}
         </div>
       )}
@@ -83,7 +164,13 @@ function FsTreeNode({
   );
 }
 
-function WorkspaceRoot({ folder }: { folder: PickedWorkspaceFolder }) {
+function WorkspaceRoot({
+  folder,
+  onOpenFile,
+}: {
+  folder: PickedWorkspaceFolder;
+  onOpenFile: (relativePath: string, name: string, handle: FileSystemFileHandle) => void;
+}) {
   const [expanded, setExpanded] = useState(true);
   const [children, setChildren] = useState<FsDirectoryEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -135,7 +222,14 @@ function WorkspaceRoot({ folder }: { folder: PickedWorkspaceFolder }) {
       {expanded && children && (
         <div className="ws-fs-children">
           {children.map((entry) => (
-            <FsTreeNode key={entry.name} entry={entry} depth={0} />
+            <FsTreeNode
+              key={entry.name}
+              entry={entry}
+              depth={0}
+              parentPath=""
+              onOpenFile={onOpenFile}
+              workspaceRoot={folder.handle}
+            />
           ))}
         </div>
       )}
@@ -144,7 +238,7 @@ function WorkspaceRoot({ folder }: { folder: PickedWorkspaceFolder }) {
 }
 
 export function WorkspaceFolderTree() {
-  const { workspaceFolder, openWorkspace, setShowSidebar } = useWorkspaceTabs();
+  const { workspaceFolder, openWorkspace, closeSidebarPanel, openWorkspaceFile } = useWorkspaceTabs();
 
   return (
     <div className="ws-explorer ws-workspace-panel">
@@ -154,7 +248,7 @@ export function WorkspaceFolderTree() {
           type="button"
           className="ws-panel-close"
           aria-label="Close workspace"
-          onClick={() => setShowSidebar(false)}
+          onClick={() => closeSidebarPanel()}
         >
           ×
         </button>
@@ -162,7 +256,7 @@ export function WorkspaceFolderTree() {
 
       {workspaceFolder ? (
         <div className="ws-tree-root">
-          <WorkspaceRoot folder={workspaceFolder} />
+          <WorkspaceRoot folder={workspaceFolder} onOpenFile={openWorkspaceFile} />
         </div>
       ) : (
         <div className="ws-workspace-empty">

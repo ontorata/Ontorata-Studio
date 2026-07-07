@@ -1,3 +1,5 @@
+import { ensureReadWritePermission } from './file-system-permission';
+
 export interface PickedWorkspaceFolder {
   name: string;
   handle: FileSystemDirectoryHandle | null;
@@ -9,9 +11,10 @@ export async function pickWorkspaceFolder(): Promise<PickedWorkspaceFolder | nul
     try {
       const handle = await (
         window as Window & {
-          showDirectoryPicker: () => Promise<FileSystemDirectoryHandle>;
+          showDirectoryPicker: (options?: { mode?: 'read' | 'readwrite' }) => Promise<FileSystemDirectoryHandle>;
         }
-      ).showDirectoryPicker();
+      ).showDirectoryPicker({ mode: 'readwrite' });
+      await ensureReadWritePermission(handle);
       return { name: handle.name, handle };
     } catch {
       return null;

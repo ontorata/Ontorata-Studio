@@ -5,6 +5,10 @@ import { useWorkspaceTabs } from './useWorkspaceTabs';
 
 const CHORD_TIMEOUT_MS = 2000;
 
+function isCodeEditorTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && target.closest('.cm-editor') !== null;
+}
+
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;
@@ -76,7 +80,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
     function focusShellUnlessEditable(event: PointerEvent) {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (target.closest('input, textarea, select, [contenteditable="true"], .cm-editor')) return;
       if (!shellEl.contains(target)) return;
       shellEl.focus({ preventScroll: true });
     }
@@ -85,6 +89,9 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
       if (event.repeat) return false;
 
       if (isTerminalInputShortcut(event)) return false;
+
+      // Code editor owns VS Code keybindings — do not run workspace shortcuts.
+      if (isCodeEditorTarget(event.target)) return false;
 
       const mod = hasPrimaryMod(event);
       const { openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal } =

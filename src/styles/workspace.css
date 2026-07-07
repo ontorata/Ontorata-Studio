@@ -350,7 +350,7 @@ body:has(.ws-shell) #root {
 
 .ws-sidebar-stack {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   flex: 1 1 auto;
   width: 100%;
   height: 100%;
@@ -379,16 +379,16 @@ body:has(.ws-shell) #root {
 }
 
 .ws-activity-bar {
-  width: 2.75rem;
-  height: 100%;
+  width: 100%;
+  height: var(--ws-activity-height);
   flex-shrink: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.35rem 0;
+  padding: 0 0.35rem;
   background: var(--ws-surface);
-  border-right: 1px solid var(--ws-border-strong);
+  border-bottom: 1px solid var(--ws-border-strong);
 }
 
 .ws-activity-btn {
@@ -413,7 +413,7 @@ body:has(.ws-shell) #root {
 .ws-activity-btn.active {
   color: var(--ws-primary-dim);
   background: var(--ws-primary-soft);
-  box-shadow: inset 2px 0 0 var(--ws-primary);
+  box-shadow: inset 0 -2px 0 var(--ws-primary);
 }
 
 .ws-activity-btn:not(.active) {
@@ -641,6 +641,62 @@ body:has(.ws-shell) #root {
   overflow: auto;
   min-height: 0;
   position: relative;
+}
+
+.ws-file-editor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--ws-bg);
+}
+
+.ws-file-editor-path {
+  font-size: 0.75rem;
+  color: var(--ws-muted);
+  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+}
+
+.ws-file-editor-save-msg {
+  margin-left: auto;
+  font-size: 0.72rem;
+  color: var(--ws-primary-dim);
+}
+
+.ws-file-editor-header {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--ws-border);
+  background: var(--ws-surface);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ws-file-editor-status,
+.ws-file-editor-error {
+  padding: 1rem 1.25rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.ws-file-editor-error {
+  color: var(--ws-danger);
+}
+
+.ws-code-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ws-code-editor .cm-editor {
+  height: 100%;
+  outline: none;
+}
+
+.ws-code-editor .cm-editor.cm-focused {
+  outline: none;
 }
 
 .ws-empty-overlay {

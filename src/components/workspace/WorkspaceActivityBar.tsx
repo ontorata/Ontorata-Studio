@@ -1,48 +1,31 @@
 import { useAuth } from '../../hooks/useAuth';
-import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
-
-type ActivityId = 'explorer' | 'workspace' | 'ontory' | 'terminal';
+import { useWorkspaceTabs, type ActivityId } from '../../hooks/useWorkspaceTabs';
 
 export function WorkspaceActivityBar() {
   const { isAuthenticated } = useAuth();
   const {
-    toggleTerminal,
-    toggleAiPanel,
-    toggleExplorerView,
-    toggleWorkspaceView,
+    toggleActivity,
     showSidebar,
     showAiPanel,
     showTerminal,
     sidebarView,
+    explorerActive,
+    workspaceActive,
   } = useWorkspaceTabs();
 
   function onSelect(id: ActivityId) {
-    if (id === 'explorer') {
-      toggleExplorerView();
-      return;
-    }
-    if (id === 'workspace') {
-      toggleWorkspaceView();
-      return;
-    }
-    if (id === 'ontory') {
-      toggleAiPanel();
-      return;
-    }
-    if (id === 'terminal') {
-      toggleTerminal();
-    }
+    toggleActivity(id);
   }
 
   const items: Array<{ id: ActivityId; label: string; icon: string; active: boolean }> = [
-    { id: 'explorer', label: 'Explorer', icon: '▤', active: showSidebar && sidebarView === 'explorer' },
+    { id: 'explorer', label: 'Explorer', icon: '▤', active: showSidebar && sidebarView === 'explorer' && explorerActive },
     ...(isAuthenticated
       ? [
           {
             id: 'workspace' as const,
             label: 'Workspace',
             icon: '▣',
-            active: showSidebar && sidebarView === 'workspace',
+            active: showSidebar && sidebarView === 'workspace' && workspaceActive,
           },
         ]
       : []),

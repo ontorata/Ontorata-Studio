@@ -5,7 +5,7 @@ import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { NavIcon } from '../NavIcon';
 
 export function WorkspaceExplorer() {
-  const { openTab, setShowSidebar } = useWorkspaceTabs();
+  const { openTab, closeSidebarPanel } = useWorkspaceTabs();
   const { capabilities } = useCapabilities();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
@@ -21,7 +21,7 @@ export function WorkspaceExplorer() {
           type="button"
           className="ws-panel-close"
           aria-label="Close explorer"
-          onClick={() => setShowSidebar(false)}
+          onClick={() => closeSidebarPanel()}
         >
           ×
         </button>
