@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import { APP_TITLE, ONTORATA_LOGO_URL } from '../../config/brand';
+import { ONTORATA_LOGO_URL, APP_TITLE } from '../../config/brand';
 import { WORKSPACE_SHORTCUTS } from '../../config/shortcuts';
 import { isWorkspaceFilePath } from '../../domain/workspace/workspace-file-path';
 import { useAuth } from '../../hooks/useAuth';
@@ -16,7 +16,12 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
   const { tabs, activePath, activateTab, closeTab } = useWorkspaceTabs();
   const activeFilePath = isWorkspaceFilePath(activePath) ? activePath : null;
   const fileTabs = tabs.filter((tab) => tab.kind === 'file');
-  const isEmpty = !pathSuffix && !activeFilePath;
+  const isWelcomeActive =
+    !activeFilePath &&
+    activePath === '' &&
+    tabs.some((tab) => tab.path === '' && tab.kind === 'route');
+  const isRouteSurface = !pathSuffix && !activeFilePath;
+  const isEmpty = isRouteSurface && !isWelcomeActive;
   const showLogin = !loading && !isAuthenticated;
 
   return (
@@ -57,26 +62,31 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
         {!activeFilePath && <Outlet />}
         {fileTabs.map((tab) => (
           <div
-            key={tab.path}
+            key={tab.id}
             className="ws-file-editor-pane"
             hidden={activeFilePath !== tab.path}
           >
             <WorkspaceFileEditor filePath={tab.path} />
           </div>
         ))}
-        {showLogin && isEmpty && (
+        {showLogin && isRouteSurface && (
           <div className="ws-empty-overlay">
             <WorkspaceLoginForm variant="welcome" />
           </div>
         )}
-        {showLogin && !isEmpty && (
+        {showLogin && !isRouteSurface && (
           <div className="ws-empty-overlay">
             <WorkspaceLoginForm variant="prompt" />
           </div>
         )}
-        {loading && isEmpty && (
+        {loading && isRouteSurface && (
           <div className="ws-empty-overlay">
             <p className="ws-auth-loading">Loading session…</p>
+          </div>
+        )}
+        {!showLogin && !loading && isAuthenticated && isWelcomeActive && (
+          <div className="ws-empty-overlay">
+            <WorkspaceWelcomeState />
           </div>
         )}
         {!showLogin && !loading && isAuthenticated && isEmpty && (
@@ -89,8 +99,8 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
   );
 }
 
-function WorkspaceEmptyState() {
-  const { openTab, openWorkspace } = useWorkspaceTabs();
+function WorkspaceWelcomeState() {
+  const { openTab, showWorkspaceView } = useWorkspaceTabs();
 
   return (
     <div className="ws-empty">
@@ -99,7 +109,7 @@ function WorkspaceEmptyState() {
       <p>Select a module from the explorer or use the menu to open your workspace.</p>
 
       <div className="ws-empty-actions">
-        <button type="button" onClick={() => void openWorkspace()}>
+        <button type="button" onClick={() => showWorkspaceView()}>
           Open Workspace
         </button>
         <button type="button" onClick={() => openTab('memories', 'Memory Bank')}>
@@ -112,6 +122,23 @@ function WorkspaceEmptyState() {
           Ask Ontory
         </button>
       </div>
+
+      <ul className="ws-shortcuts">
+        {WORKSPACE_SHORTCUTS.map((s) => (
+          <li key={s.keys}>
+            <kbd>{s.keys}</kbd>
+            <span>{s.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function WorkspaceEmptyState() {
+  return (
+    <div className="ws-empty">
+      <img src={ONTORATA_LOGO_URL} alt="Ontorata" className="ws-empty-logo" />
 
       <ul className="ws-shortcuts">
         {WORKSPACE_SHORTCUTS.map((s) => (

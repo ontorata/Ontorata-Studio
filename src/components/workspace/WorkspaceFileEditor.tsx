@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { resolveFileHandle } from '../../domain/workspace/resolve-file-handle';
+import { ensureReadWritePermission } from '../../domain/workspace/file-system-permission';
 import { isLikelyTextFile, readFileHandleText, writeFileHandleText } from '../../domain/workspace/read-file';
 import { fromWorkspaceFilePath } from '../../domain/workspace/workspace-file-path';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { WorkspaceCodeMirror } from './WorkspaceCodeMirror';
+import { WorkspaceFileBreadcrumb } from './WorkspaceFileBreadcrumb';
 
 interface WorkspaceFileEditorProps {
   filePath: string;
@@ -18,9 +20,11 @@ export function WorkspaceFileEditor({ filePath }: WorkspaceFileEditorProps) {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editorExpanded, setEditorExpanded] = useState(true);
 
   const relativePath = fromWorkspaceFilePath(filePath);
   const fileName = tab?.label ?? relativePath.split('/').pop() ?? 'File';
+  const workspaceName = workspaceFolder?.name ?? 'Workspace';
   const isDirty = content !== null && savedContent !== null && content !== savedContent;
 
   useEffect(() => {
@@ -65,7 +69,7 @@ export function WorkspaceFileEditor({ filePath }: WorkspaceFileEditorProps) {
     return () => {
       cancelled = true;
     };
-  }, [tab?.fileHandle, fileName, filePath]);
+  }, [tab?.fileHandle, fileName]);
 
   const handleSave = useCallback(async () => {
     if (content === null || saving) return;
@@ -79,10 +83,14 @@ export function WorkspaceFileEditor({ filePath }: WorkspaceFileEditorProps) {
     setError(null);
 
     try {
-      const handle =
-        workspaceFolder?.handle !== null && workspaceFolder?.handle !== undefined
-          ? await resolveFileHandle(workspaceFolder.handle, relativePath, { requestWrite: false })
-          : tab?.fileHandle;
+      let handle = tab?.fileHandle;
+      if (!handle) {
+        if (!workspaceFolder?.handle) {
+          throw new Error('File handle is no longer available.');
+        }
+        handle = await resolveFileHandle(workspaceFolder.handle, relativePath);
+        await ensureReadWritePermission(handle);
+      }
       if (!handle) {
         throw new Error('File handle is no longer available.');
       }
@@ -97,27 +105,43 @@ export function WorkspaceFileEditor({ filePath }: WorkspaceFileEditorProps) {
     }
   }, [workspaceFolder?.handle, relativePath, tab?.fileHandle, content, savedContent, saving]);
 
+  const toggleEditorExpanded = useCallback(() => {
+    setEditorExpanded((expanded) => !expanded);
+  }, []);
+
   return (
-    <div className="ws-file-editor">
+    <div className={`ws-file-editor${editorExpanded ? '' : ' ws-file-editor-collapsed'}`}>
       <div className="ws-file-editor-header">
-        <span className="ws-file-editor-path">
-          {relativePath}
-          {isDirty ? ' •' : ''}
-        </span>
+        <WorkspaceFileBreadcrumb workspaceName={workspaceName} relativePath={relativePath} />
+        {isDirty && <span className="ws-file-editor-dirty" title="Modified">•</span>}
         {saveMessage && <span className="ws-file-editor-save-msg">{saveMessage}</span>}
         {saving && <span className="ws-file-editor-save-msg">Saving…</span>}
+        <button
+          type="button"
+          className="ws-file-editor-toggle"
+          aria-label={editorExpanded ? 'Collapse editor' : 'Expand editor'}
+          aria-expanded={editorExpanded}
+          title={editorExpanded ? 'Collapse editor' : 'Expand editor'}
+          onClick={toggleEditorExpanded}
+        >
+          {editorExpanded ? '⊟' : '▼'}
+        </button>
       </div>
-      {loading && <p className="ws-file-editor-status">Loading file…</p>}
-      {error && !loading && <p className="ws-file-editor-error">{error}</p>}
-      {!loading && !error && content !== null && (
-        <WorkspaceCodeMirror
-          key={filePath}
-          filePath={filePath}
-          value={content}
-          fileName={fileName}
-          onChange={setContent}
-          onSave={handleSave}
-        />
+      {editorExpanded && (
+        <div className="ws-file-editor-body">
+          {loading && <p className="ws-file-editor-status">Loading file…</p>}
+          {error && !loading && <p className="ws-file-editor-error">{error}</p>}
+          {!loading && !error && content !== null && (
+            <WorkspaceCodeMirror
+              key={filePath}
+              filePath={filePath}
+              value={content}
+              fileName={fileName}
+              onChange={setContent}
+              onSave={handleSave}
+            />
+          )}
+        </div>
       )}
     </div>
   );

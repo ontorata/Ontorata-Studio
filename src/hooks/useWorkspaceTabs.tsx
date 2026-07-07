@@ -16,6 +16,7 @@ export type ActivityId = 'explorer' | 'workspace' | 'ontory' | 'terminal';
 import { resolveNavTitle } from '../config/navigation';
 import { fromWorkspaceFilePath, toWorkspaceFilePath, isWorkspaceFilePath } from '../domain/workspace/workspace-file-path';
 import { normalizeRelativePath } from '../domain/workspace/dirty-file-paths';
+import { deleteWorkspaceFile, renameWorkspaceFile } from '../domain/workspace/mutate-workspace-entry';
 import { useWorkspaceBasePath } from './useWorkspacePath';
 
 export interface WorkspaceTab {
@@ -37,7 +38,8 @@ interface WorkspaceTabsContextValue {
   workspaceFolder: PickedWorkspaceFolder | null;
   sidebarView: SidebarView;
   openFolder: () => Promise<void>;
-  openWorkspace: () => Promise<void>;
+  openWorkspace: () => void;
+  selectWorkspaceFolder: () => Promise<void>;
   showExplorerView: () => void;
   showWorkspaceView: () => void;
   showTerminal: boolean;
@@ -49,6 +51,12 @@ interface WorkspaceTabsContextValue {
   explorerActive: boolean;
   workspaceActive: boolean;
   closeSidebarPanel: () => void;
+  deactivateWorkspacePanel: () => void;
+  closeWorkspace: () => void;
+  workspaceTreeRefreshKey: number;
+  workspaceTreeCollapseKey: number;
+  refreshWorkspaceTree: () => void;
+  collapseWorkspaceTree: () => void;
   toggleTerminal: () => void;
   toggleAiPanel: () => void;
   toggleSidebar: () => void;
@@ -57,6 +65,12 @@ interface WorkspaceTabsContextValue {
   toggleActivity: (id: ActivityId) => void;
   dirtyFiles: readonly string[];
   setFileDirty: (relativePath: string, dirty: boolean) => void;
+  renameWorkspaceFileEntry: (relativePath: string, newFileName: string) => Promise<void>;
+  deleteWorkspaceFileEntry: (relativePath: string) => Promise<void>;
+  workspaceActiveFolderPath: string;
+  setWorkspaceActiveFolderPath: (path: string) => void;
+  focusWorkspaceFolderPath: (path: string) => void;
+  workspaceFolderRevealKey: number;
 }
 
 const WorkspaceTabsContext = createContext<WorkspaceTabsContextValue | null>(null);
@@ -74,6 +88,10 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
   const [explorerActive, setExplorerActive] = useState(true);
   const [workspaceActive, setWorkspaceActive] = useState(false);
   const [dirtyFiles, setDirtyFiles] = useState<readonly string[]>([]);
+  const [workspaceTreeRefreshKey, setWorkspaceTreeRefreshKey] = useState(0);
+  const [workspaceTreeCollapseKey, setWorkspaceTreeCollapseKey] = useState(0);
+  const [workspaceActiveFolderPath, setWorkspaceActiveFolderPath] = useState('');
+  const [workspaceFolderRevealKey, setWorkspaceFolderRevealKey] = useState(0);
 
   const setFileDirty = useCallback((relativePath: string, dirty: boolean) => {
     const normalized = normalizeRelativePath(relativePath);
@@ -250,33 +268,147 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
     setShowSidebar(false);
   }, [tabs, activePath, closeTab, base, navigate]);
 
-  const openFolder = useCallback(async () => {
-    const picked = await pickWorkspaceFolder();
-    if (!picked) return;
-    setWorkspaceFolder(picked);
+  const showExplorerView = useCallback(() => {
+    setSidebarView('explorer');
+    setExplorerActive(true);
+    setWorkspaceActive(false);
+    setShowSidebar(true);
+  }, []);
+
+  const showWorkspaceView = useCallback(() => {
     setSidebarView('workspace');
     setWorkspaceActive(true);
     setExplorerActive(false);
     setShowSidebar(true);
   }, []);
 
-  const openWorkspace = useCallback(async () => {
+  const selectWorkspaceFolder = useCallback(async () => {
     const picked = await pickWorkspaceFolder();
     if (!picked) return;
     setWorkspaceFolder(picked);
+    showWorkspaceView();
+  }, [showWorkspaceView]);
+
+  const openFolder = useCallback(async () => {
+    await selectWorkspaceFolder();
+  }, [selectWorkspaceFolder]);
+
+  const openWorkspace = useCallback(() => {
+    showWorkspaceView();
+  }, [showWorkspaceView]);
+
+  const deactivateWorkspacePanel = useCallback(() => {
+    setWorkspaceActive(false);
+    setShowSidebar(true);
+    if (explorerActive) {
+      setSidebarView('explorer');
+    }
+  }, [explorerActive]);
+
+  const closeWorkspace = useCallback(() => {
+    if (activePath && isWorkspaceFilePath(activePath)) {
+      const remaining = tabs.filter((t) => t.kind !== 'file');
+      const fallback = remaining[remaining.length - 1];
+      if (fallback) {
+        setActivePath(fallback.path);
+        navigateToTab(fallback.path);
+      } else {
+        setActivePath(null);
+        navigate(base);
+      }
+    }
+
+    setTabs((prev) => prev.filter((t) => t.kind !== 'file'));
+    setDirtyFiles([]);
+    setWorkspaceFolder(null);
+    setWorkspaceActive(false);
+    setWorkspaceActiveFolderPath('');
+    setWorkspaceFolderRevealKey(0);
+    setWorkspaceTreeRefreshKey(0);
+    setWorkspaceTreeCollapseKey(0);
+  }, [activePath, tabs, navigateToTab, base, navigate]);
+
+  const refreshWorkspaceTree = useCallback(() => {
+    setWorkspaceTreeRefreshKey((key) => key + 1);
+  }, []);
+
+  const collapseWorkspaceTree = useCallback(() => {
+    setWorkspaceTreeCollapseKey((key) => key + 1);
+  }, []);
+
+  const focusWorkspaceFolderPath = useCallback((path: string) => {
+    const normalized = path.replace(/\\/g, '/');
+    setWorkspaceActiveFolderPath(normalized);
+    setWorkspaceFolderRevealKey((key) => key + 1);
     setSidebarView('workspace');
     setWorkspaceActive(true);
     setExplorerActive(false);
     setShowSidebar(true);
-    const normalized = '';
-    const title = 'Welcome';
-    setTabs((prev) => {
-      if (prev.some((t) => t.path === normalized)) return prev;
-      return [...prev, { id: 'welcome', path: normalized, label: title }];
-    });
-    setActivePath(normalized);
-    navigate(base);
-  }, [base, navigate]);
+  }, []);
+
+  const renameWorkspaceFileEntry = useCallback(
+    async (relativePath: string, newFileName: string) => {
+      const root = workspaceFolder?.handle;
+      if (!root) return;
+
+      const oldTabPath = toWorkspaceFilePath(relativePath);
+      const { relativePath: newRelativePath, handle: newHandle } = await renameWorkspaceFile(
+        root,
+        relativePath,
+        newFileName,
+      );
+      const newTabPath = toWorkspaceFilePath(newRelativePath);
+      const newLabel = newRelativePath.split('/').pop() ?? newFileName;
+
+      setDirtyFiles((prev) => {
+        const normalizedOld = normalizeRelativePath(relativePath);
+        if (!prev.includes(normalizedOld)) return prev;
+        const normalizedNew = normalizeRelativePath(newRelativePath);
+        return [...prev.filter((path) => path !== normalizedOld), normalizedNew];
+      });
+
+      setTabs((prev) =>
+        prev.map((tab) =>
+          tab.path === oldTabPath
+            ? {
+                ...tab,
+                id: `ws-file-${newRelativePath.replace(/[/\\]+/g, '--')}`,
+                path: newTabPath,
+                label: newLabel,
+                fileHandle: newHandle,
+                kind: 'file' as const,
+              }
+            : tab,
+        ),
+      );
+
+      if (activePath === oldTabPath) {
+        setActivePath(newTabPath);
+      }
+
+      refreshWorkspaceTree();
+    },
+    [workspaceFolder?.handle, activePath, refreshWorkspaceTree],
+  );
+
+  const deleteWorkspaceFileEntry = useCallback(
+    async (relativePath: string) => {
+      const root = workspaceFolder?.handle;
+      if (!root) return;
+
+      const tabPath = toWorkspaceFilePath(relativePath);
+      const tab = tabs.find((t) => t.path === tabPath);
+      if (tab) {
+        closeTab(tab.id);
+      } else {
+        setFileDirty(relativePath, false);
+      }
+
+      await deleteWorkspaceFile(root, relativePath);
+      refreshWorkspaceTree();
+    },
+    [workspaceFolder?.handle, tabs, closeTab, setFileDirty, refreshWorkspaceTree],
+  );
 
   const deactivateActivity = useCallback(
     (id: ActivityId) => {
@@ -340,14 +472,7 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       }
 
       if (id === 'workspace') {
-        if (workspaceFolder) {
-          setSidebarView('workspace');
-          setWorkspaceActive(true);
-          setExplorerActive(false);
-          setShowSidebar(true);
-          return;
-        }
-        void openWorkspace();
+        showWorkspaceView();
         return;
       }
 
@@ -358,7 +483,7 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
 
       setShowTerminal(true);
     },
-    [workspaceFolder, openWorkspace, ensureWelcomeTab],
+    [showWorkspaceView, ensureWelcomeTab],
   );
 
   const toggleActivity = useCallback(
@@ -388,20 +513,6 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
   const toggleExplorerView = useCallback(() => toggleActivity('explorer'), [toggleActivity]);
   const toggleWorkspaceView = useCallback(() => toggleActivity('workspace'), [toggleActivity]);
 
-  const showExplorerView = useCallback(() => {
-    setSidebarView('explorer');
-    setExplorerActive(true);
-    setWorkspaceActive(false);
-    setShowSidebar(true);
-  }, []);
-
-  const showWorkspaceView = useCallback(() => {
-    setSidebarView('workspace');
-    setWorkspaceActive(true);
-    setExplorerActive(false);
-    setShowSidebar(true);
-  }, []);
-
   const value = useMemo(
     () => ({
       tabs,
@@ -415,6 +526,7 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       sidebarView,
       openFolder,
       openWorkspace,
+      selectWorkspaceFolder,
       showExplorerView,
       showWorkspaceView,
       showTerminal,
@@ -426,6 +538,12 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       explorerActive,
       workspaceActive,
       closeSidebarPanel,
+      deactivateWorkspacePanel,
+      closeWorkspace,
+      workspaceTreeRefreshKey,
+      workspaceTreeCollapseKey,
+      refreshWorkspaceTree,
+      collapseWorkspaceTree,
       toggleTerminal,
       toggleAiPanel,
       toggleSidebar,
@@ -434,6 +552,12 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       toggleActivity,
       dirtyFiles,
       setFileDirty,
+      renameWorkspaceFileEntry,
+      deleteWorkspaceFileEntry,
+      workspaceActiveFolderPath,
+      setWorkspaceActiveFolderPath,
+      focusWorkspaceFolderPath,
+      workspaceFolderRevealKey,
     }),
     [
       tabs,
@@ -447,6 +571,7 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       sidebarView,
       openFolder,
       openWorkspace,
+      selectWorkspaceFolder,
       showExplorerView,
       showWorkspaceView,
       showTerminal,
@@ -455,6 +580,12 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       explorerActive,
       workspaceActive,
       closeSidebarPanel,
+      deactivateWorkspacePanel,
+      closeWorkspace,
+      workspaceTreeRefreshKey,
+      workspaceTreeCollapseKey,
+      refreshWorkspaceTree,
+      collapseWorkspaceTree,
       toggleTerminal,
       toggleAiPanel,
       toggleSidebar,
@@ -463,6 +594,12 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       toggleActivity,
       dirtyFiles,
       setFileDirty,
+      renameWorkspaceFileEntry,
+      deleteWorkspaceFileEntry,
+      workspaceActiveFolderPath,
+      setWorkspaceActiveFolderPath,
+      focusWorkspaceFolderPath,
+      workspaceFolderRevealKey,
     ],
   );
 

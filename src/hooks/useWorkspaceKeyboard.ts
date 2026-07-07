@@ -142,7 +142,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
 
       if (mod && event.shiftKey && event.code === 'KeyO') {
         if (!actionsRef.current.isAuthenticated) return false;
-        void openWorkspace();
+        openWorkspace();
         return true;
       }
       if (mod && !event.altKey && !event.shiftKey && event.code === 'KeyO') {

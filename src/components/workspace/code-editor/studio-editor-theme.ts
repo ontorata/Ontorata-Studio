@@ -7,13 +7,15 @@ export const studioEditorTheme = EditorView.theme(
       height: '100%',
       backgroundColor: '#ffffff',
       color: '#111827',
-      fontSize: '13px',
+      fontSize: '14px',
     },
     '.cm-scroller': {
-      fontFamily: "ui-monospace, 'Cascadia Code', 'Consolas', monospace",
-      lineHeight: '1.55',
+      fontFamily: "var(--font-mono, 'Cascadia Mono', 'Cascadia Code', Consolas, 'Courier New', ui-monospace, monospace)",
+      lineHeight: '1.5',
+      fontVariantLigatures: 'none',
     },
     '.cm-gutters': {
+      fontFamily: "var(--font-mono, 'Cascadia Mono', 'Cascadia Code', Consolas, 'Courier New', ui-monospace, monospace)",
       backgroundColor: '#f3f6f5',
       color: '#8a9690',
       borderRight: '1px solid #d1dbd6',

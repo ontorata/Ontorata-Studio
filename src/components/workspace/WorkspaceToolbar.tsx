@@ -61,7 +61,7 @@ export function WorkspaceToolbar() {
   }
 
   async function onOpenWorkspace() {
-    await openWorkspace();
+    openWorkspace();
   }
 
   const goItems: MenuItem[] = NAV_GROUPS.flatMap((g) =>
@@ -77,7 +77,7 @@ export function WorkspaceToolbar() {
       items: [
         ...(isAuthenticated
           ? [
-              { label: 'Open Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
+              { label: 'Select Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
               { label: 'Open Workspace', action: onOpenWorkspace, shortcut: 'Ctrl+Shift+O' },
             ]
           : []),

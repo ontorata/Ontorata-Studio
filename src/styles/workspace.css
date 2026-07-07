@@ -495,6 +495,19 @@ body:has(.ws-shell) #root {
   flex-shrink: 0;
 }
 
+.ws-file-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.ws-file-icon svg {
+  display: block;
+}
+
 .ws-tree-label {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -532,6 +545,71 @@ body:has(.ws-shell) #root {
 
 .ws-workspace-panel .ws-explorer-header span {
   color: var(--ws-primary-dim);
+}
+
+.ws-workspace-panel-header {
+  gap: 0.35rem;
+}
+
+.ws-workspace-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: auto;
+}
+
+.ws-workspace-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: none;
+  border-radius: 0.3rem;
+  background: transparent;
+  color: var(--ws-muted);
+  cursor: pointer;
+}
+
+.ws-workspace-action:hover:not(:disabled) {
+  background: var(--ws-primary-soft);
+  color: var(--ws-text);
+}
+
+.ws-workspace-action:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.ws-workspace-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem 0.35rem;
+  border-bottom: 1px solid var(--ws-border);
+  background: var(--ws-surface);
+  flex-shrink: 0;
+}
+
+.ws-workspace-menu-item {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--ws-muted);
+  padding: 0.2rem 0.35rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+
+.ws-workspace-menu-item:hover:not(:disabled) {
+  background: var(--ws-primary-soft);
+  color: var(--ws-text);
+}
+
+.ws-workspace-menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .ws-workspace-empty {
@@ -582,6 +660,79 @@ body:has(.ws-shell) #root {
   min-width: 0;
 }
 
+.ws-fs-folder-node {
+  min-width: 0;
+}
+
+.ws-fs-folder-node:hover .ws-fs-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ws-fs-folder-node-active > .ws-fs-folder-active,
+.ws-fs-folder-node-active > .ws-tree-folder-row.ws-fs-folder-active {
+  background: var(--ws-primary-soft);
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(15, 23, 42, 0.05);
+}
+
+.ws-fs-folder {
+  cursor: default;
+  padding: 0;
+  gap: 0;
+}
+
+.ws-fs-chevron-btn,
+.ws-fs-folder-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ws-text);
+  cursor: pointer;
+  padding: 0;
+}
+
+.ws-fs-chevron-btn {
+  flex-shrink: 0;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.75rem;
+  border-radius: 0.25rem;
+}
+
+.ws-fs-chevron-btn:hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.ws-fs-folder-select {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: 0.3rem 0.25rem 0.3rem 0;
+}
+
+.ws-fs-folder-select:disabled {
+  cursor: default;
+}
+
+.ws-tree-folder-row.ws-fs-folder {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 0 0.4rem 0 0.15rem;
+}
+
+.ws-fs-folder .ws-tree-label {
+  flex: 1;
+  min-width: 0;
+}
+
 .ws-fs-children {
   padding-left: 0.75rem;
   margin-left: 0.5rem;
@@ -590,10 +741,92 @@ body:has(.ws-shell) #root {
 
 .ws-fs-file {
   cursor: default;
+  padding: 0;
+  gap: 0;
+}
+
+.ws-fs-file-node {
+  min-width: 0;
+}
+
+.ws-fs-file-node:hover .ws-fs-row-open {
+  background: var(--ws-primary-soft);
+}
+
+.ws-fs-row-open {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: left;
+  padding: 0.3rem 0.4rem;
+  border-radius: 0.35rem;
+  color: var(--ws-text);
+  cursor: pointer;
+}
+
+.ws-fs-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  flex-shrink: 0;
+  padding-right: 0.2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.ws-fs-file-node:hover .ws-fs-row-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ws-fs-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.25rem;
+  color: var(--ws-muted);
+  cursor: pointer;
+  padding: 0;
+}
+
+.ws-fs-row-action:hover {
+  background: var(--ws-surface);
+  color: var(--ws-text);
+}
+
+.ws-fs-row-action-danger:hover {
+  color: #c53030;
+}
+
+.ws-fs-rename-input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: inherit;
+  padding: 0.1rem 0.25rem;
+  border: 1px solid var(--ws-primary);
+  border-radius: 0.2rem;
+  background: var(--ws-bg);
+  color: var(--ws-text);
 }
 
 .ws-fs-file:hover {
-  background: var(--ws-primary-soft);
+  background: transparent;
+}
+
+.ws-fs-children .ws-fs-file .ws-fs-row-open {
+  padding-right: 0.15rem;
 }
 
 .ws-fs-children .ws-tree-row {
@@ -697,13 +930,114 @@ body:has(.ws-shell) #root {
 }
 
 .ws-file-editor-path {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--ws-muted);
-  font-family: ui-monospace, 'Cascadia Code', 'Consolas', monospace;
+  font-family: var(--font-mono, 'Cascadia Mono', 'Cascadia Code', Consolas, 'Courier New', ui-monospace, monospace);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.ws-file-breadcrumb {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ws-file-breadcrumb-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ws-file-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.ws-file-breadcrumb-item:last-child {
+  flex-shrink: 0;
+}
+
+.ws-file-breadcrumb-sep {
+  flex-shrink: 0;
+  margin: 0 0.2rem;
+  color: var(--ws-muted);
+  font-size: 0.72rem;
+  line-height: 1;
+  opacity: 0.75;
+}
+
+.ws-file-breadcrumb-link,
+.ws-file-breadcrumb-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
+.ws-file-breadcrumb-link {
+  border: none;
+  background: transparent;
+  padding: 0.1rem 0.2rem;
+  margin: 0;
+  border-radius: 3px;
+  color: var(--ws-muted);
+  font-family: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-file-breadcrumb-link:hover,
+.ws-file-breadcrumb-link:focus-visible {
+  color: var(--ws-fg);
+  background: color-mix(in srgb, var(--ws-border) 55%, transparent);
+  outline: none;
+}
+
+.ws-file-breadcrumb-current {
+  color: var(--ws-fg);
+  font-weight: 500;
+  padding: 0.1rem 0.2rem;
+  overflow: hidden;
+}
+
+.ws-file-breadcrumb-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ws-file-breadcrumb-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.ws-file-editor-dirty {
+  flex-shrink: 0;
+  color: #b5892f;
+  font-size: 0.85rem;
+  line-height: 1;
 }
 
 .ws-file-editor-save-msg {
-  margin-left: auto;
+  flex-shrink: 0;
   font-size: 0.72rem;
   color: var(--ws-primary-dim);
 }
@@ -716,6 +1050,38 @@ body:has(.ws-shell) #root {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.ws-file-editor-collapsed .ws-file-editor-header {
+  border-bottom: none;
+}
+
+.ws-file-editor-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--ws-muted);
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ws-file-editor-toggle:hover {
+  background: var(--ws-primary-soft);
+  color: var(--ws-text);
+}
+
+.ws-file-editor-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .ws-file-editor-status,
@@ -738,6 +1104,7 @@ body:has(.ws-shell) #root {
 .ws-code-editor .cm-editor {
   height: 100%;
   outline: none;
+  font-family: var(--font-mono, 'Cascadia Mono', 'Cascadia Code', Consolas, 'Courier New', ui-monospace, monospace);
 }
 
 .ws-code-editor .cm-editor.cm-focused {
