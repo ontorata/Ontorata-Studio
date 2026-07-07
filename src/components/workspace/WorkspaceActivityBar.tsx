@@ -1,8 +1,10 @@
+import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 
 type ActivityId = 'explorer' | 'workspace' | 'ontory' | 'terminal';
 
 export function WorkspaceActivityBar() {
+  const { isAuthenticated } = useAuth();
   const {
     toggleTerminal,
     toggleAiPanel,
@@ -27,19 +29,27 @@ export function WorkspaceActivityBar() {
       toggleAiPanel();
       return;
     }
-    toggleTerminal();
+    if (id === 'terminal') {
+      toggleTerminal();
+    }
   }
 
   const items: Array<{ id: ActivityId; label: string; icon: string; active: boolean }> = [
     { id: 'explorer', label: 'Explorer', icon: '▤', active: showSidebar && sidebarView === 'explorer' },
-    {
-      id: 'workspace',
-      label: 'Workspace',
-      icon: '▣',
-      active: showSidebar && sidebarView === 'workspace',
-    },
+    ...(isAuthenticated
+      ? [
+          {
+            id: 'workspace' as const,
+            label: 'Workspace',
+            icon: '▣',
+            active: showSidebar && sidebarView === 'workspace',
+          },
+        ]
+      : []),
     { id: 'ontory', label: 'Ontory', icon: '⌕', active: showAiPanel },
-    { id: 'terminal', label: 'Terminal', icon: '▭', active: showTerminal },
+    ...(isAuthenticated
+      ? [{ id: 'terminal' as const, label: 'Terminal', icon: '▭', active: showTerminal }]
+      : []),
   ];
 
   return (

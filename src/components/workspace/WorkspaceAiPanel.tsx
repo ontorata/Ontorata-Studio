@@ -1,9 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStudioClient } from '../../hooks/useStudioClient';
+import { useAuth } from '../../hooks/useAuth';
+import { useOptionalStudioClient } from '../../hooks/useStudioClient';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { Button, Input } from '../../presentation/design-system/primitives';
+import { WorkspaceLoginForm } from './WorkspaceLoginForm';
 
 interface ChatMessage {
   id: string;
@@ -16,7 +18,8 @@ const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 
 /** Right-side AI panel — Ontory with memory context. */
 export function WorkspaceAiPanel() {
-  const client = useStudioClient();
+  const { isAuthenticated } = useAuth();
+  const client = useOptionalStudioClient();
   const base = useWorkspaceBasePath();
   const { setShowAiPanel } = useWorkspaceTabs();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -34,6 +37,7 @@ export function WorkspaceAiPanel() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
+    if (!client) return;
     const query = input.trim();
     if (!query) return;
 
@@ -133,19 +137,23 @@ export function WorkspaceAiPanel() {
         )}
       </div>
 
-      <form className="ws-ai-input" onSubmit={onSubmit}>
-        <Input
-          label="Message"
-          hideLabel
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask Ontory…"
-          disabled={loading}
-        />
-        <Button type="submit" variant="primary" disabled={loading}>
-          {loading ? '…' : 'Send'}
-        </Button>
-      </form>
+      {!isAuthenticated ? (
+        <WorkspaceLoginForm variant="panel" />
+      ) : (
+        <form className="ws-ai-input" onSubmit={onSubmit}>
+          <Input
+            label="Message"
+            hideLabel
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask Ontory…"
+            disabled={loading}
+          />
+          <Button type="submit" variant="primary" disabled={loading}>
+            {loading ? '…' : 'Send'}
+          </Button>
+        </form>
+      )}
     </div>
   );
 }

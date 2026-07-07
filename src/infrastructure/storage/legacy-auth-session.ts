@@ -1,3 +1,5 @@
+import { getDefaultRataryBaseUrl } from '../../config/env';
+
 export interface LegacyStoredSession {
   apiKey: string;
   baseUrl: string;
@@ -41,9 +43,7 @@ export function clearLegacyStoredSession(): void {
 }
 
 export function defaultRataryBaseUrl(): string {
-  const fromEnv = import.meta.env.VITE_RATARY_BASE_URL?.trim();
-  if (fromEnv) return normalizeBaseUrl(fromEnv);
-  return import.meta.env.PROD ? 'https://ratary.ontorata.com' : 'http://localhost:9876';
+  return getDefaultRataryBaseUrl();
 }
 
 function normalizeBaseUrl(url: string): string {

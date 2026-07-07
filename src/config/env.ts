@@ -20,7 +20,11 @@ export function getAuthClientId(): string {
 export function getDefaultRataryBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_RATARY_BASE_URL?.trim();
   if (fromEnv) return fromEnv;
-  return import.meta.env.PROD ? PRODUCTION_RATARY_URL : 'http://localhost:9876';
+  if (import.meta.env.PROD) return PRODUCTION_RATARY_URL;
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return 'http://localhost:9876';
 }
 
 export function isOidcEnabled(): boolean {

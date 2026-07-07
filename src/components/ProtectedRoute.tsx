@@ -1,6 +1,8 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { getDefaultWorkspaceId } from '../config/env';
 import { useAuth } from '../hooks/useAuth';
 
+/** Legacy guard — unauthenticated users land in workspace (in-app login). */
 export function ProtectedRoute() {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
@@ -14,7 +16,9 @@ export function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    const ws = getDefaultWorkspaceId();
+    const suffix = location.pathname === '/connect' ? '' : '';
+    return <Navigate to={`/workspace/${ws}${suffix}`} replace />;
   }
 
   return <Outlet />;

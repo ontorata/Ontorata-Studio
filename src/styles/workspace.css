@@ -45,6 +45,8 @@ body:has(.ws-shell) #root {
   --accent-dim: var(--ws-primary-dim);
   --ok: var(--ws-primary);
 
+  flex: 1 1 auto;
+  min-height: 0;
   color-scheme: light;
   display: flex;
   flex-direction: column;
@@ -309,9 +311,14 @@ body:has(.ws-shell) #root {
   max-width: 220px;
 }
 
-.ws-toolbar-search-btn:hover {
+.ws-toolbar-search-btn:hover:not(:disabled) {
   border-color: var(--ws-primary);
   color: var(--ws-text);
+}
+
+.ws-toolbar-search-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .ws-toolbar-search-btn kbd {
@@ -343,7 +350,8 @@ body:has(.ws-shell) #root {
 
 .ws-sidebar-stack {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex: 1 1 auto;
   width: 100%;
   height: 100%;
   min-height: 0;
@@ -351,22 +359,36 @@ body:has(.ws-shell) #root {
   overflow: hidden;
 }
 
-.ws-sidebar-stack .ws-explorer {
+.ws-panel-inner > .ws-sidebar-stack {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.ws-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.ws-sidebar-body .ws-explorer {
   flex: 1 1 auto;
   min-height: 0;
 }
 
 .ws-activity-bar {
-  width: 100%;
-  height: var(--ws-activity-height);
+  width: 2.75rem;
+  height: 100%;
   flex-shrink: 0;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  padding: 0 0.35rem;
+  padding: 0.35rem 0;
   background: var(--ws-surface);
-  border-bottom: 1px solid var(--ws-border-strong);
+  border-right: 1px solid var(--ws-border-strong);
 }
 
 .ws-activity-btn {
@@ -391,7 +413,7 @@ body:has(.ws-shell) #root {
 .ws-activity-btn.active {
   color: var(--ws-primary-dim);
   background: var(--ws-primary-soft);
-  box-shadow: inset 0 -2px 0 var(--ws-primary);
+  box-shadow: inset 2px 0 0 var(--ws-primary);
 }
 
 .ws-activity-btn:not(.active) {
@@ -403,7 +425,6 @@ body:has(.ws-shell) #root {
 }
 
 .ws-explorer {
-  height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -1159,6 +1180,100 @@ body:has(.ws-shell) #root {
   .ws-editor-surface .coding-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.ws-login-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-login-wrap.welcome,
+.ws-login-wrap.prompt {
+  min-height: min(100%, 520px);
+  padding: clamp(1rem, 4vw, 2.5rem);
+}
+
+.ws-login-card {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
+.ws-login-welcome {
+  text-align: center;
+  margin: -0.25rem 0 1.5rem;
+}
+
+.ws-login-welcome-logo {
+  width: auto;
+  height: clamp(3rem, 10vw, 4rem);
+  display: block;
+  object-fit: contain;
+  margin: 0 auto 1rem;
+}
+
+.ws-login-welcome-title {
+  margin: 0 0 0.75rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+  color: var(--ws-text);
+}
+
+.ws-login-welcome-desc {
+  margin: 0;
+  color: var(--ws-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.ws-login-head {
+  width: min(100%, 420px);
+  margin: 0 auto 1rem;
+  text-align: left;
+}
+
+.ws-login-head h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+}
+
+.ws-login-head p {
+  margin: 0;
+  color: var(--ws-muted);
+  font-size: 0.9rem;
+}
+
+.ws-login-prompt-title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ws-text);
+}
+
+.ws-login-form .login-submit {
+  width: 100%;
+}
+
+.ws-ai-login-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--ws-border);
+  border-radius: 0.5rem;
+  background: var(--ws-bg);
+  color: var(--ws-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  user-select: none;
+}
+
+.ws-auth-loading {
+  color: var(--ws-muted);
+  font-size: 0.9rem;
 }
 
 .ws-empty {

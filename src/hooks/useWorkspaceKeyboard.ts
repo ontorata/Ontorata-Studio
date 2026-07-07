@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react';
+import { useAuth } from './useAuth';
 import { isTerminalInputShortcut } from './useTerminalInputKeyboard';
 import { useWorkspaceTabs } from './useWorkspaceTabs';
 
@@ -26,6 +27,7 @@ function isSlash(event: KeyboardEvent): boolean {
 
 /** Global workspace keyboard shortcuts with browser-safe fallbacks. */
 export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
+  const { isAuthenticated } = useAuth();
   const { openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal } =
     useWorkspaceTabs();
   const actionsRef = useRef({
@@ -35,6 +37,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
     toggleSidebar,
     toggleAiPanel,
     toggleTerminal,
+    isAuthenticated,
   });
   const chordRef = useRef(false);
   const chordTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,8 +50,9 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
       toggleSidebar,
       toggleAiPanel,
       toggleTerminal,
+      isAuthenticated,
     };
-  }, [openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal]);
+  }, [openFolder, openWorkspace, openTab, toggleSidebar, toggleAiPanel, toggleTerminal, isAuthenticated]);
 
   useEffect(() => {
     const root = shellRef.current;
@@ -93,6 +97,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
 
       if (chordRef.current && mod && !event.altKey && event.code === 'KeyO') {
         disarmChord();
+        if (!actionsRef.current.isAuthenticated) return false;
         void openFolder();
         return true;
       }
@@ -121,6 +126,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
         return true;
       }
       if (mod && isBacktick(event)) {
+        if (!actionsRef.current.isAuthenticated) return false;
         toggleTerminal();
         return true;
       }
@@ -128,6 +134,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
       if (isEditableTarget(event.target)) return false;
 
       if (mod && event.shiftKey && event.code === 'KeyO') {
+        if (!actionsRef.current.isAuthenticated) return false;
         void openWorkspace();
         return true;
       }
@@ -136,6 +143,7 @@ export function useWorkspaceKeyboard(shellRef: RefObject<HTMLElement | null>) {
         return true;
       }
       if (!mod && !event.altKey && isSlash(event)) {
+        if (!actionsRef.current.isAuthenticated) return false;
         openTab('search', 'Search');
         return true;
       }

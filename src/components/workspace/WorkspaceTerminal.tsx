@@ -12,7 +12,7 @@ import {
   formatGenericError,
 } from '../../domain/terminal/powershell-errors';
 import { useConnection } from '../../hooks/useConnection';
-import { useStudioClient } from '../../hooks/useStudioClient';
+import { useOptionalStudioClient } from '../../hooks/useStudioClient';
 import { expandBashHistory } from '../../config/git-bash-shortcuts';
 import type { OutputChannelId } from '../../config/output-channels';
 import { useOutputChannels } from '../../hooks/useOutputChannels';
@@ -87,7 +87,7 @@ function createSession(profileId: ShellProfileId = DEFAULT_TERMINAL_PROFILE): Te
 }
 
 export function WorkspaceTerminal() {
-  const client = useStudioClient();
+  const client = useOptionalStudioClient();
   const { hasActiveConnection } = useConnection();
   const { setShowTerminal, showTerminal } = useWorkspaceTabs();
   const [activeTab, setActiveTab] = useState<PanelTab>('terminal');
@@ -367,6 +367,13 @@ export function WorkspaceTerminal() {
     }
 
     if (cmd === 'health') {
+      if (!client) {
+        const message = 'Not signed in — sign in from the editor or Ontory panel first.';
+        markInputLineStatus(session.id, inputLineId, 'error');
+        appendSessionLine(session.id, 'error', message);
+        addProblem('warning', message, 'health');
+        return;
+      }
       try {
         const h = await client.getHealth();
         const healthText = JSON.stringify(h, null, 2);
@@ -384,6 +391,13 @@ export function WorkspaceTerminal() {
     }
 
     if (cmd === 'memories') {
+      if (!client) {
+        const message = 'Not signed in — sign in from the editor or Ontory panel first.';
+        markInputLineStatus(session.id, inputLineId, 'error');
+        appendSessionLine(session.id, 'error', message);
+        addProblem('warning', message, 'memories');
+        return;
+      }
       try {
         const res = await client.searchMemories({ q: '', limit: 5 });
         const count = res.results?.length ?? 0;

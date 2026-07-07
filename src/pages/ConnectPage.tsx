@@ -27,7 +27,7 @@ export function ConnectPage() {
   }, [hasActiveConnection, navigate]);
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/workspace/${getDefaultWorkspaceId()}`} replace />;
   }
 
   async function onValidate() {

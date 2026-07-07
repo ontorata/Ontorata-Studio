@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Group, Panel, Separator, usePanelRef } from 'react-resizable-panels';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
 import { useWorkspaceKeyboard } from '../../hooks/useWorkspaceKeyboard';
+import { useAuth } from '../../hooks/useAuth';
 import { WorkspaceTabsProvider, useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { WorkspaceActivityBar } from './WorkspaceActivityBar';
 import { WorkspaceAiPanel } from './WorkspaceAiPanel';
@@ -84,12 +85,26 @@ function WorkspacePanels() {
   const shellRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const base = useWorkspaceBasePath();
-  const { showTerminal, showAiPanel, showSidebar, sidebarView } = useWorkspaceTabs();
+  const { showTerminal, showAiPanel, showSidebar, sidebarView, showExplorerView } = useWorkspaceTabs();
+  const { isAuthenticated } = useAuth();
+  const terminalOpen = isAuthenticated && showTerminal;
+  const verticalLayout =
+    terminalOpen ? { main: 72, terminal: 28 } : { main: 100, terminal: 0 };
+
+  useEffect(() => {
+    if (!isAuthenticated && sidebarView === 'workspace') {
+      showExplorerView();
+    }
+  }, [isAuthenticated, sidebarView, showExplorerView]);
+
   useWorkspaceKeyboard(shellRef);
 
-  const pathSuffix = location.pathname.startsWith(`${base}/`)
-    ? location.pathname.slice(base.length + 1)
-    : '';
+  const pathSuffix =
+    location.pathname === base
+      ? ''
+      : location.pathname.startsWith(`${base}/`)
+        ? location.pathname.slice(base.length + 1)
+        : '';
 
   return (
     <div
@@ -98,7 +113,7 @@ function WorkspacePanels() {
       tabIndex={-1}
       data-sidebar-open={showSidebar ? 'true' : 'false'}
       data-ai-open={showAiPanel ? 'true' : 'false'}
-      data-terminal-open={showTerminal ? 'true' : 'false'}
+      data-terminal-open={terminalOpen ? 'true' : 'false'}
     >
       <WorkspaceToolbar />
       <div className="ws-body">
@@ -106,7 +121,7 @@ function WorkspacePanels() {
           id="ws-vertical"
           orientation="vertical"
           className="ws-panel-root"
-          defaultLayout={{ main: 72, terminal: 28 }}
+          defaultLayout={verticalLayout}
         >
           <Panel id="main" minSize={40} className="ws-panel-main">
             <Group
@@ -125,7 +140,9 @@ function WorkspacePanels() {
               >
                 <div className="ws-sidebar-stack">
                   <WorkspaceActivityBar />
-                  {sidebarView === 'workspace' ? <WorkspaceFolderTree /> : <WorkspaceExplorer />}
+                  <div className="ws-sidebar-body">
+                    {sidebarView === 'workspace' ? <WorkspaceFolderTree /> : <WorkspaceExplorer />}
+                  </div>
                 </div>
               </CollapsiblePanel>
 
@@ -157,14 +174,14 @@ function WorkspacePanels() {
           <Separator id="sep-terminal" className="ws-resize-handle ws-resize-horizontal" />
 
           <CollapsiblePanel
-            show={showTerminal}
+            show={terminalOpen}
             id="terminal"
             className="ws-panel-terminal"
             defaultSize={28}
             minSize="160px"
             maxSize="55%"
           >
-            <WorkspaceTerminal />
+            {isAuthenticated ? <WorkspaceTerminal /> : null}
           </CollapsiblePanel>
         </Group>
       </div>
@@ -175,9 +192,12 @@ function WorkspacePanels() {
 function WorkspacePanelsWithSync() {
   const base = useWorkspaceBasePath();
   const location = useLocation();
-  const pathSuffix = location.pathname.startsWith(`${base}/`)
-    ? location.pathname.slice(base.length + 1)
-    : '';
+  const pathSuffix =
+    location.pathname === base
+      ? ''
+      : location.pathname.startsWith(`${base}/`)
+        ? location.pathname.slice(base.length + 1)
+        : '';
 
   return (
     <>

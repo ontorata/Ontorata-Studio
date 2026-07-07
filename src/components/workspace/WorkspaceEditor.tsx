@@ -1,15 +1,19 @@
 import { Outlet } from 'react-router-dom';
 import { APP_TITLE, ONTORATA_LOGO_URL } from '../../config/brand';
 import { WORKSPACE_SHORTCUTS } from '../../config/shortcuts';
+import { useAuth } from '../../hooks/useAuth';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
+import { WorkspaceLoginForm } from './WorkspaceLoginForm';
 
 interface WorkspaceEditorProps {
   pathSuffix: string;
 }
 
 export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
+  const { isAuthenticated, loading } = useAuth();
   const { tabs, activePath, activateTab, closeTab } = useWorkspaceTabs();
   const isEmpty = !pathSuffix;
+  const showLogin = !loading && !isAuthenticated;
 
   return (
     <div className="ws-editor">
@@ -47,7 +51,22 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
 
       <div className="ws-editor-surface">
         <Outlet />
-        {isEmpty && (
+        {showLogin && isEmpty && (
+          <div className="ws-empty-overlay">
+            <WorkspaceLoginForm variant="welcome" />
+          </div>
+        )}
+        {showLogin && !isEmpty && (
+          <div className="ws-empty-overlay">
+            <WorkspaceLoginForm variant="prompt" />
+          </div>
+        )}
+        {loading && isEmpty && (
+          <div className="ws-empty-overlay">
+            <p className="ws-auth-loading">Loading session…</p>
+          </div>
+        )}
+        {!showLogin && !loading && isAuthenticated && isEmpty && (
           <div className="ws-empty-overlay">
             <WorkspaceEmptyState />
           </div>

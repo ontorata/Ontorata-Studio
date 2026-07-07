@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { getDefaultWorkspaceId } from '../config/env';
 import { useAuth } from '../hooks/useAuth';
 import { useConnection } from '../hooks/useConnection';
 
@@ -17,7 +18,8 @@ export function ConnectionGate() {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    const ws = getDefaultWorkspaceId();
+    return <Navigate to={`/workspace/${ws}`} replace state={{ from: location.pathname }} />;
   }
 
   if (!hasActiveConnection) {

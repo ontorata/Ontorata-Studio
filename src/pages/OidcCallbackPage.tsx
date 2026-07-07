@@ -9,9 +9,11 @@ export function OidcCallbackPage() {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
+  const workspacePath = `/workspace/${getDefaultWorkspaceId()}`;
+
   useEffect(() => {
     if (authMode !== 'oidc') {
-      navigate('/login', { replace: true });
+      navigate(workspacePath, { replace: true });
       return;
     }
 
@@ -23,17 +25,17 @@ export function OidcCallbackPage() {
         setError(err instanceof Error ? err.message : 'OIDC callback failed');
       }
     })();
-  }, [authMode, completeOidcRedirect, navigate]);
+  }, [authMode, completeOidcRedirect, navigate, workspacePath]);
 
   if (authMode !== 'oidc') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={workspacePath} replace />;
   }
 
   if (error) {
     return (
       <div className="page center">
         <p className="error">{error}</p>
-        <a href="/login">Back to login</a>
+        <a href={workspacePath}>Back to workspace</a>
       </div>
     );
   }

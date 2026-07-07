@@ -106,7 +106,11 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
 
   const syncRoute = useCallback((pathSuffix: string) => {
     if (!pathSuffix) {
-      setActivePath(null);
+      setTabs((prev) => {
+        if (prev.some((t) => t.path === '')) return prev;
+        return [...prev, { id: 'welcome', path: '', label: 'Welcome' }];
+      });
+      setActivePath('');
       return;
     }
     setTabs((prev) => {

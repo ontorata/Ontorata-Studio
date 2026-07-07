@@ -16,18 +16,9 @@ interface MenuDef {
 }
 
 export function WorkspaceToolbar() {
-  const { logout } = useAuth();
-  const {
-    openTab,
-    openFolder,
-    openWorkspace,
-    toggleTerminal,
-    toggleAiPanel,
-    toggleSidebar,
-    showTerminal,
-    showAiPanel,
-    showSidebar,
-  } = useWorkspaceTabs();
+  const { isAuthenticated, logout } = useAuth();
+  const { openTab, openFolder, openWorkspace, toggleTerminal, toggleAiPanel, toggleSidebar, showTerminal, showAiPanel, showSidebar } =
+    useWorkspaceTabs();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +48,14 @@ export function WorkspaceToolbar() {
     void action();
   }
 
+  function onAuthAction() {
+    if (isAuthenticated) {
+      void logout();
+      return;
+    }
+    openTab('', 'Welcome');
+  }
+
   async function onOpenFolder() {
     await openFolder();
   }
@@ -76,8 +75,12 @@ export function WorkspaceToolbar() {
     {
       label: 'File',
       items: [
-        { label: 'Open Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
-        { label: 'Open Workspace', action: onOpenWorkspace, shortcut: 'Ctrl+Shift+O' },
+        ...(isAuthenticated
+          ? [
+              { label: 'Open Folder…', action: onOpenFolder, shortcut: 'Ctrl+K Ctrl+O' },
+              { label: 'Open Workspace', action: onOpenWorkspace, shortcut: 'Ctrl+Shift+O' },
+            ]
+          : []),
         { label: 'Open Memory Bank', action: () => openTab('memories') },
       ],
     },
@@ -94,11 +97,15 @@ export function WorkspaceToolbar() {
           action: toggleAiPanel,
           shortcut: 'Ctrl+Alt+J',
         },
-        {
-          label: showTerminal ? 'Hide Terminal' : 'Show Terminal',
-          action: toggleTerminal,
-          shortcut: 'Ctrl+`',
-        },
+        ...(isAuthenticated
+          ? [
+              {
+                label: showTerminal ? 'Hide Terminal' : 'Show Terminal',
+                action: toggleTerminal,
+                shortcut: 'Ctrl+`',
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -109,22 +116,28 @@ export function WorkspaceToolbar() {
       label: 'Run',
       items: [
         { label: 'System Health', action: () => openTab('observability') },
-        { label: 'Search Intelligence', action: () => openTab('search') },
+        ...(isAuthenticated
+          ? [{ label: 'Search Intelligence', action: () => openTab('search') }]
+          : []),
       ],
     },
-    {
-      label: 'Terminal',
-      items: [
-        ...(showTerminal
-          ? []
-          : [{ label: 'New Terminal', action: toggleTerminal }]),
-        {
-          label: showTerminal ? 'Hide Terminal Panel' : 'Show Terminal Panel',
-          action: toggleTerminal,
-          shortcut: 'Ctrl+`',
-        },
-      ],
-    },
+    ...(isAuthenticated
+      ? [
+          {
+            label: 'Terminal',
+            items: [
+              ...(showTerminal
+                ? []
+                : [{ label: 'New Terminal', action: toggleTerminal }]),
+              {
+                label: showTerminal ? 'Hide Terminal Panel' : 'Show Terminal Panel',
+                action: toggleTerminal,
+                shortcut: 'Ctrl+`',
+              },
+            ],
+          },
+        ]
+      : []),
     {
       label: 'Help',
       items: [
@@ -181,14 +194,20 @@ export function WorkspaceToolbar() {
           <button
             type="button"
             className="ws-toolbar-search-btn"
-            onClick={() => openTab('search', 'Search')}
+            disabled={!isAuthenticated}
+            aria-disabled={!isAuthenticated}
+            title={isAuthenticated ? 'Search intelligence' : 'Sign in to search'}
+            onClick={() => {
+              if (!isAuthenticated) return;
+              openTab('search', 'Search');
+            }}
           >
             <span>Search intelligence…</span>
             <kbd>/</kbd>
           </button>
         </div>
-        <button type="button" className="ws-toolbar-signout" onClick={() => void logout()}>
-          Sign out
+        <button type="button" className="ws-toolbar-signout" onClick={onAuthAction}>
+          {isAuthenticated ? 'Sign out' : 'Login'}
         </button>
       </div>
     </header>

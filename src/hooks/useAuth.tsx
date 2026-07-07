@@ -33,8 +33,13 @@ async function loadSession(): Promise<AuthSession | null> {
   return authPort.getSession();
 }
 
+function readInitialSession(): AuthSession | null {
+  if (authPort.mode === 'oidc') return null;
+  return authPort.getSession();
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(readInitialSession);
   const [loading, setLoading] = useState(authPort.mode === 'oidc');
 
   useEffect(() => {
