@@ -40,14 +40,16 @@ export function isOidcEnabled(): boolean {
   return Boolean(getAuthIssuer());
 }
 
-/** Inline email/password in Studio — calls Ratary /api/v1/auth/* (no separate auth UI). */
+/** Inline email/password — auth.ontorata.com gateway. Takes precedence over legacy Zitadel OIDC. */
 export function isNativeAuthEnabled(): boolean {
-  if (isOidcEnabled()) return false;
   const flag =
     import.meta.env.VITE_NATIVE_AUTH?.trim().toLowerCase() ??
     import.meta.env.VITE_STUDIO_NATIVE_AUTH?.trim().toLowerCase();
+  if (flag === 'true') return true;
   if (flag === 'false') return false;
-  return flag === 'true' || import.meta.env.PROD;
+  if (import.meta.env.VITE_AUTH_BASE_URL?.trim()) return true;
+  if (isOidcEnabled()) return false;
+  return import.meta.env.PROD;
 }
 
 /** Bearer JWT to Ratary (OIDC cloud or native accounts). */
