@@ -1,6 +1,6 @@
 import type { AuthPort, NativeLoginCredentials, NativeRegisterInput } from '../../application/auth/auth-port';
 import type { AuthSession } from '../../domain/auth/session';
-import { getAuthBaseUrl, getDefaultWorkspaceId } from '../../config/env';
+import { getAuthBaseUrl } from '../../config/env';
 
 const SESSION_KEY = 'ontorata-studio-native-session';
 
