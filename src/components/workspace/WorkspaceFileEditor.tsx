@@ -10,7 +10,7 @@ interface WorkspaceFileEditorProps {
 }
 
 export function WorkspaceFileEditor({ filePath }: WorkspaceFileEditorProps) {
-  const { tabs, workspaceFolder } = useWorkspaceTabs();
+  const { tabs, workspaceFolder, setFileDirty } = useWorkspaceTabs();
   const tab = tabs.find((t) => t.path === filePath);
   const [content, setContent] = useState<string | null>(null);
   const [savedContent, setSavedContent] = useState<string | null>(null);
@@ -22,6 +22,10 @@ export function WorkspaceFileEditor({ filePath }: WorkspaceFileEditorProps) {
   const relativePath = fromWorkspaceFilePath(filePath);
   const fileName = tab?.label ?? relativePath.split('/').pop() ?? 'File';
   const isDirty = content !== null && savedContent !== null && content !== savedContent;
+
+  useEffect(() => {
+    setFileDirty(relativePath, isDirty);
+  }, [relativePath, isDirty, setFileDirty]);
 
   useEffect(() => {
     const handle = tab?.fileHandle;

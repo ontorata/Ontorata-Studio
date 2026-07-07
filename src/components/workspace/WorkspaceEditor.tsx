@@ -15,6 +15,7 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
   const { isAuthenticated, loading } = useAuth();
   const { tabs, activePath, activateTab, closeTab } = useWorkspaceTabs();
   const activeFilePath = isWorkspaceFilePath(activePath) ? activePath : null;
+  const fileTabs = tabs.filter((tab) => tab.kind === 'file');
   const isEmpty = !pathSuffix && !activeFilePath;
   const showLogin = !loading && !isAuthenticated;
 
@@ -54,7 +55,15 @@ export function WorkspaceEditor({ pathSuffix }: WorkspaceEditorProps) {
 
       <div className="ws-editor-surface">
         {!activeFilePath && <Outlet />}
-        {activeFilePath && <WorkspaceFileEditor filePath={activeFilePath} />}
+        {fileTabs.map((tab) => (
+          <div
+            key={tab.path}
+            className="ws-file-editor-pane"
+            hidden={activeFilePath !== tab.path}
+          >
+            <WorkspaceFileEditor filePath={tab.path} />
+          </div>
+        ))}
         {showLogin && isEmpty && (
           <div className="ws-empty-overlay">
             <WorkspaceLoginForm variant="welcome" />

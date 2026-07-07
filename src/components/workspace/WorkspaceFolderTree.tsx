@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { folderHasDirtyDescendants, isDirtyFile } from '../../domain/workspace/dirty-file-paths';
 import type { FsDirectoryEntry } from '../../domain/workspace/list-directory';
 import { listDirectoryEntries } from '../../domain/workspace/list-directory';
 import type { PickedWorkspaceFolder } from '../../domain/workspace/pick-folder';
@@ -75,24 +76,25 @@ function fileIcon(name: string): string {
 
 function FsTreeNode({
   entry,
-  depth,
   parentPath,
   onOpenFile,
   workspaceRoot,
+  dirtyFiles,
 }: {
   entry: FsDirectoryEntry;
-  depth: number;
   parentPath: string;
   onOpenFile: (relativePath: string, name: string, handle: FileSystemFileHandle) => void;
   workspaceRoot: FileSystemDirectoryHandle | null;
+  dirtyFiles: readonly string[];
 }) {
   const [expanded, setExpanded] = useState(false);
   const [children, setChildren] = useState<FsDirectoryEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
 
   const isDir = entry.kind === 'directory';
-  const pad = 0.4 + depth * 0.85;
   const relativePath = parentPath ? `${parentPath}/${entry.name}` : entry.name;
+  const fileDirty = !isDir && isDirtyFile(relativePath, dirtyFiles);
+  const folderDirty = isDir && folderHasDirtyDescendants(relativePath, dirtyFiles);
 
   const loadChildren = useCallback(async () => {
     if (!isDir || entry.handle.kind !== 'directory') return;
@@ -136,7 +138,6 @@ function FsTreeNode({
       <button
         type="button"
         className={`ws-tree-row ws-fs-row${isDir ? '' : ' ws-fs-file'}`}
-        style={{ paddingLeft: `${pad}rem` }}
         onClick={onClick}
         aria-expanded={isDir ? expanded : undefined}
       >
@@ -145,6 +146,16 @@ function FsTreeNode({
         </span>
         <span className="ws-tree-icon">{isDir ? '📁' : fileIcon(entry.name)}</span>
         <span className="ws-tree-label">{entry.name}</span>
+        {fileDirty && (
+          <span className="ws-tree-status ws-tree-status-modified" title="Modified">
+            M
+          </span>
+        )}
+        {folderDirty && (
+          <span className="ws-tree-status ws-tree-status-folder" title="Contains modified files">
+            ●
+          </span>
+        )}
       </button>
       {isDir && expanded && children && (
         <div className="ws-fs-children">
@@ -152,10 +163,10 @@ function FsTreeNode({
             <FsTreeNode
               key={child.name}
               entry={child}
-              depth={depth + 1}
               parentPath={relativePath}
               onOpenFile={onOpenFile}
               workspaceRoot={workspaceRoot}
+              dirtyFiles={dirtyFiles}
             />
           ))}
         </div>
@@ -167,9 +178,11 @@ function FsTreeNode({
 function WorkspaceRoot({
   folder,
   onOpenFile,
+  dirtyFiles,
 }: {
   folder: PickedWorkspaceFolder;
   onOpenFile: (relativePath: string, name: string, handle: FileSystemFileHandle) => void;
+  dirtyFiles: readonly string[];
 }) {
   const [expanded, setExpanded] = useState(true);
   const [children, setChildren] = useState<FsDirectoryEntry[] | null>(null);
@@ -207,6 +220,8 @@ function WorkspaceRoot({
     );
   }
 
+  const rootDirty = folderHasDirtyDescendants('', dirtyFiles);
+
   return (
     <div className="ws-fs-root">
       <button
@@ -218,6 +233,11 @@ function WorkspaceRoot({
         <span className="ws-tree-chevron">{loading ? '…' : expanded ? '▼' : '▶'}</span>
         <span className="ws-tree-icon">📁</span>
         <span className="ws-tree-label">{folder.name}</span>
+        {rootDirty && (
+          <span className="ws-tree-status ws-tree-status-folder" title="Contains modified files">
+            ●
+          </span>
+        )}
       </button>
       {expanded && children && (
         <div className="ws-fs-children">
@@ -225,10 +245,10 @@ function WorkspaceRoot({
             <FsTreeNode
               key={entry.name}
               entry={entry}
-              depth={0}
               parentPath=""
               onOpenFile={onOpenFile}
               workspaceRoot={folder.handle}
+              dirtyFiles={dirtyFiles}
             />
           ))}
         </div>
@@ -238,7 +258,8 @@ function WorkspaceRoot({
 }
 
 export function WorkspaceFolderTree() {
-  const { workspaceFolder, openWorkspace, closeSidebarPanel, openWorkspaceFile } = useWorkspaceTabs();
+  const { workspaceFolder, openWorkspace, closeSidebarPanel, openWorkspaceFile, dirtyFiles } =
+    useWorkspaceTabs();
 
   return (
     <div className="ws-explorer ws-workspace-panel">
@@ -256,7 +277,7 @@ export function WorkspaceFolderTree() {
 
       {workspaceFolder ? (
         <div className="ws-tree-root">
-          <WorkspaceRoot folder={workspaceFolder} onOpenFile={openWorkspaceFile} />
+          <WorkspaceRoot folder={workspaceFolder} onOpenFile={openWorkspaceFile} dirtyFiles={dirtyFiles} />
         </div>
       ) : (
         <div className="ws-workspace-empty">

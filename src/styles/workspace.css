@@ -504,6 +504,25 @@ body:has(.ws-shell) #root {
   color: var(--ws-text);
 }
 
+.ws-tree-status {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 0.35rem;
+  line-height: 1;
+}
+
+.ws-tree-status-modified {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #b5892f;
+}
+
+.ws-tree-status-folder {
+  font-size: 0.48rem;
+  color: #b5892f;
+}
+
 .ws-tree-row .nav-icon {
   width: 0.95rem;
   height: 0.95rem;
@@ -553,6 +572,20 @@ body:has(.ws-shell) #root {
   color: var(--ws-muted);
   background: var(--ws-surface);
   border-radius: 0.35rem;
+}
+
+.ws-fs-root {
+  min-width: 0;
+}
+
+.ws-fs-node {
+  min-width: 0;
+}
+
+.ws-fs-children {
+  padding-left: 0.75rem;
+  margin-left: 0.5rem;
+  border-left: 1px solid var(--ws-border);
 }
 
 .ws-fs-file {
@@ -637,10 +670,22 @@ body:has(.ws-shell) #root {
 }
 
 .ws-editor-surface {
-  flex: 1 1 auto;
-  overflow: auto;
-  min-height: 0;
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ws-file-editor-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ws-file-editor-pane[hidden] {
+  display: none !important;
 }
 
 .ws-file-editor {

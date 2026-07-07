@@ -14,7 +14,8 @@ export type SidebarView = 'explorer' | 'workspace';
 export type ActivityId = 'explorer' | 'workspace' | 'ontory' | 'terminal';
 
 import { resolveNavTitle } from '../config/navigation';
-import { toWorkspaceFilePath, isWorkspaceFilePath } from '../domain/workspace/workspace-file-path';
+import { fromWorkspaceFilePath, toWorkspaceFilePath, isWorkspaceFilePath } from '../domain/workspace/workspace-file-path';
+import { normalizeRelativePath } from '../domain/workspace/dirty-file-paths';
 import { useWorkspaceBasePath } from './useWorkspacePath';
 
 export interface WorkspaceTab {
@@ -54,6 +55,8 @@ interface WorkspaceTabsContextValue {
   toggleExplorerView: () => void;
   toggleWorkspaceView: () => void;
   toggleActivity: (id: ActivityId) => void;
+  dirtyFiles: readonly string[];
+  setFileDirty: (relativePath: string, dirty: boolean) => void;
 }
 
 const WorkspaceTabsContext = createContext<WorkspaceTabsContextValue | null>(null);
@@ -70,6 +73,17 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
   const [showSidebar, setShowSidebar] = useState(true);
   const [explorerActive, setExplorerActive] = useState(true);
   const [workspaceActive, setWorkspaceActive] = useState(false);
+  const [dirtyFiles, setDirtyFiles] = useState<readonly string[]>([]);
+
+  const setFileDirty = useCallback((relativePath: string, dirty: boolean) => {
+    const normalized = normalizeRelativePath(relativePath);
+    setDirtyFiles((prev) => {
+      const has = prev.includes(normalized);
+      if (dirty === has) return prev;
+      if (dirty) return [...prev, normalized];
+      return prev.filter((path) => path !== normalized);
+    });
+  }, []);
 
   const getActivityState = useCallback(() => {
     const explorer =
@@ -137,6 +151,11 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
 
   const closeTab = useCallback(
     (id: string) => {
+      const closing = tabs.find((t) => t.id === id);
+      if (closing?.kind === 'file' && isWorkspaceFilePath(closing.path)) {
+        setFileDirty(fromWorkspaceFilePath(closing.path), false);
+      }
+
       setTabs((prev) => {
         const idx = prev.findIndex((t) => t.id === id);
         if (idx < 0) return prev;
@@ -154,7 +173,7 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
         return next;
       });
     },
-    [activePath, navigateToTab],
+    [tabs, activePath, navigateToTab, setFileDirty],
   );
 
   const activateTab = useCallback(
@@ -413,6 +432,8 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       toggleExplorerView,
       toggleWorkspaceView,
       toggleActivity,
+      dirtyFiles,
+      setFileDirty,
     }),
     [
       tabs,
@@ -440,6 +461,8 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       toggleExplorerView,
       toggleWorkspaceView,
       toggleActivity,
+      dirtyFiles,
+      setFileDirty,
     ],
   );
 
