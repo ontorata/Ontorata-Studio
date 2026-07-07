@@ -2903,7 +2903,28 @@ body.ws-resizing-terminal-sessions * {
   }
 }
 
-.ratary-connection-notice {
+.ws-login-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.ws-login-tabs button {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--ws-border);
+  border-radius: 0.4rem;
+  background: var(--ws-surface);
+  color: var(--ws-muted);
+  cursor: pointer;
+}
+
+.ws-login-tabs button.active {
+  color: var(--ws-text);
+  border-color: var(--ws-accent, #3b82f6);
+  background: color-mix(in srgb, var(--ws-accent, #3b82f6) 8%, var(--ws-surface));
+}
+
   margin-top: 0.75rem;
   border-color: color-mix(in srgb, var(--ws-danger, #c53030) 35%, var(--ws-border));
   background: color-mix(in srgb, var(--ws-danger, #c53030) 6%, var(--ws-surface));

@@ -12,10 +12,14 @@ interface WorkspaceLoginFormProps {
 
 /** In-workspace sign-in — API key or OIDC (replaces standalone /login page). */
 export function WorkspaceLoginForm({ variant = 'welcome', className = '' }: WorkspaceLoginFormProps) {
-  const { login, authMode } = useAuth();
+  const { login, register, authMode } = useAuth();
   const [baseUrl, setBaseUrl] = useState(getDefaultRataryBaseUrl());
   const [apiKey, setApiKey] = useState('');
   const [workspaceId, setWorkspaceId] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [nativeTab, setNativeTab] = useState<'login' | 'register'>('login');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -39,6 +43,23 @@ export function WorkspaceLoginForm({ variant = 'welcome', className = '' }: Work
       await login();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign-in failed');
+      setSubmitting(false);
+    }
+  }
+
+  async function onNativeSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setSubmitting(true);
+    try {
+      if (nativeTab === 'register') {
+        await register({ email: email.trim(), password, displayName: displayName.trim() || undefined });
+      } else {
+        await login({ email: email.trim(), password });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Sign-in failed');
+    } finally {
       setSubmitting(false);
     }
   }
@@ -99,6 +120,78 @@ export function WorkspaceLoginForm({ variant = 'welcome', className = '' }: Work
               {submitting ? 'Redirecting…' : 'Continue with SSO'}
             </Button>
           </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (authMode === 'native') {
+    return (
+      <div className={`ws-login-wrap ${variant} ${className}`.trim()}>
+        {variant === 'prompt' && <p className="ws-login-prompt-title">Please Login</p>}
+        <section className="auth-card ws-login-card">
+          {isWelcome ? (
+            <LoginWelcomeHero subtitle="Create an account or sign in with email and password." />
+          ) : (
+            <div className="auth-card-head">
+              <h2>Sign in to Studio</h2>
+              <p>Multi-user accounts on your Ratary server.</p>
+            </div>
+          )}
+          <div className="ws-login-tabs">
+            <button
+              type="button"
+              className={nativeTab === 'login' ? 'active' : ''}
+              onClick={() => setNativeTab('login')}
+            >
+              Sign in
+            </button>
+            <button
+              type="button"
+              className={nativeTab === 'register' ? 'active' : ''}
+              onClick={() => setNativeTab('register')}
+            >
+              Register
+            </button>
+          </div>
+          <form className={formClass} onSubmit={onNativeSubmit}>
+            {nativeTab === 'register' && (
+              <Input
+                label="Display name"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                disabled={submitting}
+                placeholder="Optional"
+              />
+            )}
+            <Input
+              label="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={submitting}
+              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              autoComplete={nativeTab === 'register' ? 'new-password' : 'current-password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={submitting}
+              required
+            />
+            {error && <p className="error login-error">{error}</p>}
+            <Button type="submit" variant="primary" className="login-submit" disabled={submitting}>
+              {submitting
+                ? '…'
+                : nativeTab === 'register'
+                  ? 'Create account'
+                  : 'Sign in'}
+            </Button>
+          </form>
         </section>
       </div>
     );
