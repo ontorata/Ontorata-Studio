@@ -1,3 +1,5 @@
+import type { AuthSession } from '../domain/auth/session';
+
 const PRODUCTION_RATARY_URL = 'https://ratary.ontorata.com';
 const PRODUCTION_AUTH_URL = 'https://auth.ontorata.com';
 const DEFAULT_WORKSPACE_ID = 'personal-default';
@@ -67,6 +69,13 @@ export function isOidcCloudAutoConnect(): boolean {
 
 export function getDefaultWorkspaceId(): string {
   return import.meta.env.VITE_RATARY_WORKSPACE_ID?.trim() || DEFAULT_WORKSPACE_ID;
+}
+
+/** Prefer Ratary-provisioned workspace from native/legacy session over Studio placeholder. */
+export function resolveWorkspaceId(session: AuthSession | null | undefined): string {
+  if (session?.nativeWorkspaceId) return session.nativeWorkspaceId;
+  if (session?.legacyWorkspaceId) return session.legacyWorkspaceId;
+  return getDefaultWorkspaceId();
 }
 
 export { DEFAULT_WORKSPACE_ID, PRODUCTION_RATARY_URL, PRODUCTION_AUTH_URL };

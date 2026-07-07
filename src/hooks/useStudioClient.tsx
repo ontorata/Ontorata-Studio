@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { getDefaultRataryBaseUrl, getDefaultWorkspaceId, isRataryBearerAuth } from '../config/env';
+import { getDefaultRataryBaseUrl, isRataryBearerAuth, resolveWorkspaceId } from '../config/env';
 import { StudioRataryClient } from '../infrastructure/ratary';
 import { toLegacyCredentials } from '../presentation/routes/manifest';
 import { useAuth } from './useAuth';
@@ -27,7 +27,7 @@ function buildClient(
     return new StudioRataryClient({
       baseUrl: getDefaultRataryBaseUrl(),
       accessToken: session.accessToken,
-      workspaceId: getDefaultWorkspaceId(),
+      workspaceId: resolveWorkspaceId(session),
     });
   }
 

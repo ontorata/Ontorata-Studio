@@ -1,6 +1,6 @@
 import type { AuthPort, NativeLoginCredentials, NativeRegisterInput } from '../../application/auth/auth-port';
 import type { AuthSession } from '../../domain/auth/session';
-import { getAuthBaseUrl } from '../../config/env';
+import { getAuthBaseUrl, getDefaultWorkspaceId } from '../../config/env';
 
 const SESSION_KEY = 'ontorata-studio-native-session';
 
@@ -11,6 +11,7 @@ interface StoredNativeSession {
   accessToken: string;
   expiresAt: number;
   ownerId: string;
+  workspaceId?: string;
 }
 
 interface StudioAuthResponse {
@@ -23,6 +24,7 @@ interface StudioAuthResponse {
     identityId: string;
     email: string;
     displayName: string;
+    workspaceId?: string;
   };
   error?: { message?: string };
 }
@@ -54,6 +56,7 @@ function toAuthSession(stored: StoredNativeSession): AuthSession {
     nativeEmail: stored.email,
     nativeDisplayName: stored.displayName,
     nativeOwnerId: stored.ownerId,
+    nativeWorkspaceId: stored.workspaceId,
   };
 }
 
@@ -104,6 +107,7 @@ export class RataryNativeAuthAdapter implements AuthPort {
       accessToken: data.accessToken,
       expiresAt,
       ownerId: data.ownerId,
+      workspaceId: data.workspaceId,
     });
   }
 
@@ -122,6 +126,7 @@ export class RataryNativeAuthAdapter implements AuthPort {
       accessToken: data.accessToken,
       expiresAt,
       ownerId: data.ownerId,
+      workspaceId: data.workspaceId,
     });
   }
 
