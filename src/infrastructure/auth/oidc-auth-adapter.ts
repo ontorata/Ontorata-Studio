@@ -1,7 +1,7 @@
 import { UserManager, WebStorageStateStore, type User } from 'oidc-client-ts';
 import type { AuthPort } from '../../application/auth/auth-port';
 import type { AuthSession } from '../../domain/auth/session';
-import { getAuthClientId, getAuthIssuer, getDefaultWorkspaceId } from '../../config/env';
+import { getAuthClientId, getAuthIssuer } from '../../config/env';
 
 const OIDC_STORAGE_KEY = 'ontorata-studio-oidc';
 
@@ -24,7 +24,7 @@ function createUserManager(): UserManager {
     authority: issuer.replace(/\/$/, ''),
     client_id: getAuthClientId(),
     redirect_uri: `${window.location.origin}/callback`,
-    post_logout_redirect_uri: `${window.location.origin}/workspace/${getDefaultWorkspaceId()}`,
+    post_logout_redirect_uri: `${window.location.origin}/login`,
     response_type: 'code',
     scope: 'openid profile email',
     automaticSilentRenew: true,
