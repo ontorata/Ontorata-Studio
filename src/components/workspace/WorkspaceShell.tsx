@@ -8,6 +8,7 @@ import { WorkspaceActivityBar } from './WorkspaceActivityBar';
 import { WorkspaceAiPanel } from './WorkspaceAiPanel';
 import { WorkspaceEditor } from './WorkspaceEditor';
 import { WorkspaceExplorer } from './WorkspaceExplorer';
+import { WorkspaceFolderTree } from './WorkspaceFolderTree';
 import { WorkspaceTerminal } from './WorkspaceTerminal';
 import { WorkspaceToolbar } from './WorkspaceToolbar';
 
@@ -83,7 +84,7 @@ function WorkspacePanels() {
   const shellRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const base = useWorkspaceBasePath();
-  const { showTerminal, showAiPanel, showSidebar } = useWorkspaceTabs();
+  const { showTerminal, showAiPanel, showSidebar, sidebarView } = useWorkspaceTabs();
   useWorkspaceKeyboard(shellRef);
 
   const pathSuffix = location.pathname.startsWith(`${base}/`)
@@ -124,7 +125,7 @@ function WorkspacePanels() {
               >
                 <div className="ws-sidebar-stack">
                   <WorkspaceActivityBar />
-                  <WorkspaceExplorer />
+                  {sidebarView === 'workspace' ? <WorkspaceFolderTree /> : <WorkspaceExplorer />}
                 </div>
               </CollapsiblePanel>
 

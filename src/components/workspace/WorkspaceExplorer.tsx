@@ -5,7 +5,7 @@ import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { NavIcon } from '../NavIcon';
 
 export function WorkspaceExplorer() {
-  const { openTab, folderName, setShowSidebar } = useWorkspaceTabs();
+  const { openTab, setShowSidebar } = useWorkspaceTabs();
   const { capabilities } = useCapabilities();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
@@ -26,16 +26,6 @@ export function WorkspaceExplorer() {
           ×
         </button>
       </div>
-
-      {folderName && (
-        <div className="ws-tree-folder open">
-          <button type="button" className="ws-tree-row ws-tree-folder-row">
-            <span className="ws-tree-chevron">▼</span>
-            <span className="ws-tree-icon">📁</span>
-            <span className="ws-tree-label">{folderName}</span>
-          </button>
-        </div>
-      )}
 
       <div className="ws-tree-root">
         <button

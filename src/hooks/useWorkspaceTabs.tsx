@@ -7,7 +7,10 @@ import {
   type ReactNode,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { PickedWorkspaceFolder } from '../domain/workspace/pick-folder';
 import { pickWorkspaceFolder } from '../domain/workspace/pick-folder';
+
+export type SidebarView = 'explorer' | 'workspace';
 import { resolveNavTitle } from '../config/navigation';
 import { useWorkspaceBasePath } from './useWorkspacePath';
 
@@ -24,10 +27,12 @@ interface WorkspaceTabsContextValue {
   closeTab: (id: string) => void;
   activateTab: (path: string) => void;
   syncRoute: (pathSuffix: string) => void;
-  folderName: string | null;
-  setFolderName: (name: string | null) => void;
+  workspaceFolder: PickedWorkspaceFolder | null;
+  sidebarView: SidebarView;
   openFolder: () => Promise<void>;
   openWorkspace: () => Promise<void>;
+  showExplorerView: () => void;
+  showWorkspaceView: () => void;
   showTerminal: boolean;
   setShowTerminal: (show: boolean) => void;
   showAiPanel: boolean;
@@ -37,6 +42,8 @@ interface WorkspaceTabsContextValue {
   toggleTerminal: () => void;
   toggleAiPanel: () => void;
   toggleSidebar: () => void;
+  toggleExplorerView: () => void;
+  toggleWorkspaceView: () => void;
 }
 
 const WorkspaceTabsContext = createContext<WorkspaceTabsContextValue | null>(null);
@@ -46,7 +53,8 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [tabs, setTabs] = useState<WorkspaceTab[]>([]);
   const [activePath, setActivePath] = useState<string | null>(null);
-  const [folderName, setFolderName] = useState<string | null>(null);
+  const [workspaceFolder, setWorkspaceFolder] = useState<PickedWorkspaceFolder | null>(null);
+  const [sidebarView, setSidebarView] = useState<SidebarView>('explorer');
   const [showTerminal, setShowTerminal] = useState(true);
   const [showAiPanel, setShowAiPanel] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -120,16 +128,18 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
   const toggleSidebar = useCallback(() => setShowSidebar((v) => !v), []);
 
   const openFolder = useCallback(async () => {
-    const name = await pickWorkspaceFolder();
-    if (!name) return;
-    setFolderName(name);
+    const picked = await pickWorkspaceFolder();
+    if (!picked) return;
+    setWorkspaceFolder(picked);
+    setSidebarView('workspace');
     setShowSidebar(true);
   }, []);
 
   const openWorkspace = useCallback(async () => {
-    const name = await pickWorkspaceFolder();
-    if (!name) return;
-    setFolderName(name);
+    const picked = await pickWorkspaceFolder();
+    if (!picked) return;
+    setWorkspaceFolder(picked);
+    setSidebarView('workspace');
     setShowSidebar(true);
     const normalized = '';
     const title = 'Welcome';
@@ -141,6 +151,38 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
     navigate(base);
   }, [base, navigate]);
 
+  const showExplorerView = useCallback(() => {
+    setSidebarView('explorer');
+    setShowSidebar(true);
+  }, []);
+
+  const showWorkspaceView = useCallback(() => {
+    setSidebarView('workspace');
+    setShowSidebar(true);
+  }, []);
+
+  const toggleExplorerView = useCallback(() => {
+    if (showSidebar && sidebarView === 'explorer') {
+      setShowSidebar(false);
+      return;
+    }
+    setSidebarView('explorer');
+    setShowSidebar(true);
+  }, [showSidebar, sidebarView]);
+
+  const toggleWorkspaceView = useCallback(() => {
+    if (showSidebar && sidebarView === 'workspace') {
+      setShowSidebar(false);
+      return;
+    }
+    if (workspaceFolder) {
+      setSidebarView('workspace');
+      setShowSidebar(true);
+      return;
+    }
+    void openWorkspace();
+  }, [showSidebar, sidebarView, workspaceFolder, openWorkspace]);
+
   const value = useMemo(
     () => ({
       tabs,
@@ -149,10 +191,12 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       closeTab,
       activateTab,
       syncRoute,
-      folderName,
-      setFolderName,
+      workspaceFolder,
+      sidebarView,
       openFolder,
       openWorkspace,
+      showExplorerView,
+      showWorkspaceView,
       showTerminal,
       setShowTerminal,
       showAiPanel,
@@ -162,6 +206,8 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       toggleTerminal,
       toggleAiPanel,
       toggleSidebar,
+      toggleExplorerView,
+      toggleWorkspaceView,
     }),
     [
       tabs,
@@ -170,15 +216,20 @@ export function WorkspaceTabsProvider({ children }: { children: ReactNode }) {
       closeTab,
       activateTab,
       syncRoute,
-      folderName,
+      workspaceFolder,
+      sidebarView,
       openFolder,
       openWorkspace,
+      showExplorerView,
+      showWorkspaceView,
       showTerminal,
       showAiPanel,
       showSidebar,
       toggleTerminal,
       toggleAiPanel,
       toggleSidebar,
+      toggleExplorerView,
+      toggleWorkspaceView,
     ],
   );
 
