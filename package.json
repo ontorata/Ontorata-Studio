@@ -59,7 +59,7 @@
     "vitest": "^3.2.6"
   },
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   },
   "license": "MIT"
 }
