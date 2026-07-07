@@ -161,12 +161,9 @@ export function WorkspaceFolderTree() {
       </div>
 
       {workspaceFolder ? (
-        <>
-          <div className="ws-workspace-title">UNTITLED (WORKSPACE)</div>
-          <div className="ws-tree-root">
-            <WorkspaceRoot folder={workspaceFolder} />
-          </div>
-        </>
+        <div className="ws-tree-root">
+          <WorkspaceRoot folder={workspaceFolder} />
+        </div>
       ) : (
         <div className="ws-workspace-empty">
           <p>No folder open.</p>

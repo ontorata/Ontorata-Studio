@@ -494,17 +494,6 @@ body:has(.ws-shell) #root {
   color: var(--ws-primary-dim);
 }
 
-.ws-workspace-title {
-  padding: 0.35rem 0.75rem 0.2rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--ws-muted);
-  text-transform: uppercase;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--ws-border);
-}
-
 .ws-workspace-empty {
   flex: 1;
   display: flex;
