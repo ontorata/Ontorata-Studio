@@ -1,7 +1,10 @@
 # ADR-003: External OIDC authentication (Zitadel)
 
-**Status:** Accepted  
-**Date:** 2026-07-06 · Updated 2026-07-06 (Zitadel production)
+**Status:** Accepted (superseded as **production default** by Ratary ADR-006 native auth, 2026-07-07)  
+**Date:** 2026-07-06 · Updated 2026-07-07
+
+> **Default path:** [../../auth/NATIVE-AUTH.md](../../auth/NATIVE-AUTH.md)  
+> **This ADR remains valid** for enterprise OIDC federation — see [../../auth/OIDC-FEDERATION.md](../../auth/OIDC-FEDERATION.md).
 
 ## Decision
 

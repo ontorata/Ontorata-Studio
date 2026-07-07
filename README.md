@@ -7,21 +7,27 @@ Memory engine: **Ratary** · MCP server id: **`ratary`** · This repo: **Ontorat
 ## Architecture
 
 ```
-Browser → Ontorata Studio (Vercel) → @ratary/sdk → Ratary Server (REST)
-         ↘ Zitadel OIDC (identity)              ↘ per-user owner scope
-IDE      → ratary MCP ─────────────────────────→ same brain
+Browser → Ontorata Studio (Vercel)
+              ↓ VITE_AUTH_BASE_URL
+          Auth Gateway (auth.ontorata.com)
+              ↓
+          Ratary Server (REST) — memory, auth, MCP
+IDE       → ratary MCP ─────────────────────────→ same brain
 ```
+
+**Default auth:** native email/password via Auth Gateway.  
+**Enterprise:** OIDC federation (Zitadel, Azure AD, Okta). See [docs/auth/](docs/auth/).
 
 All data plane traffic goes through **`@ratary/sdk`** only. No direct SQL, D1, or Ratary server imports in the SPA.
 
 **Branches:** push to `staging` · production Vercel deploy from `main` — see [docs/BRANCHING.md](docs/BRANCHING.md).  
-**Phases 01–20:** [docs/PHASES.md](docs/PHASES.md) · **Architecture:** [docs/architecture/](docs/architecture/).
+**Phases 01–20:** [docs/PHASES.md](docs/PHASES.md) · **Architecture:** [docs/architecture/](docs/architecture/) · **Auth:** [docs/auth/](docs/auth/).
 
 ## Prerequisites
 
-- Node.js 20+
-- Running [Ratary Server](https://github.com/ontorata/ratary) (`npm run dev` on port **9876**)
-- **Production:** Zitadel app + Ratary `STUDIO_OIDC_ENABLED=true`
+- Node.js 24.x
+- Running [Ratary Server](https://github.com/ontorata/ratary) for local full-stack dev (`npm run dev` on port **9876**)
+- **Production:** Auth Gateway + Ratary `NATIVE_AUTH_ENABLED=true`
 
 ## Setup (local dev)
 
@@ -33,7 +39,15 @@ npm install
 cp .env.example .env.local
 ```
 
-### Option A — OIDC (matches production)
+### Option A — Native auth (matches production default)
+
+```env
+VITE_AUTH_BASE_URL=https://auth.ontorata.com
+VITE_RATARY_BASE_URL=https://ratary.ontorata.com
+# Or full local stack — see docs/auth/NATIVE-AUTH.md
+```
+
+### Option B — OIDC (enterprise)
 
 ```env
 VITE_AUTH_ISSUER=https://<instance>.zitadel.cloud
@@ -43,7 +57,7 @@ VITE_RATARY_BASE_URL=http://localhost:9876
 
 Ratary `.env`: `STUDIO_OIDC_ENABLED=true`, `OIDC_ISSUER_URL=<same issuer>`
 
-### Option B — API key only
+### Option C — API key only (self-hosted)
 
 ```env
 VITE_RATARY_BASE_URL=http://localhost:9876
@@ -58,12 +72,11 @@ npm run dev   # http://localhost:8765
 
 | Mode | Login | Ratary connection |
 |------|-------|-------------------|
-| **OIDC (production)** | Zitadel → `/callback` → workspace | Auto — Zitadel access token |
+| **Native (production default)** | Inline email/password → Auth Gateway | Bearer JWT auto |
+| **OIDC (enterprise)** | IdP → `/callback` → workspace | Auto — IdP access token |
 | **Legacy / self-hosted** | `/login` API key or `/connect` wizard | `aic_...` per connection |
 
-OIDC tokens live in **sessionStorage** (tab-scoped). API keys from the connect wizard use obfuscated local storage.
-
-See [docs/ZITADEL-SETUP.md](docs/ZITADEL-SETUP.md).
+See [docs/auth/NATIVE-AUTH.md](docs/auth/NATIVE-AUTH.md) · [docs/auth/OIDC-FEDERATION.md](docs/auth/OIDC-FEDERATION.md).
 
 ## Workspace routes
 
