@@ -3,6 +3,7 @@ import type { AIExecutionRequest } from '../../domain/ai/ai-execution-request';
 export type WorkspaceAiCompletion = Readonly<{
   text: string;
   provider: string;
+  requestId?: string;
 }>;
 
 /**

@@ -1,8 +1,11 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { WorkspaceAiInteractionPipeline } from '../application/ai/workspace-ai-interaction-pipeline';
 import type { WorkspaceAiInteractionResult } from '../application/ai/workspace-ai-interaction-pipeline';
+import type { WorkspaceAiRuntimePort } from '../application/ai/workspace-ai-runtime.port';
 import { WorkspaceRecallOrchestrator } from '../application/session/workspace-recall-orchestrator';
+import { getDefaultOntoryBaseUrl } from '../config/env';
 import { EchoWorkspaceAiRuntime } from '../infrastructure/ai/echo-workspace-ai-runtime';
+import { OntoryRestWorkspaceAiRuntime } from '../infrastructure/ai/ontory-rest-workspace-ai-runtime';
 import { WorkspaceRecallAdapter } from '../infrastructure/ratary/workspace-recall-adapter';
 import { InMemoryWorkspaceSessionPort } from '../infrastructure/session/in-memory-workspace-session-port';
 import { useOptionalStudioClient } from './useStudioClient';
@@ -13,16 +16,25 @@ type SessionBinding = {
   sessionId: string;
 };
 
+function resolveRuntimePort(): WorkspaceAiRuntimePort {
+  const mode = import.meta.env.VITE_ONTORY_RUNTIME?.trim().toLowerCase();
+  if (mode === 'echo') {
+    return new EchoWorkspaceAiRuntime();
+  }
+  // Default P2-A path: Studio talks to Ontory over HTTP only.
+  return new OntoryRestWorkspaceAiRuntime({ baseUrl: getDefaultOntoryBaseUrl() });
+}
+
 /**
- * W4 — UI runs AI interaction through pipeline only.
- * Path: prompt → Orchestrator → ContextPackage → PromptAssembler → WorkspaceAiRuntimePort
+ * AI interaction via WorkspaceAiRuntimePort.
+ * Prefer Ontory REST; set VITE_ONTORY_RUNTIME=echo for local-only fallback.
  */
 export function useWorkspaceAiPipeline() {
   const client = useOptionalStudioClient();
   const workspaceId = useWorkspaceId();
   const sessionPortRef = useRef(new InMemoryWorkspaceSessionPort());
   const bindingRef = useRef<SessionBinding | null>(null);
-  const runtimeRef = useRef(new EchoWorkspaceAiRuntime());
+  const runtimeRef = useRef(resolveRuntimePort());
 
   const recallOrchestrator = useMemo(() => {
     if (!client) return null;
