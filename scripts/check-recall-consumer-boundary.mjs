@@ -16,6 +16,7 @@ const forbiddenPatterns = [
 ];
 
 const contextBuildPattern = /\.context\.build\s*\(|sdk\.context\.build\s*\(/;
+const clientBuildContextPattern = /\.buildContext\s*\(/;
 const recallPortFile = path.join(srcDir, 'application', 'recall', 'workspace-recall.port.ts');
 
 function walk(dir, out = []) {
@@ -47,6 +48,22 @@ for (const file of walk(srcDir)) {
   if (contextBuildPattern.test(text) && !isUnderRataryAdapter(file)) {
     violations.push(
       `${rel}: context.build() must route through infrastructure/ratary adapters (WorkspaceRecallPort)`,
+    );
+  }
+
+  if (clientBuildContextPattern.test(text) && !isUnderRataryAdapter(file)) {
+    violations.push(
+      `${rel}: buildContext() is forbidden outside infrastructure/ratary — use WorkspaceRecallOrchestrator`,
+    );
+  }
+
+  // W3: AI presentation surfaces must not import @ratary/sdk.
+  // Memory CRUD pages may still import SDK type aliases until a separate port migrates them.
+  const isAiPresentationSurface =
+    /[\\/](WorkspaceAiPanel|OntoryChatPage)\.(tsx?|jsx?)$/.test(file);
+  if (isAiPresentationSurface && /from\s+['"]@ratary\/sdk['"]/.test(text)) {
+    violations.push(
+      `${rel}: AI presentation must not import @ratary/sdk — consume WorkspaceContextPackage via orchestrator`,
     );
   }
 
