@@ -18,6 +18,14 @@ const forbiddenPatterns = [
 const contextBuildPattern = /\.context\.build\s*\(|sdk\.context\.build\s*\(/;
 const clientBuildContextPattern = /\.buildContext\s*\(/;
 const recallPortFile = path.join(srcDir, 'application', 'recall', 'workspace-recall.port.ts');
+const promptAssemblerFile = path.join(srcDir, 'domain', 'ai', 'prompt-assembler.ts');
+const executionRequestFile = path.join(srcDir, 'domain', 'ai', 'ai-execution-request.ts');
+const pipelineFile = path.join(
+  srcDir,
+  'application',
+  'ai',
+  'workspace-ai-interaction-pipeline.ts',
+);
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -33,47 +41,64 @@ function isUnderRataryAdapter(file) {
   return !rel.startsWith('..') && !path.isAbsolute(rel);
 }
 
+/** Comments / docs must not trip boundary matchers. */
+function stripComments(source) {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
 const violations = [];
 
 for (const file of walk(srcDir)) {
   const text = fs.readFileSync(file, 'utf8');
+  const codeOnly = stripComments(text);
   const rel = path.relative(root, file);
 
   for (const pattern of forbiddenPatterns) {
-    if (pattern.regex.test(text)) {
+    if (pattern.regex.test(codeOnly)) {
       violations.push(`${rel}: forbidden recall-internal pattern (${pattern.name})`);
     }
   }
 
-  if (contextBuildPattern.test(text) && !isUnderRataryAdapter(file)) {
+  if (contextBuildPattern.test(codeOnly) && !isUnderRataryAdapter(file)) {
     violations.push(
       `${rel}: context.build() must route through infrastructure/ratary adapters (WorkspaceRecallPort)`,
     );
   }
 
-  if (clientBuildContextPattern.test(text) && !isUnderRataryAdapter(file)) {
+  if (clientBuildContextPattern.test(codeOnly) && !isUnderRataryAdapter(file)) {
     violations.push(
       `${rel}: buildContext() is forbidden outside infrastructure/ratary — use WorkspaceRecallOrchestrator`,
     );
   }
 
-  // W3: AI presentation surfaces must not import @ratary/sdk.
-  // Memory CRUD pages may still import SDK type aliases until a separate port migrates them.
   const isAiPresentationSurface =
     /[\\/](WorkspaceAiPanel|OntoryChatPage)\.(tsx?|jsx?)$/.test(file);
-  if (isAiPresentationSurface && /from\s+['"]@ratary\/sdk['"]/.test(text)) {
+  if (isAiPresentationSurface && /from\s+['"]@ratary\/sdk['"]/.test(codeOnly)) {
     violations.push(
       `${rel}: AI presentation must not import @ratary/sdk — consume WorkspaceContextPackage via orchestrator`,
     );
   }
 
   if (file === recallPortFile) {
-    const methodCount = (text.match(/fetchContextPackage/g) ?? []).length;
-    if (!text.includes('fetchContextPackage') || methodCount < 1) {
+    if (!codeOnly.includes('fetchContextPackage')) {
       violations.push(`${rel}: WorkspaceRecallPort must stay minimal (fetchContextPackage only)`);
     }
-    if (/\b(rank|retrieve|searchCandidates)\b/.test(text)) {
+    if (/\b(rank|retrieve|searchCandidates)\b/.test(codeOnly)) {
       violations.push(`${rel}: recall mechanism methods are forbidden on WorkspaceRecallPort`);
+    }
+  }
+
+  if (file === promptAssemblerFile) {
+    if (!/contextPackage:\s*WorkspaceContextPackage/.test(codeOnly)) {
+      violations.push(`${rel}: PromptAssembler MUST accept WorkspaceContextPackage`);
+    }
+    if (/\b(RecallPolicy|RecallDecision|BuildContextResult)\b/.test(codeOnly)) {
+      violations.push(
+        `${rel}: PromptAssembler MUST NOT reference recall-policy / decision / SDK result types`,
+      );
+    }
+    if (/\b(fetchContextPackage|searchMemories|buildContext)\s*\(/.test(codeOnly)) {
+      violations.push(`${rel}: PromptAssembler must not call recall/search APIs`);
     }
   }
 }
@@ -82,6 +107,13 @@ const portFile = path.join(srcDir, 'application', 'recall', 'workspace-recall.po
 const adapterFile = path.join(rataryAdapterDir, 'workspace-recall-adapter.ts');
 if (!fs.existsSync(portFile) || !fs.existsSync(adapterFile)) {
   violations.push('missing WorkspaceRecallPort or WorkspaceRecallAdapter files');
+}
+if (
+  !fs.existsSync(promptAssemblerFile) ||
+  !fs.existsSync(pipelineFile) ||
+  !fs.existsSync(executionRequestFile)
+) {
+  violations.push('missing PromptAssembler, AIExecutionRequest, or WorkspaceAiInteractionPipeline');
 }
 
 const packageJsonPath = path.join(root, 'package.json');

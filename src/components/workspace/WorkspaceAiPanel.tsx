@@ -1,13 +1,10 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useWorkspaceRecallOrchestrator } from '../../hooks/useWorkspaceRecallOrchestrator';
+import { useWorkspaceAiPipeline } from '../../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
-import {
-  listContextSourceIds,
-  presentContextPackageText,
-} from '../../domain/recall/present-context-package';
+import { listContextSourceIds } from '../../domain/recall/present-context-package';
 import { Button, Input } from '../../presentation/design-system/primitives';
 import { WorkspaceLoginForm } from './WorkspaceLoginForm';
 
@@ -20,10 +17,10 @@ interface ChatMessage {
 
 const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 
-/** Right-side AI panel — Ontory with memory context via recall orchestrator. */
+/** Right-side AI panel — W4 pipeline: recall → PromptAssembler → runtime. */
 export function WorkspaceAiPanel() {
   const { isAuthenticated } = useAuth();
-  const { ready, attachContextPackage } = useWorkspaceRecallOrchestrator();
+  const { ready, runAiInteraction } = useWorkspaceAiPipeline();
   const base = useWorkspaceBasePath();
   const { setShowAiPanel } = useWorkspaceTabs();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -53,18 +50,22 @@ export function WorkspaceAiPanel() {
     try {
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'tool', text: `fetch_context_package("${query}")` },
+        {
+          id: crypto.randomUUID(),
+          role: 'tool',
+          text: `ai_pipeline("${query}") → ContextPackage → PromptAssembler → runtime`,
+        },
       ]);
 
-      const { contextPackage } = await attachContextPackage(query, 2048);
-      const sourceIds = [...listContextSourceIds(contextPackage)];
+      const result = await runAiInteraction(query, 2048);
+      const sourceIds = [...listContextSourceIds(result.contextPackage)];
 
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: presentContextPackageText(contextPackage),
+          text: result.completion.text,
           sourceIds,
         },
       ]);
@@ -103,7 +104,9 @@ export function WorkspaceAiPanel() {
         {messages.length === 0 ? (
           <div className="ws-ai-empty">
             <p>Ask about your organizational memory.</p>
-            <p className="muted">Responses use WorkspaceContextPackage via recall orchestrator.</p>
+            <p className="muted">
+              Pipeline: Orchestrator → ContextPackage → PromptAssembler → AI runtime
+            </p>
           </div>
         ) : (
           <ul className="ws-ai-thread">

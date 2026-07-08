@@ -3,12 +3,9 @@ import { Link } from 'react-router-dom';
 import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
 import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useRataryTabClient } from '../hooks/useRataryTabClient';
-import { useWorkspaceRecallOrchestrator } from '../hooks/useWorkspaceRecallOrchestrator';
+import { useWorkspaceAiPipeline } from '../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
-import {
-  listContextSourceIds,
-  presentContextPackageText,
-} from '../domain/recall/present-context-package';
+import { listContextSourceIds } from '../domain/recall/present-context-package';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
 interface ChatMessage {
@@ -20,10 +17,10 @@ interface ChatMessage {
 
 const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 
-/** Ontory chat — consumes WorkspaceContextPackage via recall orchestrator. */
+/** Ontory chat — W4 AI interaction pipeline (context → PromptAssembler → runtime). */
 export function OntoryChatPage() {
   const { authLoading, missingConnection } = useRataryTabClient();
-  const { ready, attachContextPackage } = useWorkspaceRecallOrchestrator();
+  const { ready, runAiInteraction } = useWorkspaceAiPipeline();
   const base = useWorkspaceBasePath();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState(() => sessionStorage.getItem(DRAFT_KEY) ?? '');
@@ -46,18 +43,22 @@ export function OntoryChatPage() {
     try {
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'tool', text: `fetch_context_package("${query}")` },
+        {
+          id: crypto.randomUUID(),
+          role: 'tool',
+          text: `ai_pipeline("${query}") → ContextPackage → PromptAssembler → runtime`,
+        },
       ]);
 
-      const { contextPackage } = await attachContextPackage(query, 2048);
-      const sourceIds = [...listContextSourceIds(contextPackage)];
+      const result = await runAiInteraction(query, 2048);
+      const sourceIds = [...listContextSourceIds(result.contextPackage)];
 
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: presentContextPackageText(contextPackage),
+          text: result.completion.text,
           sourceIds,
         },
       ]);
@@ -91,13 +92,13 @@ export function OntoryChatPage() {
     <div className="page">
       <PageHeader
         title="Ontory Chat"
-        description="Memory-grounded assistant — consumes ContextPackage via workspace recall orchestrator."
+        description="Memory-grounded assistant — PromptAssembler formats ContextPackage for the AI runtime."
       />
       <Card className="chat-panel">
         {messages.length === 0 ? (
           <EmptyState
             title="Start a conversation"
-            description="Ask about your project memories. Responses cite WorkspaceContextPackage sources."
+            description="Ask about your project memories. Responses are produced by the W4 AI interaction pipeline."
           />
         ) : (
           <ul className="chat-messages">
