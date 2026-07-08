@@ -12,9 +12,11 @@ const forbiddenPatterns = [
   { name: 'candidate-provider', regex: /candidate-provider|CandidateProvider/i },
   { name: 'ratary-recall-src', regex: /memory\/recall|context-package-assembler/i },
   { name: 'ratary-src-import', regex: /from\s+['"]ratary\/src/i },
+  { name: 'sdk-deep-import', regex: /from\s+['"]@ratary\/sdk\// },
 ];
 
 const contextBuildPattern = /\.context\.build\s*\(|sdk\.context\.build\s*\(/;
+const recallPortFile = path.join(srcDir, 'application', 'recall', 'workspace-recall.port.ts');
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -47,12 +49,35 @@ for (const file of walk(srcDir)) {
       `${rel}: context.build() must route through infrastructure/ratary adapters (WorkspaceRecallPort)`,
     );
   }
+
+  if (file === recallPortFile) {
+    const methodCount = (text.match(/fetchContextPackage/g) ?? []).length;
+    if (!text.includes('fetchContextPackage') || methodCount < 1) {
+      violations.push(`${rel}: WorkspaceRecallPort must stay minimal (fetchContextPackage only)`);
+    }
+    if (/\b(rank|retrieve|searchCandidates)\b/.test(text)) {
+      violations.push(`${rel}: recall mechanism methods are forbidden on WorkspaceRecallPort`);
+    }
+  }
 }
 
 const portFile = path.join(srcDir, 'application', 'recall', 'workspace-recall.port.ts');
 const adapterFile = path.join(rataryAdapterDir, 'workspace-recall-adapter.ts');
 if (!fs.existsSync(portFile) || !fs.existsSync(adapterFile)) {
   violations.push('missing WorkspaceRecallPort or WorkspaceRecallAdapter files');
+}
+
+const packageJsonPath = path.join(root, 'package.json');
+const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+const dependencyEntries = {
+  ...packageJson.dependencies,
+  ...packageJson.devDependencies,
+};
+for (const [name, version] of Object.entries(dependencyEntries)) {
+  if (typeof version !== 'string') continue;
+  if (/ai-brain|ratary\/src|file:.*\.\.(\\|\/)ai-brain/.test(version)) {
+    violations.push(`package.json: dependency ${name} may leak Ratary internal packages`);
+  }
 }
 
 if (violations.length > 0) {

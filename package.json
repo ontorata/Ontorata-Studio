@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "lint": "eslint src && node scripts/check-sdk-boundary.mjs && node scripts/check-recall-consumer-boundary.mjs",
     "test": "vitest run",
+    "test:ci": "vitest run && node scripts/check-recall-consumer-boundary.mjs",
+    "check:recall-boundary": "node scripts/check-recall-consumer-boundary.mjs",
+    "check:boundaries": "node scripts/check-sdk-boundary.mjs && node scripts/check-recall-consumer-boundary.mjs",
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
