@@ -9,7 +9,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "eslint src && node scripts/check-sdk-boundary.mjs",
+    "lint": "eslint src && node scripts/check-sdk-boundary.mjs && node scripts/check-recall-consumer-boundary.mjs",
     "test": "vitest run",
     "typecheck": "tsc -b --noEmit"
   },
