@@ -11,6 +11,7 @@ interface StoredNativeSession {
   accessToken: string;
   expiresAt: number;
   ownerId: string;
+  organizationId?: string;
   workspaceId?: string;
 }
 
@@ -22,6 +23,7 @@ interface StudioAuthResponse {
     tokenType: string;
     ownerId: string;
     identityId: string;
+    organizationId?: string;
     email: string;
     displayName: string;
     workspaceId?: string;
@@ -56,6 +58,7 @@ function toAuthSession(stored: StoredNativeSession): AuthSession {
     nativeEmail: stored.email,
     nativeDisplayName: stored.displayName,
     nativeOwnerId: stored.ownerId,
+    nativeOrganizationId: stored.organizationId,
     nativeWorkspaceId: stored.workspaceId,
   };
 }
@@ -75,6 +78,34 @@ async function postAuth(path: string, body: Record<string, string>): Promise<Stu
     throw new Error(json.error?.message ?? `Auth failed (${response.status})`);
   }
   return json.data;
+}
+
+function persistAuthSession(data: NonNullable<StudioAuthResponse['data']>): void {
+  const expiresAt = Date.now() + data.expiresIn * 1000;
+  writeStored({
+    subject: data.identityId,
+    email: data.email,
+    displayName: data.displayName,
+    accessToken: data.accessToken,
+    expiresAt,
+    ownerId: data.ownerId,
+    organizationId: data.organizationId,
+    workspaceId: data.workspaceId,
+  });
+}
+
+/** Update tenant fields after workspace bootstrap (listWorkspaces). */
+export function updateNativeSessionTenant(input: {
+  organizationId?: string;
+  workspaceId?: string;
+}): void {
+  const stored = readStored();
+  if (!stored) return;
+  writeStored({
+    ...stored,
+    organizationId: input.organizationId ?? stored.organizationId,
+    workspaceId: input.workspaceId ?? stored.workspaceId,
+  });
 }
 
 /** Built-in Ratary email/password auth — no Zitadel or Keycloak. */
@@ -99,16 +130,7 @@ export class RataryNativeAuthAdapter implements AuthPort {
       password: credentials.password,
     });
     if (!data) throw new Error('Login failed');
-    const expiresAt = Date.now() + data.expiresIn * 1000;
-    writeStored({
-      subject: data.identityId,
-      email: data.email,
-      displayName: data.displayName,
-      accessToken: data.accessToken,
-      expiresAt,
-      ownerId: data.ownerId,
-      workspaceId: data.workspaceId,
-    });
+    persistAuthSession(data);
   }
 
   async register(input: NativeRegisterInput): Promise<void> {
@@ -118,16 +140,7 @@ export class RataryNativeAuthAdapter implements AuthPort {
       display_name: input.displayName ?? '',
     });
     if (!data) throw new Error('Registration failed');
-    const expiresAt = Date.now() + data.expiresIn * 1000;
-    writeStored({
-      subject: data.identityId,
-      email: data.email,
-      displayName: data.displayName,
-      accessToken: data.accessToken,
-      expiresAt,
-      ownerId: data.ownerId,
-      workspaceId: data.workspaceId,
-    });
+    persistAuthSession(data);
   }
 
   logout(): void {

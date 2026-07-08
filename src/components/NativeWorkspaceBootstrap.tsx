@@ -3,11 +3,11 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getDefaultWorkspaceId } from '../config/env';
 import { useAuth } from '../hooks/useAuth';
 import { useOptionalStudioClient } from '../hooks/useStudioClient';
+import { updateNativeSessionTenant } from '../infrastructure/auth/ratary-native-auth-adapter';
 
-const SESSION_KEY = 'ontorata-studio-native-session';
 const PLACEHOLDER_WS = getDefaultWorkspaceId();
 
-/** Resolve Ratary workspace UUID for native auth (fixes personal-default placeholder). */
+/** Resolve Ratary workspace + organization UUID for native auth (fixes personal-default placeholder). */
 export function NativeWorkspaceBootstrap({ children }: { children: ReactNode }) {
   const { session, authMode } = useAuth();
   const { workspaceId: routeWorkspaceId } = useParams<{ workspaceId: string }>();
@@ -26,19 +26,16 @@ export function NativeWorkspaceBootstrap({ children }: { children: ReactNode }) 
 
     async function syncWorkspace(): Promise<void> {
       let workspaceId = session?.nativeWorkspaceId;
+      let organizationId = session?.nativeOrganizationId;
 
-      if (!workspaceId && client) {
+      if ((!workspaceId || !organizationId) && client) {
         try {
           const { workspaces } = await client.listWorkspaces();
           const defaultWs = workspaces.find((w) => w.slug === 'default') ?? workspaces[0];
-          workspaceId = defaultWs?.id;
-          if (workspaceId) {
-            const raw = sessionStorage.getItem(SESSION_KEY);
-            if (raw) {
-              const parsed = JSON.parse(raw) as Record<string, unknown>;
-              parsed.workspaceId = workspaceId;
-              sessionStorage.setItem(SESSION_KEY, JSON.stringify(parsed));
-            }
+          workspaceId = workspaceId ?? defaultWs?.id;
+          organizationId = organizationId ?? defaultWs?.organizationId;
+          if (workspaceId || organizationId) {
+            updateNativeSessionTenant({ workspaceId, organizationId });
           }
         } catch {
           if (!cancelled) setReady(true);
@@ -69,6 +66,7 @@ export function NativeWorkspaceBootstrap({ children }: { children: ReactNode }) 
     navigate,
     routeWorkspaceId,
     session?.accessToken,
+    session?.nativeOrganizationId,
     session?.nativeWorkspaceId,
   ]);
 

@@ -54,6 +54,7 @@ export function toLegacyCredentials(session: AuthSession): LegacyLoginCredential
   return {
     apiKey: session.legacyApiKey,
     baseUrl: session.legacyBaseUrl,
+    organizationId: session.legacyOrganizationId,
     workspaceId: session.legacyWorkspaceId,
   };
 }

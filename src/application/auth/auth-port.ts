@@ -5,6 +5,7 @@ export type AuthMode = 'legacy' | 'oidc' | 'native';
 export interface LegacyLoginCredentials {
   apiKey: string;
   baseUrl: string;
+  organizationId?: string;
   workspaceId?: string;
 }
 

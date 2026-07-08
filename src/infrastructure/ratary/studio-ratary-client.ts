@@ -5,6 +5,7 @@ export interface StudioClientOptions {
   baseUrl: string;
   apiKey?: string;
   accessToken?: string;
+  organizationId?: string;
   workspaceId?: string;
 }
 
@@ -62,6 +63,7 @@ export interface WorkspaceRecord {
   id: string;
   name: string;
   slug?: string;
+  organizationId?: string;
   [key: string]: unknown;
 }
 
@@ -83,6 +85,7 @@ export class StudioRataryClient {
       baseUrl: serverUrl,
       apiKey: options.apiKey,
       accessToken: options.accessToken,
+      organizationId: options.organizationId,
       workspaceId: options.workspaceId,
     };
     this.sdk = new RataryClient(transportConfig);

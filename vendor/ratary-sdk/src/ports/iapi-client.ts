@@ -15,6 +15,7 @@ export interface RestTransportConfig {
   apiKey?: string;
   /** OIDC access token (e.g. Zitadel) — sent as Bearer without X-API-Key. */
   accessToken?: string;
+  organizationId?: string;
   workspaceId?: string;
   fetchImpl?: typeof fetch;
   defaultHeaders?: Record<string, string>;
