@@ -7,6 +7,10 @@ export type { ExecutionConstraints, ExecutionProfile } from './execution-profile
  * Execution envelope for AI runtime — keeps identity/scope out of prompt text.
  * Neutral enough for future Ontory Runtime adapters without renaming Studio types.
  */
+/**
+ * @deprecated Prefer executionProfile (Phase 6A). Retained for Ontory REST backward compatibility during migration.
+ * Use mapCapabilityToExecutionProfile() when bridging legacy callers.
+ */
 export type AIExecutionCapability = 'chat' | 'summarize' | 'tool-assist';
 
 export type AIExecutionRequest = Readonly<{
@@ -14,8 +18,11 @@ export type AIExecutionRequest = Readonly<{
   workspaceId?: string;
   userId?: string;
   projectId?: string;
+  /**
+   * @deprecated Prefer executionProfile — retained for REST backward compatibility (Phase 6A).
+   */
   capability: AIExecutionCapability;
-  /** ADR-2101: public execution intent (optional during migration) */
+  /** Primary public execution intent (ADR-2101 / Phase 6A). */
   executionProfile?: ExecutionProfile;
   /** Tool names allowed for this request — empty until tool orchestration lands */
   tools: readonly string[];
@@ -28,6 +35,7 @@ export function createAIExecutionRequest(input: {
   workspaceId?: string;
   userId?: string;
   projectId?: string;
+  /** @deprecated Prefer executionProfile. */
   capability?: AIExecutionCapability;
   executionProfile?: ExecutionProfile;
   tools?: readonly string[];
