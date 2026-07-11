@@ -3,6 +3,7 @@ export type ConnectionMode = 'persistent' | 'temporary';
 export interface RataryConnection {
   id: string;
   workspaceId: string;
+  organizationId?: string;
   baseUrl: string;
   label?: string;
   description?: string;

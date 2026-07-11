@@ -10,5 +10,7 @@ export interface AuthSession {
   nativeEmail?: string;
   nativeDisplayName?: string;
   nativeOwnerId?: string;
+  nativeOrganizationId?: string;
   nativeWorkspaceId?: string;
+  legacyOrganizationId?: string;
 }

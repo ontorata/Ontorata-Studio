@@ -18,6 +18,18 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/memory/recall/**', '**/recall-policy*', '**/context-budget*'],
+              message:
+                'P1-D: Ratary recall internals are forbidden in Studio — use WorkspaceRecallPort + @ratary/sdk.',
+            },
+          ],
+        },
+      ],
     },
   },
 );

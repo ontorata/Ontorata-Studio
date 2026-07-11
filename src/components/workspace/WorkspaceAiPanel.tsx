@@ -1,9 +1,10 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { useOptionalStudioClient } from '../../hooks/useStudioClient';
+import { useWorkspaceAiPipeline } from '../../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
+import { listContextSourceIds } from '../../domain/recall/present-context-package';
 import { Button, Input } from '../../presentation/design-system/primitives';
 import { WorkspaceLoginForm } from './WorkspaceLoginForm';
 
@@ -11,15 +12,15 @@ interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'tool';
   text: string;
-  memoryIds?: string[];
+  sourceIds?: string[];
 }
 
 const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 
-/** Right-side AI panel — Ontory with memory context. */
+/** Right-side AI panel — W4 pipeline: recall → PromptAssembler → runtime. */
 export function WorkspaceAiPanel() {
   const { isAuthenticated } = useAuth();
-  const client = useOptionalStudioClient();
+  const { ready, runAiInteraction } = useWorkspaceAiPipeline();
   const base = useWorkspaceBasePath();
   const { setShowAiPanel } = useWorkspaceTabs();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -37,7 +38,7 @@ export function WorkspaceAiPanel() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!client) return;
+    if (!ready) return;
     const query = input.trim();
     if (!query) return;
 
@@ -49,35 +50,23 @@ export function WorkspaceAiPanel() {
     try {
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'tool', text: `search_memories("${query}")` },
+        {
+          id: crypto.randomUUID(),
+          role: 'tool',
+          text: `ai_pipeline("${query}") → ContextPackage → PromptAssembler → runtime`,
+        },
       ]);
 
-      const [searchRes, contextRes] = await Promise.all([
-        client.searchMemories({ q: query, limit: 5 }),
-        client.buildContext({ task: query, maxTokens: 2048 }).catch(() => null),
-      ]);
-
-      const hits = searchRes.results ?? [];
-      const memoryIds = hits.map((m) => m.id);
-      const hitLines =
-        hits.length > 0
-          ? hits
-              .map((m) => `• ${m.title ?? m.id}: ${(m.content ?? m.summary ?? '').slice(0, 120)}`)
-              .join('\n')
-          : 'No matching memories found.';
-
-      const contextBlock =
-        contextRes && 'context' in contextRes && typeof contextRes.context === 'string'
-          ? `\n\nContext:\n${contextRes.context.slice(0, 500)}${contextRes.context.length > 500 ? '…' : ''}`
-          : '';
+      const result = await runAiInteraction(query, 2048);
+      const sourceIds = [...listContextSourceIds(result.contextPackage)];
 
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: `${hitLines}${contextBlock}`,
-          memoryIds,
+          text: result.completion.text,
+          sourceIds,
         },
       ]);
     } catch (err) {
@@ -115,18 +104,20 @@ export function WorkspaceAiPanel() {
         {messages.length === 0 ? (
           <div className="ws-ai-empty">
             <p>Ask about your organizational memory.</p>
-            <p className="muted">Responses use Ratary search + context.</p>
+            <p className="muted">
+              Pipeline: Orchestrator → ContextPackage → PromptAssembler → AI runtime
+            </p>
           </div>
         ) : (
           <ul className="ws-ai-thread">
             {messages.map((m) => (
               <li key={m.id} className={`ws-ai-bubble ${m.role}`}>
                 <pre>{m.text}</pre>
-                {m.memoryIds && m.memoryIds.length > 0 && (
+                {m.sourceIds && m.sourceIds.length > 0 && (
                   <div className="ws-ai-links">
-                    {m.memoryIds.map((id) => (
+                    {m.sourceIds.map((id) => (
                       <Link key={id} to={`${base}/memories/${id}`}>
-                        View memory
+                        View source
                       </Link>
                     ))}
                   </div>
@@ -147,9 +138,9 @@ export function WorkspaceAiPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Ontory…"
-            disabled={loading}
+            disabled={loading || !ready}
           />
-          <Button type="submit" variant="primary" disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading || !ready}>
             {loading ? '…' : 'Send'}
           </Button>
         </form>

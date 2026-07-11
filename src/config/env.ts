@@ -71,6 +71,13 @@ export function getDefaultWorkspaceId(): string {
   return import.meta.env.VITE_RATARY_WORKSPACE_ID?.trim() || DEFAULT_WORKSPACE_ID;
 }
 
+/** Ontory Runtime base URL (REST adapter — P2-A). */
+export function getDefaultOntoryBaseUrl(): string {
+  const fromEnv = import.meta.env.VITE_ONTORY_BASE_URL?.trim();
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  return 'http://localhost:9787';
+}
+
 /** Prefer Ratary-provisioned workspace from native/legacy session over Studio placeholder. */
 export function resolveWorkspaceId(session: AuthSession | null | undefined): string {
   if (session?.nativeWorkspaceId) return session.nativeWorkspaceId;

@@ -3,21 +3,24 @@ import { Link } from 'react-router-dom';
 import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
 import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useRataryTabClient } from '../hooks/useRataryTabClient';
+import { useWorkspaceAiPipeline } from '../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceBasePath } from '../hooks/useWorkspacePath';
+import { listContextSourceIds } from '../domain/recall/present-context-package';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'tool';
   text: string;
-  memoryIds?: string[];
+  sourceIds?: string[];
 }
 
 const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 
-/** Phase 07 — Ontory chat with memory search + context build. */
+/** Ontory chat — W4 AI interaction pipeline (context → PromptAssembler → runtime). */
 export function OntoryChatPage() {
-  const { client, authLoading, missingConnection } = useRataryTabClient();
+  const { authLoading, missingConnection } = useRataryTabClient();
+  const { ready, runAiInteraction } = useWorkspaceAiPipeline();
   const base = useWorkspaceBasePath();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState(() => sessionStorage.getItem(DRAFT_KEY) ?? '');
@@ -30,7 +33,7 @@ export function OntoryChatPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     const query = input.trim();
-    if (!query || !client) return;
+    if (!query || !ready) return;
 
     const userMsg: ChatMessage = { id: crypto.randomUUID(), role: 'user', text: query };
     setMessages((prev) => [...prev, userMsg]);
@@ -40,35 +43,23 @@ export function OntoryChatPage() {
     try {
       setMessages((prev) => [
         ...prev,
-        { id: crypto.randomUUID(), role: 'tool', text: `search_memories("${query}")` },
+        {
+          id: crypto.randomUUID(),
+          role: 'tool',
+          text: `ai_pipeline("${query}") → ContextPackage → PromptAssembler → runtime`,
+        },
       ]);
 
-      const [searchRes, contextRes] = await Promise.all([
-        client.searchMemories({ q: query, limit: 5 }),
-        client.buildContext({ task: query, maxTokens: 2048 }).catch(() => null),
-      ]);
-
-      const hits = searchRes.results ?? [];
-      const memoryIds = hits.map((m) => m.id);
-      const hitLines =
-        hits.length > 0
-          ? hits
-              .map((m) => `• ${m.title ?? m.id}: ${(m.content ?? m.summary ?? '').slice(0, 160)}`)
-              .join('\n')
-          : 'No matching memories found.';
-
-      const contextBlock =
-        contextRes && 'context' in contextRes && typeof contextRes.context === 'string'
-          ? `\n\nContext (${contextRes.context.length} chars):\n${contextRes.context.slice(0, 800)}${contextRes.context.length > 800 ? '…' : ''}`
-          : '';
+      const result = await runAiInteraction(query, 2048);
+      const sourceIds = [...listContextSourceIds(result.contextPackage)];
 
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: `${hitLines}${contextBlock}`,
-          memoryIds,
+          text: result.completion.text,
+          sourceIds,
         },
       ]);
     } catch (err) {
@@ -101,24 +92,24 @@ export function OntoryChatPage() {
     <div className="page">
       <PageHeader
         title="Ontory Chat"
-        description="Memory-grounded assistant — searches and builds context from your Ratary brain."
+        description="Memory-grounded assistant — PromptAssembler formats ContextPackage for the AI runtime."
       />
       <Card className="chat-panel">
         {messages.length === 0 ? (
           <EmptyState
             title="Start a conversation"
-            description="Ask about your project memories. Responses cite Ratary search + context APIs."
+            description="Ask about your project memories. Responses are produced by the W4 AI interaction pipeline."
           />
         ) : (
           <ul className="chat-messages">
             {messages.map((m) => (
               <li key={m.id} className={`chat-bubble ${m.role}`}>
                 {m.text}
-                {m.memoryIds && m.memoryIds.length > 0 && (
+                {m.sourceIds && m.sourceIds.length > 0 && (
                   <div className="chat-links">
-                    {m.memoryIds.map((id) => (
+                    {m.sourceIds.map((id) => (
                       <Link key={id} to={`${base}/memories/${id}`}>
-                        View memory
+                        View source
                       </Link>
                     ))}
                   </div>
@@ -134,9 +125,9 @@ export function OntoryChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Ontory…"
-            disabled={loading}
+            disabled={loading || !ready}
           />
-          <Button type="submit" variant="primary" disabled={loading}>
+          <Button type="submit" variant="primary" disabled={loading || !ready}>
             {loading ? '…' : 'Send'}
           </Button>
         </form>
