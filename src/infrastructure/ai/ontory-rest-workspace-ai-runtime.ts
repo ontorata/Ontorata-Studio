@@ -39,6 +39,16 @@ type OntoryErrorBody = {
 /**
  * Studio → Ontory over HTTP only.
  * Must not import Ontory packages or run Dispatcher in-process.
+ *
+ * ## POST /v1/execute request body (Phase 6A)
+ *
+ * | Field | Role |
+ * |-------|------|
+ * | `executionProfile` | **Primary** public execution intent |
+ * | `capability` | **Deprecated** — legacy backward compatibility only |
+ *
+ * This adapter passthroughs domain fields only. No routing, mapping, or execution
+ * decisions (INV-005).
  */
 export class OntoryRestWorkspaceAiRuntime implements WorkspaceAiRuntimePort {
   private readonly baseUrl: string;
@@ -62,6 +72,9 @@ export class OntoryRestWorkspaceAiRuntime implements WorkspaceAiRuntimePort {
     return (await res.json()) as { status: string; service?: string };
   }
 
+  /**
+   * Forwards AIExecutionRequest to Ontory REST. See class JSDoc for body contract.
+   */
   async complete(request: AIExecutionRequest): Promise<WorkspaceAiCompletion> {
     const res = await this.fetchImpl(`${this.baseUrl}/v1/execute`, {
       method: 'POST',
