@@ -79,6 +79,7 @@ export class OntoryRestWorkspaceAiRuntime implements WorkspaceAiRuntimePort {
         userId: request.userId,
         projectId: request.projectId,
         capability: request.capability,
+        executionProfile: request.executionProfile,
         tools: [...request.tools],
         metadata: request.metadata ? { ...request.metadata } : undefined,
       }),
