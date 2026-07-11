@@ -45,6 +45,7 @@ describe('WorkspaceAiInteractionPipeline', () => {
     expect(result.executionRequest.prompt.user).toBe('migration decision');
     expect(result.executionRequest.workspaceId).toBe('personal-default');
     expect(result.executionRequest.capability).toBe('chat');
+    expect(result.executionRequest.executionProfile).toEqual({ name: 'conversation' });
     expect(result.executionRequest.tools).toEqual([]);
     expect(result.completion.provider).toBe('echo-stub');
     expect(result.completion.text).toContain('Source A');
@@ -73,6 +74,7 @@ describe('WorkspaceAiInteractionPipeline', () => {
     expect(requestArg).toHaveProperty('workspaceId', 'ws-1');
     expect(requestArg).toHaveProperty('userId', 'user-1');
     expect(requestArg).toHaveProperty('capability', 'chat');
+    expect(requestArg).toHaveProperty('executionProfile', { name: 'conversation' });
     expect(requestArg.prompt).toHaveProperty('user', 'hello');
     expect(requestArg).not.toHaveProperty('selectedCandidates');
     expect(requestArg).not.toHaveProperty('candidates');
