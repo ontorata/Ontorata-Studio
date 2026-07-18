@@ -22,17 +22,21 @@ export function getAuthClientId(): string {
 
 export function getDefaultRataryBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_RATARY_BASE_URL?.trim();
-  if (fromEnv) return fromEnv;
-  if (import.meta.env.PROD) return PRODUCTION_RATARY_URL;
   if (import.meta.env.DEV && typeof window !== 'undefined') {
     return window.location.origin;
   }
+  if (fromEnv) return fromEnv;
+  if (import.meta.env.PROD) return PRODUCTION_RATARY_URL;
   return 'http://localhost:9876';
 }
 
 /** Auth API — register/login only (auth.ontorata.com). Memory API uses Ratary URL. */
 export function getAuthBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_AUTH_BASE_URL?.trim();
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    // Same-origin proxy avoids CORS when Studio dev hits cloud or local auth gateway.
+    return `${window.location.origin}/auth-proxy`;
+  }
   if (fromEnv) return fromEnv.replace(/\/$/, '');
   if (import.meta.env.PROD) return PRODUCTION_AUTH_URL;
   return 'http://localhost:8780';
@@ -75,6 +79,9 @@ export function getDefaultWorkspaceId(): string {
 export function getDefaultOntoryBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_ONTORY_BASE_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/$/, '');
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    return `${window.location.origin}/ontory`;
+  }
   return 'http://localhost:9787';
 }
 

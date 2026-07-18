@@ -3,11 +3,13 @@ import { WorkspaceAiInteractionPipeline } from '../application/ai/workspace-ai-i
 import type { WorkspaceAiInteractionResult } from '../application/ai/workspace-ai-interaction-pipeline';
 import type { WorkspaceAiRuntimePort } from '../application/ai/workspace-ai-runtime.port';
 import { WorkspaceRecallOrchestrator } from '../application/session/workspace-recall-orchestrator';
+import { resolveStudioTenantContext } from '../config/tenant-context';
 import { getDefaultOntoryBaseUrl } from '../config/env';
 import { EchoWorkspaceAiRuntime } from '../infrastructure/ai/echo-workspace-ai-runtime';
 import { OntoryRestWorkspaceAiRuntime } from '../infrastructure/ai/ontory-rest-workspace-ai-runtime';
 import { WorkspaceRecallAdapter } from '../infrastructure/ratary/workspace-recall-adapter';
 import { InMemoryWorkspaceSessionPort } from '../infrastructure/session/in-memory-workspace-session-port';
+import { useAuth } from './useAuth';
 import { useOptionalStudioClient } from './useStudioClient';
 import { useWorkspaceId } from './useWorkspacePath';
 
@@ -30,19 +32,24 @@ function resolveRuntimePort(): WorkspaceAiRuntimePort {
  * Prefer Ontory REST; set VITE_ONTORY_RUNTIME=echo for local-only fallback.
  */
 export function useWorkspaceAiPipeline() {
+  const { session } = useAuth();
   const client = useOptionalStudioClient();
   const workspaceId = useWorkspaceId();
+  const tenant = useMemo(
+    () => resolveStudioTenantContext(session, workspaceId),
+    [session, workspaceId],
+  );
   const sessionPortRef = useRef(new InMemoryWorkspaceSessionPort());
   const bindingRef = useRef<SessionBinding | null>(null);
   const runtimeRef = useRef(resolveRuntimePort());
 
   const recallOrchestrator = useMemo(() => {
-    if (!client) return null;
+    if (!client || !tenant) return null;
     return new WorkspaceRecallOrchestrator(
-      new WorkspaceRecallAdapter(client),
+      new WorkspaceRecallAdapter(client, tenant),
       sessionPortRef.current,
     );
-  }, [client]);
+  }, [client, tenant]);
 
   const pipeline = useMemo(() => {
     if (!recallOrchestrator) return null;
@@ -80,7 +87,8 @@ export function useWorkspaceAiPipeline() {
   );
 
   return {
-    ready: Boolean(pipeline),
+    ready: Boolean(pipeline && tenant),
+    tenantReady: Boolean(tenant),
     runAiInteraction,
   };
 }

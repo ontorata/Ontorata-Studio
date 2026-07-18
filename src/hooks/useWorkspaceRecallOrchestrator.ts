@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useRef } from 'react';
 import { WorkspaceRecallOrchestrator } from '../application/session/workspace-recall-orchestrator';
 import type { WorkspaceRecallOrchestrationResult } from '../application/session/workspace-recall-orchestrator';
+import { resolveStudioTenantContext } from '../config/tenant-context';
 import { WorkspaceRecallAdapter } from '../infrastructure/ratary/workspace-recall-adapter';
 import { InMemoryWorkspaceSessionPort } from '../infrastructure/session/in-memory-workspace-session-port';
+import { useAuth } from './useAuth';
 import { useOptionalStudioClient } from './useStudioClient';
 import { useWorkspaceId } from './useWorkspacePath';
 
@@ -16,18 +18,23 @@ type SessionBinding = {
  * Presentation layer must not call StudioRataryClient.buildContext / SDK directly.
  */
 export function useWorkspaceRecallOrchestrator() {
+  const { session } = useAuth();
   const client = useOptionalStudioClient();
   const workspaceId = useWorkspaceId();
+  const tenant = useMemo(
+    () => resolveStudioTenantContext(session, workspaceId),
+    [session, workspaceId],
+  );
   const sessionPortRef = useRef(new InMemoryWorkspaceSessionPort());
   const bindingRef = useRef<SessionBinding | null>(null);
 
   const orchestrator = useMemo(() => {
-    if (!client) return null;
+    if (!client || !tenant) return null;
     return new WorkspaceRecallOrchestrator(
-      new WorkspaceRecallAdapter(client),
+      new WorkspaceRecallAdapter(client, tenant),
       sessionPortRef.current,
     );
-  }, [client]);
+  }, [client, tenant]);
 
   const ensureSessionId = useCallback(() => {
     if (!orchestrator) return null;
@@ -55,7 +62,8 @@ export function useWorkspaceRecallOrchestrator() {
   );
 
   return {
-    ready: Boolean(orchestrator),
+    ready: Boolean(orchestrator && tenant),
+    tenantReady: Boolean(tenant),
     attachContextPackage,
   };
 }

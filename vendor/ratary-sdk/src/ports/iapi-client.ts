@@ -4,6 +4,8 @@ export interface RequestOptions {
   query?: Record<string, string | number | boolean | undefined>;
   body?: unknown;
   auth?: boolean;
+  /** Per-request headers merged after transport defaults (tenant headers can override). */
+  headers?: Record<string, string>;
 }
 
 export interface IApiClient {

@@ -25,5 +25,9 @@ export function formatRataryApiError(err: unknown): string {
       : 'Invalid or missing credentials — check your Ratary API key.';
   }
 
+  if (lower.includes('x-organization-id') || lower.includes('tenant context')) {
+    return 'Workspace scope not ready — sign out, sign in again, then retry.';
+  }
+
   return message;
 }

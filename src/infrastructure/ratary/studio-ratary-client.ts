@@ -1,5 +1,6 @@
 import { RataryClient, RestTransport } from '@ratary/sdk';
 import type { MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
+import { buildStudioTenantHeaders, type StudioTenantContext } from '../../config/tenant-context';
 
 export interface StudioClientOptions {
   baseUrl: string;
@@ -147,12 +148,28 @@ export class StudioRataryClient {
     });
   }
 
-  buildContext(input: { task: string; maxTokens?: number; project?: string }) {
-    return this.sdk.context.build({
+  buildContext(
+    input: { task: string; maxTokens?: number; project?: string },
+    tenant?: Pick<StudioTenantContext, 'organizationId' | 'workspaceId'>,
+  ) {
+    const body = {
       task: input.task,
       maxTokens: input.maxTokens,
       project: input.project,
-    });
+    };
+    if (tenant) {
+      return this.sdk.transport.request({
+        method: 'POST',
+        path: '/context',
+        body,
+        headers: buildStudioTenantHeaders({
+          identityId: '',
+          organizationId: tenant.organizationId,
+          workspaceId: tenant.workspaceId,
+        }),
+      });
+    }
+    return this.sdk.context.build(body);
   }
 }
 

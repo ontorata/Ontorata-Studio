@@ -27,7 +27,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ratary.ontorata.com https://auth.ontorata.com https://*.zitadel.cloud https://*.au1.zitadel.cloud http://localhost:9876 http://localhost:8080; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://*.zitadel.cloud https://*.au1.zitadel.cloud"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ratary.ontorata.com https://auth.ontorata.com https://*.zitadel.cloud https://*.au1.zitadel.cloud http://localhost:9876 http://localhost:9787 http://localhost:8080; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://*.zitadel.cloud https://*.au1.zitadel.cloud"
         }
       ]
     }

@@ -19,6 +19,7 @@ export const routeManifest: RouteDefinition[] = [
   { path: '/workspace/:workspaceId/search', requiresAuth: true, requiresConnection: true, phase: 11 },
   { path: '/workspace/:workspaceId/graph', requiresAuth: true, requiresConnection: true, phase: 11 },
   { path: '/workspace/:workspaceId/ontory/chat', requiresAuth: true, requiresConnection: true, phase: 7 },
+  { path: '/workspace/:workspaceId/pilots/cdsb-001', requiresAuth: true, requiresConnection: false, phase: 7 },
   { path: '/workspace/:workspaceId/profiles', requiresAuth: true, requiresConnection: true, phase: 8 },
   { path: '/workspace/:workspaceId/stacks', requiresAuth: true, requiresConnection: true, phase: 9 },
   { path: '/workspace/:workspaceId/stack-builder', requiresAuth: true, requiresConnection: true, phase: 10 },

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { getDefaultRataryBaseUrl, isRataryBearerAuth } from '../config/env';
+import { DEFAULT_WORKSPACE_ID, getDefaultRataryBaseUrl, isRataryBearerAuth } from '../config/env';
 import { resolveStudioTenantContext } from '../config/tenant-context';
 import { StudioRataryClient } from '../infrastructure/ratary';
 import { toLegacyCredentials } from '../presentation/routes/manifest';
@@ -8,6 +8,27 @@ import { useConnection } from './useConnection';
 import { useWorkspaceId } from './useWorkspacePath';
 
 const StudioClientContext = createContext<StudioRataryClient | null>(null);
+
+function resolveBearerTenantHeaders(
+  session: NonNullable<ReturnType<typeof useAuth>['session']>,
+  routeWorkspaceId: string,
+): { organizationId?: string; workspaceId?: string } {
+  const tenant = resolveStudioTenantContext(session, routeWorkspaceId);
+  if (tenant) {
+    return { organizationId: tenant.organizationId, workspaceId: tenant.workspaceId };
+  }
+
+  const organizationId = session.nativeOrganizationId ?? session.legacyOrganizationId;
+  const sessionWorkspace = session.nativeWorkspaceId ?? session.legacyWorkspaceId;
+  const workspaceId =
+    routeWorkspaceId && routeWorkspaceId !== DEFAULT_WORKSPACE_ID
+      ? routeWorkspaceId
+      : sessionWorkspace;
+
+  return {
+    ...(organizationId && workspaceId ? { organizationId, workspaceId } : {}),
+  };
+}
 
 function buildClient(
   session: ReturnType<typeof useAuth>['session'],
@@ -30,12 +51,12 @@ function buildClient(
   }
 
   if (session.accessToken && isRataryBearerAuth() && session.expiresAt > Date.now()) {
-    if (!tenant) return null;
+    const bearerTenant = resolveBearerTenantHeaders(session, routeWorkspaceId);
     return new StudioRataryClient({
       baseUrl: getDefaultRataryBaseUrl(),
       accessToken: session.accessToken,
-      organizationId: tenant.organizationId,
-      workspaceId: tenant.workspaceId,
+      organizationId: bearerTenant.organizationId,
+      workspaceId: bearerTenant.workspaceId,
     });
   }
 

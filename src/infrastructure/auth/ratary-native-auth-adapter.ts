@@ -1,6 +1,6 @@
 import type { AuthPort, NativeLoginCredentials, NativeRegisterInput } from '../../application/auth/auth-port';
 import type { AuthSession } from '../../domain/auth/session';
-import { getAuthBaseUrl } from '../../config/env';
+import { getAuthBaseUrl, getDefaultRataryBaseUrl } from '../../config/env';
 
 const SESSION_KEY = 'ontorata-studio-native-session';
 
@@ -63,16 +63,37 @@ function toAuthSession(stored: StoredNativeSession): AuthSession {
   };
 }
 
+function formatAuthFetchError(err: unknown, baseUrl: string): Error {
+  const message = err instanceof Error ? err.message : 'Auth request failed';
+  const lower = message.toLowerCase();
+  if (
+    lower.includes('failed to fetch') ||
+    lower.includes('networkerror') ||
+    lower.includes('network request failed') ||
+    lower.includes('load failed')
+  ) {
+    return new Error(
+      `Cannot reach Auth Gateway at ${baseUrl}. Restart Studio dev server after env changes, or start auth locally (npm run dev in auth-ontorata on :8780).`,
+    );
+  }
+  return err instanceof Error ? err : new Error(message);
+}
+
 async function postAuth(path: string, body: Record<string, string>): Promise<StudioAuthResponse['data']> {
   const baseUrl = getAuthBaseUrl();
   if (import.meta.env.PROD && !baseUrl.startsWith('https://')) {
     throw new Error('Production Studio requires HTTPS auth URL');
   }
-  const response = await fetch(`${baseUrl}/api/v1/auth/${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(body),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/api/v1/auth/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    throw formatAuthFetchError(err, baseUrl);
+  }
   const json = (await response.json()) as StudioAuthResponse;
   if (!response.ok || !json.success || !json.data) {
     throw new Error(json.error?.message ?? `Auth failed (${response.status})`);
@@ -92,6 +113,49 @@ function persistAuthSession(data: NonNullable<StudioAuthResponse['data']>): void
     organizationId: data.organizationId,
     workspaceId: data.workspaceId,
   });
+}
+
+async function backfillTenantFromWorkspaces(
+  accessToken: string,
+  current: { organizationId?: string; workspaceId?: string },
+): Promise<{ organizationId?: string; workspaceId?: string }> {
+  if (current.organizationId && current.workspaceId) {
+    return current;
+  }
+
+  const baseUrl = getDefaultRataryBaseUrl().replace(/\/$/, '').replace(/\/api\/v1$/, '');
+  try {
+    const response = await fetch(`${baseUrl}/api/v1/workspaces`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      },
+    });
+    if (!response.ok) return current;
+
+    const json = (await response.json()) as {
+      workspaces?: Array<{ id: string; organizationId?: string; slug?: string }>;
+    };
+    const defaultWs =
+      json.workspaces?.find((workspace) => workspace.slug === 'default') ?? json.workspaces?.[0];
+
+    return {
+      organizationId: current.organizationId ?? defaultWs?.organizationId,
+      workspaceId: current.workspaceId ?? defaultWs?.id,
+    };
+  } catch {
+    return current;
+  }
+}
+
+async function persistAuthSessionWithTenant(
+  data: NonNullable<StudioAuthResponse['data']>,
+): Promise<void> {
+  const tenant = await backfillTenantFromWorkspaces(data.accessToken, {
+    organizationId: data.organizationId,
+    workspaceId: data.workspaceId,
+  });
+  persistAuthSession({ ...data, ...tenant });
 }
 
 /** Update tenant fields after workspace bootstrap (listWorkspaces). */
@@ -130,7 +194,7 @@ export class RataryNativeAuthAdapter implements AuthPort {
       password: credentials.password,
     });
     if (!data) throw new Error('Login failed');
-    persistAuthSession(data);
+    await persistAuthSessionWithTenant(data);
   }
 
   async register(input: NativeRegisterInput): Promise<void> {
@@ -140,7 +204,7 @@ export class RataryNativeAuthAdapter implements AuthPort {
       display_name: input.displayName ?? '',
     });
     if (!data) throw new Error('Registration failed');
-    persistAuthSession(data);
+    await persistAuthSessionWithTenant(data);
   }
 
   logout(): void {

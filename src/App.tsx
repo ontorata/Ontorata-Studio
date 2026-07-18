@@ -6,6 +6,7 @@ import { AuthProvider } from './hooks/useAuth';
 import { ConnectionProvider } from './hooks/useConnection';
 import { StudioClientProvider } from './hooks/useStudioClient';
 import { AgentManagerPage } from './pages/AgentManagerPage';
+import { Cdsb001PilotPage } from './pages/Cdsb001PilotPage';
 import { CodingWorkspacePage } from './pages/CodingWorkspacePage';
 import { ConnectPage } from './pages/ConnectPage';
 import { EnterprisePage } from './pages/EnterprisePage';
@@ -63,6 +64,7 @@ export function App() {
               <Route path="workspaces" element={<WorkspacesPage />} />
               <Route path="ontory" element={<OntoryPage />} />
               <Route path="ontory/chat" element={<OntoryChatPage />} />
+              <Route path="pilots/cdsb-001" element={<Cdsb001PilotPage />} />
               <Route path="profiles" element={<ProfilesPage />} />
               <Route path="stacks" element={<StacksPage />} />
               <Route path="stack-builder" element={<StackBuilderPage />} />

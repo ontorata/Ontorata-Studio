@@ -54,6 +54,9 @@ interface AuthContextValue {
 
   logout: () => Promise<void>;
 
+  /** Re-read session from storage (after native tenant bootstrap). */
+  refreshSession: () => void;
+
   loading: boolean;
 
 }
@@ -212,6 +215,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 
 
+  const refreshSession = useCallback(() => {
+
+    if (authPort.mode === 'oidc') return;
+
+    setSession(authPort.getSession());
+
+  }, []);
+
+
+
   const value = useMemo(
 
     () => ({
@@ -230,11 +243,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       logout,
 
+      refreshSession,
+
       loading,
 
     }),
 
-    [session, login, register, completeOidcRedirect, logout, loading],
+    [session, login, register, completeOidcRedirect, logout, refreshSession, loading],
 
   );
 

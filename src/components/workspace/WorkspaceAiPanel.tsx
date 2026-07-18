@@ -5,6 +5,7 @@ import { useWorkspaceAiPipeline } from '../../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceBasePath } from '../../hooks/useWorkspacePath';
 import { useWorkspaceTabs } from '../../hooks/useWorkspaceTabs';
 import { listContextSourceIds } from '../../domain/recall/present-context-package';
+import { formatRataryApiError } from '../../infrastructure/ratary/format-ratary-api-error';
 import { Button, Input } from '../../presentation/design-system/primitives';
 import { WorkspaceLoginForm } from './WorkspaceLoginForm';
 
@@ -20,7 +21,7 @@ const DRAFT_KEY = 'ontorata-studio-ontory-draft';
 /** Right-side AI panel — W4 pipeline: recall → PromptAssembler → runtime. */
 export function WorkspaceAiPanel() {
   const { isAuthenticated } = useAuth();
-  const { ready, runAiInteraction } = useWorkspaceAiPipeline();
+  const { ready, tenantReady, runAiInteraction } = useWorkspaceAiPipeline();
   const base = useWorkspaceBasePath();
   const { setShowAiPanel } = useWorkspaceTabs();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -38,7 +39,7 @@ export function WorkspaceAiPanel() {
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!ready) return;
+    if (!ready || !tenantReady) return;
     const query = input.trim();
     if (!query) return;
 
@@ -75,7 +76,7 @@ export function WorkspaceAiPanel() {
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          text: err instanceof Error ? err.message : 'Request failed',
+          text: formatRataryApiError(err),
         },
       ]);
     } finally {
@@ -132,15 +133,20 @@ export function WorkspaceAiPanel() {
         <WorkspaceLoginForm variant="panel" />
       ) : (
         <form className="ws-ai-input" onSubmit={onSubmit}>
+          {!tenantReady && (
+            <p className="error login-error">
+              Workspace scope not ready — sign out, sign in again, then retry.
+            </p>
+          )}
           <Input
             label="Message"
             hideLabel
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask Ontory…"
-            disabled={loading || !ready}
+            disabled={loading || !ready || !tenantReady}
           />
-          <Button type="submit" variant="primary" disabled={loading || !ready}>
+          <Button type="submit" variant="primary" disabled={loading || !ready || !tenantReady}>
             {loading ? '…' : 'Send'}
           </Button>
         </form>

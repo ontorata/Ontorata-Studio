@@ -47,6 +47,9 @@ export class RestTransport implements IApiClient {
     if (this.config.workspaceId) {
       headers['X-Workspace-Id'] = this.config.workspaceId;
     }
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
 
     let body: string | undefined;
     if (options.body !== undefined) {

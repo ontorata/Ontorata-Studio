@@ -37,8 +37,14 @@ export class RestTransport {
                 headers['X-API-Key'] = this.config.apiKey;
             }
         }
+        if (this.config.organizationId) {
+            headers['X-Organization-Id'] = this.config.organizationId;
+        }
         if (this.config.workspaceId) {
             headers['X-Workspace-Id'] = this.config.workspaceId;
+        }
+        if (options.headers) {
+            Object.assign(headers, options.headers);
         }
         let body;
         if (options.body !== undefined) {

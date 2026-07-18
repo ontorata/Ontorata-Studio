@@ -46,6 +46,18 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    id: 'pilots',
+    label: 'Pilots',
+    items: [
+      {
+        id: 'cdsb-001',
+        label: 'CDSB-001 Brief',
+        path: 'pilots/cdsb-001',
+        icon: 'composer',
+      },
+    ],
+  },
+  {
     id: 'assist',
     label: 'Assist',
     items: [{ id: 'chat', label: 'Ontory', path: 'ontory/chat', icon: 'chat' }],
