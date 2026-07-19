@@ -1,5 +1,5 @@
 import { RataryClient, RestTransport } from '@ratary/sdk';
-import type { MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
+import type { BuildContextResult, MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
 import { buildStudioTenantHeaders, type StudioTenantContext } from '../../config/tenant-context';
 
 export interface StudioClientOptions {
@@ -151,7 +151,7 @@ export class StudioRataryClient {
   buildContext(
     input: { task: string; maxTokens?: number; project?: string },
     tenant?: Pick<StudioTenantContext, 'organizationId' | 'workspaceId'>,
-  ) {
+  ): Promise<BuildContextResult> {
     const body = {
       task: input.task,
       maxTokens: input.maxTokens,
