@@ -21,12 +21,14 @@ describe('assembleCdsb001Prompt', () => {
 });
 
 describe('executeCdsb001Brief', () => {
-  it('calls runtime with conversation profile and pilot metadata', async () => {
-    const complete = vi.fn(async () => ({
-      text: 'brief',
-      provider: 'stub',
-      requestId: 'req-cdsb',
-    }));
+  it('calls runtime with public request and pilot metadata', async () => {
+    const complete = vi.fn(async () =>
+      Object.freeze({
+        text: 'brief',
+        finishReason: 'stop' as const,
+        requestId: 'req-cdsb',
+      }),
+    );
     const runtime: WorkspaceAiRuntimePort = { complete, health: vi.fn() };
 
     const result = await executeCdsb001Brief(runtime, {
@@ -39,10 +41,12 @@ describe('executeCdsb001Brief', () => {
     expect(result.requestId).toBe('req-cdsb');
     expect(complete).toHaveBeenCalledOnce();
     const request = complete.mock.calls[0]![0];
-    expect(request.executionProfile).toEqual({ name: 'conversation' });
+    expect(request).not.toHaveProperty('executionProfile');
+    expect(request).not.toHaveProperty('capability');
     expect(request.metadata).toMatchObject({
       pilotId: 'CDSB-001',
       projectId: 'client-a',
+      workspaceId: 'ws-1',
     });
     expect(request.prompt.context).toContain('Notes');
   });

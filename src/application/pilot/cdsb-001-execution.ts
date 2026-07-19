@@ -23,8 +23,6 @@ export async function executeCdsb001Brief(
     prompt,
     workspaceId: input.workspaceId,
     projectId: input.projectId,
-    capability: 'chat',
-    executionProfile: { name: 'conversation' },
     tools: [],
     metadata: Object.freeze({
       pilotId: 'CDSB-001',

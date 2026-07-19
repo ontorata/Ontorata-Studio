@@ -6,39 +6,36 @@ import type {
 
 /**
  * W4 stub runtime — proves pipeline wiring without binding a production LLM.
- * Later milestones may swap for OpenAI/Anthropic/local/Ontory adapters.
  */
 export class EchoWorkspaceAiRuntime implements WorkspaceAiRuntimePort {
-  readonly provider = 'echo-stub';
-
   async complete(request: AIExecutionRequest): Promise<WorkspaceAiCompletion> {
-    const { prompt, workspaceId, capability, tools } = request;
+    const workspaceId =
+      typeof request.metadata?.workspaceId === 'string' ? request.metadata.workspaceId : undefined;
     const sourceSummary =
-      prompt.sourceLabels.length > 0
-        ? prompt.sourceLabels.map((label) => `• ${label}`).join('\n')
+      request.prompt.sourceLabels.length > 0
+        ? request.prompt.sourceLabels.map((label) => `• ${label}`).join('\n')
         : '• (no labeled sources)';
 
     const text = [
-      `[${this.provider}] Prompt assembled for package ${prompt.packageId}`,
-      `capability=${capability}`,
+      '[echo-stub] Prompt assembled for package',
+      request.prompt.packageId,
       `workspace=${workspaceId ?? '(unspecified)'}`,
-      `tools=${tools.length > 0 ? tools.join(',') : '(none)'}`,
+      `tools=${request.tools.length > 0 ? request.tools.join(',') : '(none)'}`,
       '',
       'User:',
-      prompt.user,
+      request.prompt.user,
       '',
       'Context length:',
-      `${prompt.context.length} chars`,
+      `${request.prompt.context.length} chars`,
       '',
       'Sources:',
       sourceSummary,
-      '',
-      'Note: replace EchoWorkspaceAiRuntime with a production WorkspaceAiRuntimePort adapter later.',
     ].join('\n');
 
     return Object.freeze({
       text,
-      provider: this.provider,
+      finishReason: 'stop',
+      requestId: 'echo-stub-req',
     });
   }
 }

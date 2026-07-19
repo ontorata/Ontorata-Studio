@@ -3,7 +3,6 @@ import {
   createAIExecutionRequest,
   type AIExecutionRequest,
 } from '../../domain/ai/ai-execution-request';
-import { mapCapabilityToExecutionProfile } from '../../domain/ai/execution-profile-mapper';
 import type { WorkspaceContextPackage } from '../../domain/recall/workspace-context-package';
 import type { WorkspaceSession, WorkspaceSessionId } from '../../domain/session/workspace-session';
 import type { WorkspaceAiRuntimePort, WorkspaceAiCompletion } from './workspace-ai-runtime.port';
@@ -49,14 +48,11 @@ export class WorkspaceAiInteractionPipeline {
       workspaceId: input.workspaceId,
     });
 
-    const capability = 'chat';
     const executionRequest = createAIExecutionRequest({
       prompt: assembledPrompt,
       workspaceId: input.workspaceId,
       userId: input.userId,
       projectId: input.projectId,
-      capability,
-      executionProfile: mapCapabilityToExecutionProfile(capability),
       tools: [],
     });
 

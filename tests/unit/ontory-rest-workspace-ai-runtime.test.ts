@@ -7,7 +7,7 @@ import {
   OntoryRuntimeHttpError,
 } from '../../src/infrastructure/ai/ontory-rest-workspace-ai-runtime';
 
-function sampleRequest(options?: { executionProfile?: { name: string; constraints?: { latencyClass?: 'interactive' | 'batch' } } }) {
+function sampleRequest() {
   const contextPackage = createWorkspaceContextPackage({
     packageId: 'pkg-rest',
     query: 'hello',
@@ -25,8 +25,6 @@ function sampleRequest(options?: { executionProfile?: { name: string; constraint
     prompt,
     workspaceId: 'ws-1',
     userId: 'user-1',
-    capability: 'chat',
-    executionProfile: options?.executionProfile,
     tools: [],
   });
 }
@@ -37,14 +35,14 @@ function parseExecuteBody(fetchImpl: ReturnType<typeof vi.fn>) {
 }
 
 describe('OntoryRestWorkspaceAiRuntime', () => {
-  it('posts AIExecutionRequest and maps AIExecutionResponse', async () => {
+  it('posts public AIExecutionRequest and maps public AIExecutionResponse', async () => {
     const fetchImpl = vi.fn(async () =>
       new Response(
         JSON.stringify({
           text: 'from-ontory',
-          provider: 'stub',
+          finishReason: 'stop',
           requestId: 'req-1',
-          finishedAt: '2026-07-08T12:00:00.000Z',
+          usage: { inputChars: 1, outputChars: 2 },
         }),
         { status: 200, headers: { 'content-type': 'application/json' } },
       ),
@@ -56,69 +54,20 @@ describe('OntoryRestWorkspaceAiRuntime', () => {
     });
 
     const completion = await runtime.complete(sampleRequest());
-    expect(completion.text).toBe('from-ontory');
-    expect(completion.provider).toBe('stub');
-    expect(completion.requestId).toBe('req-1');
+    expect(completion).toEqual({
+      text: 'from-ontory',
+      finishReason: 'stop',
+      requestId: 'req-1',
+      usage: { inputChars: 1, outputChars: 2 },
+    });
 
-    expect(fetchImpl).toHaveBeenCalledOnce();
-    const [url, init] = fetchImpl.mock.calls[0]!;
-    expect(url).toBe('http://ontory.test/v1/execute');
-    expect(init?.method).toBe('POST');
-    expect(init?.headers).toEqual({ 'content-type': 'application/json' });
     const body = parseExecuteBody(fetchImpl);
     expect(body.prompt).toMatchObject({ user: 'hello' });
-    expect(body.workspaceId).toBe('ws-1');
-    expect(body.capability).toBe('chat');
+    expect(body.metadata).toMatchObject({ workspaceId: 'ws-1', userId: 'user-1' });
+    expect(body).not.toHaveProperty('workspaceId');
+    expect(body).not.toHaveProperty('capability');
     expect(body).not.toHaveProperty('executionProfile');
-  });
-
-  it('includes executionProfile in JSON body when present on request', async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(
-        JSON.stringify({ text: 'ok', provider: 'stub', requestId: 'req-2' }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
-    );
-    const runtime = new OntoryRestWorkspaceAiRuntime({
-      baseUrl: 'http://ontory.test',
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-
-    await runtime.complete(
-      sampleRequest({ executionProfile: { name: 'conversation' } }),
-    );
-
-    const body = parseExecuteBody(fetchImpl);
-    expect(body.capability).toBe('chat');
-    expect(body.executionProfile).toEqual({ name: 'conversation' });
-  });
-
-  it('forwards executionProfile constraints without adapter mapping', async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(
-        JSON.stringify({ text: 'ok', provider: 'stub', requestId: 'req-3' }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      ),
-    );
-    const runtime = new OntoryRestWorkspaceAiRuntime({
-      baseUrl: 'http://ontory.test',
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-
-    await runtime.complete(
-      sampleRequest({
-        executionProfile: {
-          name: 'conversation',
-          constraints: { latencyClass: 'interactive' },
-        },
-      }),
-    );
-
-    const body = parseExecuteBody(fetchImpl);
-    expect(body.executionProfile).toEqual({
-      name: 'conversation',
-      constraints: { latencyClass: 'interactive' },
-    });
+    expect(body).not.toHaveProperty('provider');
   });
 
   it('maps Ontory error envelope', async () => {
@@ -139,6 +88,69 @@ describe('OntoryRestWorkspaceAiRuntime', () => {
       code: 'bad_request',
       message: 'validation failed',
     } satisfies Partial<OntoryRuntimeHttpError>);
+  });
+
+  it('rejects legacy provider field in response envelope', async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          text: 'legacy',
+          provider: 'stub',
+          requestId: 'req-legacy',
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
+    const runtime = new OntoryRestWorkspaceAiRuntime({
+      baseUrl: 'http://ontory.test',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await expect(runtime.complete(sampleRequest())).rejects.toThrow(/unexpected field "provider"/);
+  });
+
+  it('streams delta and complete with identical completion semantics', async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (url.endsWith('/v1/execute/stream')) {
+        return new Response(
+          [
+            'event: delta',
+            'data: {"text":"Hel"}',
+            '',
+            'event: delta',
+            'data: {"text":"lo"}',
+            '',
+            'event: complete',
+            'data: {"text":"Hello","finishReason":"stop","requestId":"req-stream"}',
+            '',
+          ].join('\n'),
+          { status: 200, headers: { 'content-type': 'text/event-stream' } },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          text: 'Hello',
+          finishReason: 'stop',
+          requestId: 'req-stream',
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    });
+
+    const runtime = new OntoryRestWorkspaceAiRuntime({
+      baseUrl: 'http://ontory.test',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    const request = sampleRequest();
+    const nonStream = await runtime.complete(request);
+    const deltas: string[] = [];
+    const streamed = await runtime.stream(request, {
+      onDelta: (chunk) => deltas.push(chunk),
+    });
+
+    expect(streamed).toEqual(nonStream);
+    expect(deltas).toEqual(['Hel', 'lo']);
   });
 
   it('health hits /health', async () => {

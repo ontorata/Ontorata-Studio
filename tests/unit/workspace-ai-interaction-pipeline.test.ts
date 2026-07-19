@@ -43,16 +43,17 @@ describe('WorkspaceAiInteractionPipeline', () => {
     expect(result.contextPackage.packageId).toBe('pkg-pipeline');
     expect(result.assembledPrompt.sourceLabels).toEqual(['Source A']);
     expect(result.executionRequest.prompt.user).toBe('migration decision');
-    expect(result.executionRequest.workspaceId).toBe('personal-default');
-    expect(result.executionRequest.capability).toBe('chat');
-    expect(result.executionRequest.executionProfile).toEqual({ name: 'conversation' });
+    expect(result.executionRequest.metadata?.workspaceId).toBe('personal-default');
     expect(result.executionRequest.tools).toEqual([]);
-    expect(result.completion.provider).toBe('echo-stub');
+    expect(result.executionRequest).not.toHaveProperty('executionProfile');
+    expect(result.completion.finishReason).toBe('stop');
     expect(result.completion.text).toContain('Source A');
   });
 
-  it('passes AIExecutionRequest (not AssembledPrompt alone) to runtime port', async () => {
-    const complete = vi.fn(async () => Object.freeze({ text: 'ok', provider: 'mock' }));
+  it('passes public AIExecutionRequest to runtime port', async () => {
+    const complete = vi.fn(async () =>
+      Object.freeze({ text: 'ok', finishReason: 'stop' as const, requestId: 'req-mock' }),
+    );
     const runtime: WorkspaceAiRuntimePort = { complete };
     const recallOrchestrator = new WorkspaceRecallOrchestrator(
       createRecallPortMock(),
@@ -71,11 +72,10 @@ describe('WorkspaceAiInteractionPipeline', () => {
     expect(complete).toHaveBeenCalledOnce();
     const requestArg = complete.mock.calls[0]?.[0];
     expect(requestArg).toHaveProperty('prompt');
-    expect(requestArg).toHaveProperty('workspaceId', 'ws-1');
-    expect(requestArg).toHaveProperty('userId', 'user-1');
-    expect(requestArg).toHaveProperty('capability', 'chat');
-    expect(requestArg).toHaveProperty('executionProfile', { name: 'conversation' });
+    expect(requestArg.metadata).toMatchObject({ workspaceId: 'ws-1', userId: 'user-1' });
     expect(requestArg.prompt).toHaveProperty('user', 'hello');
+    expect(requestArg).not.toHaveProperty('executionProfile');
+    expect(requestArg).not.toHaveProperty('capability');
     expect(requestArg).not.toHaveProperty('selectedCandidates');
     expect(requestArg).not.toHaveProperty('candidates');
   });

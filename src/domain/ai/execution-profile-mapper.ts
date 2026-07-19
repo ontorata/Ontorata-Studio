@@ -1,5 +1,7 @@
-import type { AIExecutionCapability } from './ai-execution-request';
 import type { ExecutionProfile } from './execution-profile';
+
+/** @deprecated PI#002 — capability removed from public contract; mapper retained for legacy tests only. */
+export type AIExecutionCapability = 'chat' | 'summarize' | 'tool-assist';
 
 /**
  * Legacy capability → execution profile name (ADR-2101 migration).

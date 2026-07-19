@@ -1,9 +1,16 @@
 import type { AIExecutionRequest } from '../../domain/ai/ai-execution-request';
+import { serializePublicExecutionRequest } from '../../domain/ai/ai-execution-request';
+import { parseAIExecutionResponse } from '../../domain/ai/ai-execution-response';
 import type {
   WorkspaceAiCompletion,
   WorkspaceAiRuntimePort,
+  WorkspaceAiStreamHandlers,
 } from '../../application/ai/workspace-ai-runtime.port';
 import { getDefaultOntoryBaseUrl } from '../../config/env';
+import {
+  accumulatePublicSseEvents,
+  parsePublicSseBody,
+} from './ontory-public-sse-parser';
 
 export type OntoryRestRuntimeOptions = {
   baseUrl?: string;
@@ -24,31 +31,14 @@ export class OntoryRuntimeHttpError extends Error {
   }
 }
 
-type OntoryExecuteSuccess = {
-  text: string;
-  provider: string;
-  requestId: string;
-  finishedAt?: string;
-};
-
 type OntoryErrorBody = {
   error?: string;
   message?: string;
 };
 
 /**
- * Studio → Ontory over HTTP only.
- * Must not import Ontory packages or run Dispatcher in-process.
- *
- * ## POST /v1/execute request body (Phase 6A)
- *
- * | Field | Role |
- * |-------|------|
- * | `executionProfile` | **Primary** public execution intent |
- * | `capability` | **Deprecated** — legacy backward compatibility only |
- *
- * This adapter passthroughs domain fields only. No routing, mapping, or execution
- * decisions (INV-005).
+ * Studio → Ontory over HTTP only (PI#002 public contract).
+ * Must not import Ontory packages or embed planner/runtime fields in requests.
  */
 export class OntoryRestWorkspaceAiRuntime implements WorkspaceAiRuntimePort {
   private readonly baseUrl: string;
@@ -72,57 +62,68 @@ export class OntoryRestWorkspaceAiRuntime implements WorkspaceAiRuntimePort {
     return (await res.json()) as { status: string; service?: string };
   }
 
-  /**
-   * Forwards AIExecutionRequest to Ontory REST. See class JSDoc for body contract.
-   */
   async complete(request: AIExecutionRequest): Promise<WorkspaceAiCompletion> {
     const res = await this.fetchImpl(`${this.baseUrl}/v1/execute`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        prompt: {
-          system: request.prompt.system,
-          context: request.prompt.context,
-          user: request.prompt.user,
-          sourceLabels: [...request.prompt.sourceLabels],
-          packageId: request.prompt.packageId,
-          query: request.prompt.query,
-        },
-        workspaceId: request.workspaceId,
-        userId: request.userId,
-        projectId: request.projectId,
-        capability: request.capability,
-        executionProfile: request.executionProfile,
-        tools: [...request.tools],
-        metadata: request.metadata ? { ...request.metadata } : undefined,
-      }),
+      body: JSON.stringify(serializePublicExecutionRequest(request)),
       signal: AbortSignal.timeout(this.timeoutMs),
     });
 
     if (!res.ok) {
-      let code = 'execute_failed';
-      let message = `Ontory execute failed (${res.status})`;
-      try {
-        const errBody = (await res.json()) as OntoryErrorBody;
-        if (typeof errBody.error === 'string') code = errBody.error;
-        if (typeof errBody.message === 'string' && errBody.message.trim()) {
-          message = errBody.message;
-        }
-      } catch {
-        // keep defaults
-      }
-      throw new OntoryRuntimeHttpError(message, res.status, code);
+      throw await this.readHttpError(res);
     }
 
-    const body = (await res.json()) as OntoryExecuteSuccess;
-    if (typeof body.text !== 'string' || typeof body.provider !== 'string') {
-      throw new OntoryRuntimeHttpError('Invalid AIExecutionResponse from Ontory', res.status, 'invalid_envelope');
-    }
+    return parseAIExecutionResponse(await res.json());
+  }
 
-    return Object.freeze({
-      text: body.text,
-      provider: body.provider,
-      requestId: typeof body.requestId === 'string' ? body.requestId : undefined,
+  async stream(
+    request: AIExecutionRequest,
+    handlers: WorkspaceAiStreamHandlers = {},
+  ): Promise<WorkspaceAiCompletion> {
+    const res = await this.fetchImpl(`${this.baseUrl}/v1/execute/stream`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(serializePublicExecutionRequest({ ...request, stream: true })),
+      signal: AbortSignal.timeout(this.timeoutMs),
     });
+
+    if (!res.ok) {
+      throw await this.readHttpError(res);
+    }
+
+    const raw = await res.text();
+    const events = parsePublicSseBody(raw);
+
+    for (const event of events) {
+      if (event.event === 'delta' && typeof event.data.text === 'string') {
+        handlers.onDelta?.(event.data.text);
+      }
+    }
+
+    const accumulated = accumulatePublicSseEvents(events);
+    if (accumulated.error) {
+      throw new OntoryRuntimeHttpError(accumulated.error.message, 502, accumulated.error.code);
+    }
+    if (!accumulated.completion) {
+      throw new OntoryRuntimeHttpError('Stream ended without complete event', 502, 'invalid_stream');
+    }
+
+    return accumulated.completion;
+  }
+
+  private async readHttpError(res: Response): Promise<OntoryRuntimeHttpError> {
+    let code = 'execute_failed';
+    let message = `Ontory request failed (${res.status})`;
+    try {
+      const errBody = (await res.json()) as OntoryErrorBody;
+      if (typeof errBody.error === 'string') code = errBody.error;
+      if (typeof errBody.message === 'string' && errBody.message.trim()) {
+        message = errBody.message;
+      }
+    } catch {
+      // keep defaults
+    }
+    return new OntoryRuntimeHttpError(message, res.status, code);
   }
 }

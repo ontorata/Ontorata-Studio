@@ -8,7 +8,7 @@ type ApprovalState = 'pending' | 'approved' | 'rejected';
 type BriefResult = Readonly<{
   text: string;
   requestId: string;
-  provider: string;
+  finishReason: string;
   submitTime: string;
 }>;
 
@@ -45,8 +45,8 @@ export function Cdsb001PilotPage() {
       });
       setResult({
         text: completion.text,
-        requestId: completion.requestId ?? 'n/a',
-        provider: completion.provider,
+        requestId: completion.requestId,
+        finishReason: completion.finishReason,
         submitTime,
       });
     } catch (err) {
@@ -123,8 +123,8 @@ export function Cdsb001PilotPage() {
       {result ? (
         <Card>
           <p>
-            <strong>Request:</strong> {result.requestId} · <strong>Provider:</strong>{' '}
-            {result.provider}
+            <strong>Request:</strong> {result.requestId} · <strong>Finish:</strong>{' '}
+            {result.finishReason}
           </p>
           <pre className="code-block">{result.text}</pre>
           <div className="form-actions">

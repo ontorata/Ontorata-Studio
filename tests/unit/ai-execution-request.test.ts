@@ -4,7 +4,7 @@ import { assembleWorkspacePrompt } from '../../src/domain/ai/prompt-assembler';
 import { createWorkspaceContextPackage } from '../../src/domain/recall/workspace-context-package';
 
 describe('AIExecutionRequest', () => {
-  it('keeps execution context outside prompt text', () => {
+  it('stores identity in metadata outside prompt text', () => {
     const contextPackage = createWorkspaceContextPackage({
       packageId: 'pkg-exec',
       query: 'q',
@@ -27,10 +27,12 @@ describe('AIExecutionRequest', () => {
     });
 
     expect(request.prompt.user).toBe('hello');
-    expect(request.workspaceId).toBe('ws-1');
-    expect(request.userId).toBe('user-9');
-    expect(request.projectId).toBe('proj-1');
+    expect(request.metadata?.workspaceId).toBe('ws-1');
+    expect(request.metadata?.userId).toBe('user-9');
+    expect(request.metadata?.projectId).toBe('proj-1');
     expect(request.tools).toEqual(['search_notes']);
+    expect(request).not.toHaveProperty('workspaceId');
+    expect(request).not.toHaveProperty('executionProfile');
     expect(Object.isFrozen(request)).toBe(true);
     expect(request.prompt.system).not.toContain('user-9');
     expect(request.prompt.system).not.toContain('proj-1');

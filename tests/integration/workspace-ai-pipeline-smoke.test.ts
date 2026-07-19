@@ -78,7 +78,7 @@ describe('W5 workspace AI pipeline smoke', () => {
 
     expect(result.assembledPrompt.sourceLabels).toHaveLength(scenario.expectSourceCount);
     expect(result.executionRequest.prompt).toBe(result.assembledPrompt);
-    expect(result.executionRequest.workspaceId).toBe(scenario.workspaceId);
+    expect(result.executionRequest.metadata?.workspaceId).toBe(scenario.workspaceId);
     expect(result.session.contextSnapshots).toHaveLength(scenario.expectSnapshotCountAfter);
   });
 
@@ -105,7 +105,8 @@ describe('W5 workspace AI pipeline smoke', () => {
 
       expect(result.assembledPrompt.sourceLabels).toHaveLength(scenario.expectSourceCount);
       expect(result.assembledPrompt.sourceLabels).toEqual(scenario.candidates.map((c) => c.title));
-      expect(result.completion.provider).toBe('echo-stub');
+      expect(result.completion.finishReason).toBe('stop');
+      expect(result.completion.requestId).toBe('echo-stub-req');
     }
   });
 
@@ -141,7 +142,9 @@ describe('W5 workspace AI pipeline smoke', () => {
 
   it('s5 boundary: runtime receives AIExecutionRequest only (no recall internals)', async () => {
     const scenario = WORKSPACE_AI_SMOKE_FIXTURE.scenarios.find((s) => s.id === 's5-boundary')!;
-    const complete = vi.fn(async () => Object.freeze({ text: 'ok', provider: 'mock' }));
+    const complete = vi.fn(async () =>
+      Object.freeze({ text: 'ok', finishReason: 'stop' as const, requestId: 'req-mock' }),
+    );
     const runtime: WorkspaceAiRuntimePort = { complete };
     const sessions = new InMemoryWorkspaceSessionPort();
     const orchestrator = new WorkspaceRecallOrchestrator(
@@ -161,8 +164,9 @@ describe('W5 workspace AI pipeline smoke', () => {
     expect(complete).toHaveBeenCalledOnce();
     const request = complete.mock.calls[0]?.[0];
     expect(request).toHaveProperty('prompt');
-    expect(request).toHaveProperty('capability', 'chat');
-    expect(request).toHaveProperty('workspaceId', scenario.workspaceId);
+    expect(request.metadata).toMatchObject({ workspaceId: scenario.workspaceId, userId: scenario.userId });
+    expect(request).not.toHaveProperty('executionProfile');
+    expect(request).not.toHaveProperty('capability');
     expect(request).not.toHaveProperty('selectedCandidates');
     expect(request).not.toHaveProperty('policyVersion');
     expect(request).not.toHaveProperty('candidates');
@@ -181,7 +185,11 @@ describe('W5 workspace AI pipeline smoke', () => {
     const runtime: WorkspaceAiRuntimePort = {
       complete: async (request) => {
         observed.push(`runtime:${request.prompt.packageId}`);
-        return Object.freeze({ text: 'pipeline-ok', provider: 'trace' });
+        return Object.freeze({
+          text: 'pipeline-ok',
+          finishReason: 'stop' as const,
+          requestId: 'req-trace',
+        });
       },
     };
     const sessions = new InMemoryWorkspaceSessionPort();
