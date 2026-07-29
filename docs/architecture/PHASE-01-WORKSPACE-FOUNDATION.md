@@ -1,6 +1,12 @@
 # Phase 01 — Workspace Foundation
 
+> **SUPERSEDED open-checkbox (hygiene 2026-07-24)** — Phase 01 is **Closed**.  
+> Unticked boxes in §13 are historical gate text; they are **not** an active blocker.  
+> Living phase index: [PHASES.md](../../PHASES.md) (phases 01–20 implemented).  
+> Do **not** reopen Phase 01 from §13 checkboxes.
+
 **Status:** Closed — superseded by [PHASES.md](../../PHASES.md) for phases 02–20  
+**Lifecycle:** **SUPERSEDED** as active gate (checkboxes below = archive)  
 **Scope:** Ontorata-Studio structural foundation + ecosystem boundaries  
 **Out of scope:** Keycloak deployment (Phase 02), OIDC login flow (Phase 04), Connection Wizard UI (Phase 05)
 
@@ -335,7 +341,9 @@ Ordered; each task is shippable without breaking v0.1.
 
 ## 13. Success criteria (Phase 01 gate)
 
-All must pass before Phase 02 begins:
+> **Archive:** Phase 01 closed. Criteria below were the original gate; not an open checklist.
+
+All must pass before Phase 02 begins *(historical — already satisfied / superseded by PHASES.md)*:
 
 - [ ] ADR-001 through ADR-005 approved by owner
 - [ ] `npm run build`, `npm run test`, `npm run lint` green
