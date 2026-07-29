@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const rataryTarget = env.VITE_RATARY_PROXY_TARGET || 'http://localhost:9876';
-  const ontoryTarget = env.VITE_ONTORY_PROXY_TARGET || 'http://localhost:9787';
+  // Prefer Owner VPS (ARCH-0217); override with localhost:9787 for local Runtime.
+  const ontoryTarget = env.VITE_ONTORY_PROXY_TARGET || 'https://vps.ontorata.com';
   const authTarget = env.VITE_AUTH_PROXY_TARGET || env.VITE_AUTH_BASE_URL || 'http://localhost:8780';
 
   return {

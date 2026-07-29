@@ -2,6 +2,8 @@ import type { AuthSession } from '../domain/auth/session';
 
 const PRODUCTION_RATARY_URL = 'https://ratary.ontorata.com';
 const PRODUCTION_AUTH_URL = 'https://auth.ontorata.com';
+/** Owner VPS Runtime (ARCH-0217 / ARCH-0242) — preferred remote Ontory host. */
+const PRODUCTION_ONTORY_URL = 'https://vps.ontorata.com';
 const DEFAULT_WORKSPACE_ID = 'personal-default';
 
 export type StudioProfile = 'local' | 'staging' | 'production';
@@ -79,10 +81,15 @@ export function getDefaultWorkspaceId(): string {
 export function getDefaultOntoryBaseUrl(): string {
   const fromEnv = import.meta.env.VITE_ONTORY_BASE_URL?.trim();
   if (fromEnv) return fromEnv.replace(/\/$/, '');
+  const profile = getStudioProfile();
+  if (profile === 'staging' || profile === 'production' || import.meta.env.PROD) {
+    return PRODUCTION_ONTORY_URL;
+  }
+  // Local Vite: same-origin `/ontory` proxy (see vite.config.ts → VITE_ONTORY_PROXY_TARGET).
   if (import.meta.env.DEV && typeof window !== 'undefined') {
     return `${window.location.origin}/ontory`;
   }
-  return 'http://localhost:9787';
+  return PRODUCTION_ONTORY_URL;
 }
 
 /** Prefer Ratary-provisioned workspace from native/legacy session over Studio placeholder. */
@@ -92,4 +99,9 @@ export function resolveWorkspaceId(session: AuthSession | null | undefined): str
   return getDefaultWorkspaceId();
 }
 
-export { DEFAULT_WORKSPACE_ID, PRODUCTION_RATARY_URL, PRODUCTION_AUTH_URL };
+export {
+  DEFAULT_WORKSPACE_ID,
+  PRODUCTION_RATARY_URL,
+  PRODUCTION_AUTH_URL,
+  PRODUCTION_ONTORY_URL,
+};

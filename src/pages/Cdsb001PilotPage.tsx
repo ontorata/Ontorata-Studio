@@ -54,7 +54,7 @@ export function Cdsb001PilotPage() {
       const message = err instanceof Error ? err.message : 'Request failed';
       if (message.toLowerCase().includes('failed to fetch')) {
         setError(
-          'Cannot reach Ontory — start REST with `npm run start:rest` in the Ontory repo (port 9787), then retry.',
+          'Cannot reach Ontory — check https://vps.ontorata.com/health (or local `npm run start:rest` on :9787), then retry.',
         );
       } else {
         setError(formatRataryApiError(err));
