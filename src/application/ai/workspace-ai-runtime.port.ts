@@ -16,6 +16,9 @@ export type WorkspaceAiStreamHandlers = Readonly<{
 export interface WorkspaceAiRuntimePort {
   complete(request: AIExecutionRequest): Promise<WorkspaceAiCompletion>;
 
+  /** Optional liveness probe (Ontory REST `/health`). */
+  health?(): Promise<{ status: string; service?: string }>;
+
   /** Optional — Ontory REST adapter implements streaming via /v1/execute/stream. */
   stream?(
     request: AIExecutionRequest,

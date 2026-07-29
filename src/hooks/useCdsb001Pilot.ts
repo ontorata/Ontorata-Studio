@@ -29,8 +29,17 @@ export function useCdsb001Pilot() {
     [workspaceId],
   );
 
+  const checkHealth = useCallback(async () => {
+    const runtime = runtimeRef.current;
+    if (runtime.health) {
+      return runtime.health();
+    }
+    return { status: 'ok', service: 'echo' };
+  }, []);
+
   return {
     ready: Boolean(workspaceId),
     executeBrief,
+    checkHealth,
   };
 }
