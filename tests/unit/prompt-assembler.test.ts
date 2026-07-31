@@ -40,4 +40,23 @@ describe('assembleWorkspacePrompt', () => {
     expect(prompt).not.toHaveProperty('selectedCandidates');
     expect(prompt).not.toHaveProperty('RecallDecision');
   });
+
+  it('prefers package.sourceLabels when Ratary envelope is present', () => {
+    const withEnvelope = createWorkspaceContextPackage({
+      packageId: 'pkg-server',
+      query: 'q',
+      contextText: 'body',
+      items: [{ content: 'body', title: 'Item Title' }],
+      memoryCount: 1,
+      truncated: false,
+      sourceLabels: ['SERVER-LABEL'],
+    });
+    const prompt = assembleWorkspacePrompt({
+      userPrompt: 'What?',
+      contextPackage: withEnvelope,
+    });
+    expect(prompt.sourceLabels).toEqual(['SERVER-LABEL']);
+    expect(prompt.context).toContain('1. SERVER-LABEL');
+    expect(prompt.context).not.toContain('Item Title');
+  });
 });

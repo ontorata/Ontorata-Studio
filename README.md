@@ -20,6 +20,8 @@ IDE       → ratary MCP ──────────────────�
 
 All data plane traffic goes through **`@ratary/sdk`** only. No direct SQL, D1, or Ratary server imports in the SPA.
 
+**Context Package (ADR-1010 / ADR-1011):** Organizational recall uses Ratary `buildContext` → immutable Context Package → `assembleWorkspacePrompt` → Ontory execute. Studio does **not** re-retrieve or re-rank. Knowledge: [ADR-1010](https://github.com/ontorata/docs-ai/blob/main/architecture/acos/ADR-1010-context-manager-architecture.md) · [ADR-1011](https://github.com/ontorata/docs-ai/blob/main/architecture/acos/ADR-1011-context-assembly-strategy.md) · [wire evidence](https://github.com/ontorata/docs-ai/blob/main/products/ratary/evidence/ADR-1011-CONTEXT-PACKAGE-WIRE-2026-07-31.md).
+
 **Branches:** push to `staging` · production Vercel deploy from `main` — see [docs/BRANCHING.md](docs/BRANCHING.md).  
 **Phases 01–20:** [docs/PHASES.md](docs/PHASES.md) · **Architecture:** [docs/architecture/](docs/architecture/) · **Auth:** [docs/auth/](docs/auth/).
 

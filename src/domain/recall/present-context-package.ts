@@ -7,6 +7,9 @@ import type { WorkspaceContextPackage } from '../recall/workspace-context-packag
 export function listContextSourceLabels(
   contextPackage: WorkspaceContextPackage,
 ): readonly string[] {
+  if (contextPackage.sourceLabels && contextPackage.sourceLabels.length > 0) {
+    return contextPackage.sourceLabels;
+  }
   return contextPackage.items.map((item) => {
     return item.title ?? item.candidateId ?? item.sourceReference ?? `item-${item.ordinal}`;
   });
