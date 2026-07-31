@@ -25,6 +25,12 @@ export type WorkspaceContextPackage = Readonly<{
   memoryCount: number;
   truncated: boolean;
   consumedVia: 'sdk-context-api';
+  /** ADR-1011 envelope — preferred when Ratary issues them. */
+  ownerId?: string;
+  createdAt?: string;
+  confidence?: 'high' | 'medium' | 'low' | number;
+  updateMechanism?: string;
+  sourceLabels?: readonly string[];
 }>;
 
 function deepFreeze<T>(value: T): T {
@@ -43,6 +49,11 @@ export function createWorkspaceContextPackage(input: {
   items: ReadonlyArray<Omit<WorkspaceContextItem, 'ordinal'>>;
   memoryCount: number;
   truncated: boolean;
+  ownerId?: string;
+  createdAt?: string;
+  confidence?: 'high' | 'medium' | 'low' | number;
+  updateMechanism?: string;
+  sourceLabels?: readonly string[];
 }): WorkspaceContextPackage {
   const items = input.items.map((item, index) => ({ ...item, ordinal: index }));
   return deepFreeze({
@@ -53,6 +64,13 @@ export function createWorkspaceContextPackage(input: {
     memoryCount: input.memoryCount,
     truncated: input.truncated,
     consumedVia: 'sdk-context-api',
+    ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
+    ...(input.createdAt !== undefined ? { createdAt: input.createdAt } : {}),
+    ...(input.confidence !== undefined ? { confidence: input.confidence } : {}),
+    ...(input.updateMechanism !== undefined ? { updateMechanism: input.updateMechanism } : {}),
+    ...(input.sourceLabels !== undefined
+      ? { sourceLabels: Object.freeze([...input.sourceLabels]) }
+      : {}),
   });
 }
 

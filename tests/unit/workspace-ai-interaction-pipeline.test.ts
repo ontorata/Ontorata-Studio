@@ -24,8 +24,9 @@ function createRecallPortMock(): WorkspaceRecallPort {
 
 describe('WorkspaceAiInteractionPipeline', () => {
   it('runs ContextPackage → PromptAssembler → AIExecutionRequest → runtime', async () => {
+    const recallPort = createRecallPortMock();
     const recallOrchestrator = new WorkspaceRecallOrchestrator(
-      createRecallPortMock(),
+      recallPort,
       new InMemoryWorkspaceSessionPort(),
     );
     const session = recallOrchestrator.createWorkspaceSession('personal-default');
@@ -48,6 +49,7 @@ describe('WorkspaceAiInteractionPipeline', () => {
     expect(result.executionRequest).not.toHaveProperty('executionProfile');
     expect(result.completion.finishReason).toBe('stop');
     expect(result.completion.text).toContain('Source A');
+    expect(recallPort.fetchContextPackage).toHaveBeenCalledOnce();
   });
 
   it('passes public AIExecutionRequest to runtime port', async () => {
