@@ -96,7 +96,7 @@ export function DecisionBriefPage() {
           packageId: decided.packageId,
           verdict: verdict === 'accepted' ? 'accepted' : 'rejected',
           rationale: decided.rationale,
-          sourceMemoryIds: decided.sourceIds,
+          sourceMemoryIds: [...decided.sourceIds],
         });
       } catch {
         // Flag-gated / optional — local artifact remains SoR fallback
