@@ -26,7 +26,8 @@ export type NavIconName =
   | 'organization'
   | 'security'
   | 'health'
-  | 'deployment';
+  | 'deployment'
+  | 'governance';
 
 export interface NavGroup {
   id: string;
@@ -44,6 +45,11 @@ export const NAV_GROUPS: NavGroup[] = [
       { id: 'graph', label: 'Knowledge Graph', path: 'graph', icon: 'graph', capabilityFlag: 'supportsKnowledgeGraph' },
       { id: 'knowledge', label: 'Knowledge Layer', path: 'knowledge', icon: 'knowledge' },
     ],
+  },
+  {
+    id: 'decisions',
+    label: 'Decisions',
+    items: [{ id: 'brief', label: 'Decision Brief', path: 'decisions/brief', icon: 'composer' }],
   },
   {
     id: 'pilots',
@@ -88,6 +94,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'organization', label: 'Organization', path: 'organization', icon: 'organization' },
       { id: 'security', label: 'Security', path: 'security', icon: 'security' },
+      {
+        id: 'memory-governance',
+        label: 'Memory Governance',
+        path: 'governance/memory',
+        icon: 'governance',
+      },
       { id: 'health', label: 'System Health', path: 'observability', icon: 'health' },
       { id: 'deployment', label: 'Deployment', path: 'enterprise', icon: 'deployment' },
     ],

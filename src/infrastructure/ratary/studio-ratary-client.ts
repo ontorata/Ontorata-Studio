@@ -1,6 +1,10 @@
 import { RataryClient, RestTransport } from '@ratary/sdk';
 import type { BuildContextResult, MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
 import { buildStudioTenantHeaders, type StudioTenantContext } from '../../config/tenant-context';
+import type {
+  MemoryGovernanceManifest,
+  StewardshipRunReportView,
+} from '../../domain/governance/governance-types';
 
 export interface StudioClientOptions {
   baseUrl: string;
@@ -170,6 +174,25 @@ export class StudioRataryClient {
       });
     }
     return this.sdk.context.build(body);
+  }
+
+  getGovernanceManifest(): Promise<MemoryGovernanceManifest> {
+    return this.sdk.transport.request({ method: 'GET', path: '/governance/manifest' });
+  }
+
+  listStewardshipRuns(limit?: number): Promise<{ runs: StewardshipRunReportView[] }> {
+    const query = limit !== undefined ? `?limit=${limit}` : '';
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: `/governance/stewardship/runs${query}`,
+    });
+  }
+
+  getStewardshipRun(runId: string): Promise<{ run: StewardshipRunReportView }> {
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: `/governance/stewardship/runs/${encodeURIComponent(runId)}`,
+    });
   }
 }
 
