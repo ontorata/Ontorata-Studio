@@ -36,6 +36,7 @@ export class WorkspaceAiInteractionPipeline {
     userId?: string;
     projectId?: string;
     maxTokens?: number;
+    metadata?: Readonly<Record<string, unknown>>;
   }): Promise<WorkspaceAiInteractionResult> {
     const { session, contextPackage } = await this.recallOrchestrator.attachContextPackage(
       input.sessionId,
@@ -54,6 +55,7 @@ export class WorkspaceAiInteractionPipeline {
       userId: input.userId,
       projectId: input.projectId,
       tools: [],
+      metadata: input.metadata,
     });
 
     const completion = await this.runtime.complete(executionRequest);
