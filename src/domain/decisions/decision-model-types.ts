@@ -1,3 +1,10 @@
+export type DecisionModelComputedPluginSummary = Readonly<{
+  kind: 'worker';
+  artifactDigestPrefix: string;
+}>;
+
+export type SandboxOutcome = 'ok' | 'timeout' | 'error' | 'denied' | 'disabled';
+
 export type DecisionModelSummary = Readonly<{
   id: string;
   version: string;
@@ -6,6 +13,7 @@ export type DecisionModelSummary = Readonly<{
   stability: 'experimental' | 'stable' | 'deprecated';
   executionProfileName: string;
   capabilities: readonly string[];
+  computedPlugin?: DecisionModelComputedPluginSummary;
 }>;
 
 export type DecisionModelSelection = Readonly<{
@@ -13,4 +21,7 @@ export type DecisionModelSelection = Readonly<{
   version: string;
   displayName: string;
   executionProfileName: string;
+  computedPlugin?: DecisionModelComputedPluginSummary;
+  sandboxOutcome?: SandboxOutcome;
+  pluginDigestPrefix?: string;
 }>;

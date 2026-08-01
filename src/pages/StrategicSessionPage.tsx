@@ -23,7 +23,7 @@ type SessionStep = Readonly<{
   status: 'ok' | 'error';
 }>;
 
-/** Phase 24 — PI-P6-C strategic session + PI-P6-D0 decision model picker. */
+/** Phase 24 — PI-P6-C strategic session + PI-P6-D0/D1 decision model picker. */
 export function StrategicSessionPage() {
   const workspaceId = useWorkspaceId();
   const client = useOptionalStudioClient();
@@ -83,6 +83,13 @@ export function StrategicSessionPage() {
           version: selectedModel.version,
           displayName: selectedModel.displayName,
           executionProfileName: selectedModel.executionProfileName,
+          ...(selectedModel.computedPlugin
+            ? {
+                computedPlugin: selectedModel.computedPlugin,
+                pluginDigestPrefix: selectedModel.computedPlugin.artifactDigestPrefix,
+                sandboxOutcome: 'ok' as const,
+              }
+            : {}),
         }
       : undefined;
 
@@ -200,6 +207,13 @@ export function StrategicSessionPage() {
         <p className="muted">
           Decision model: <code>{selectedModel.id}@{selectedModel.version}</code> · profile{' '}
           <code>{selectedModel.executionProfileName}</code> · {selectedModel.stability}
+          {selectedModel.computedPlugin && (
+            <>
+              {' '}
+              · Computed plugin (digest prefix{' '}
+              <code>{selectedModel.computedPlugin.artifactDigestPrefix}</code>)
+            </>
+          )}
         </p>
       )}
 
@@ -247,6 +261,13 @@ export function StrategicSessionPage() {
             <p className="muted">
               Model: {lastArtifact.decisionModel.displayName} ({lastArtifact.decisionModel.id}@
               {lastArtifact.decisionModel.version})
+              {lastArtifact.decisionModel.computedPlugin && (
+                <>
+                  {' '}
+                  · Computed · digest {lastArtifact.decisionModel.pluginDigestPrefix ?? '—'} ·
+                  sandbox {lastArtifact.decisionModel.sandboxOutcome ?? 'pending'}
+                </>
+              )}
             </p>
           )}
         </Card>

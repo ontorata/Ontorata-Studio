@@ -46,4 +46,29 @@ describe('strategic-session-artifact storage', () => {
     expect(listed[0]?.decisionModel?.id).toBe('ontorata-internal-v1');
     expect(listStrategicSessionArtifacts('ws-b')).toHaveLength(0);
   });
+
+  it('persists computed model sandbox audit fields', () => {
+    const artifact: StrategicSessionArtifact = {
+      id: createStrategicSessionArtifactId(),
+      workspaceId: 'ws-a',
+      goal: 'Score evidence',
+      packageId: 'pkg-1',
+      outcome: 'success — step budget reached',
+      decisionModel: {
+        id: 'ontorata-computed-scorer-v1',
+        version: '1.0.0',
+        displayName: 'Ontorata Computed Scorer v1',
+        executionProfileName: 'analysis',
+        computedPlugin: { kind: 'worker', artifactDigestPrefix: '97212904c798' },
+        pluginDigestPrefix: '97212904c798',
+        sandboxOutcome: 'ok',
+      },
+      steps: [{ index: 1, text: 'step one', status: 'ok' }],
+      recordedAt: new Date().toISOString(),
+    };
+    saveStrategicSessionArtifact(artifact);
+    const listed = listStrategicSessionArtifacts('ws-a');
+    expect(listed[0]?.decisionModel?.sandboxOutcome).toBe('ok');
+    expect(listed[0]?.decisionModel?.pluginDigestPrefix).toBe('97212904c798');
+  });
 });

@@ -8,7 +8,8 @@ type DecisionModelPickerProps = Readonly<{
 }>;
 
 export function formatDecisionModelOptionLabel(model: DecisionModelSummary): string {
-  return `${model.displayName} (${model.stability}) — ${model.id}@${model.version}`;
+  const computedTag = model.computedPlugin ? ' (computed)' : '';
+  return `${model.displayName}${computedTag} (${model.stability}) — ${model.id}@${model.version}`;
 }
 
 /** PI-P6-D0 — authorized declarative decision model picker. */
