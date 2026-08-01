@@ -5,26 +5,53 @@ import {
   saveRecommendationIntent,
   type RecommendationIntentRecord,
 } from '../domain/decisions/recommendation-intent';
+import type { DecisionModelSummary } from '../domain/decisions/decision-model-types';
+import type { RecommendationCardView, RecommendationRerankView } from '../domain/decisions/decision-types';
 import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceId } from '../hooks/useWorkspacePath';
-import type { RecommendationCardView } from '../domain/decisions/decision-types';
+import { DecisionModelPicker } from '../presentation/decisions/DecisionModelPicker';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
-/** Phase 23 — PI-P6-B advisory recommendations (ADR-1042). */
+/** Phase 23 — PI-P6-B advisory recommendations · PI-P6-D1.1 computed re-rank. */
 export function RecommendationsPage() {
   const workspaceId = useWorkspaceId();
   const { client, authLoading, missingConnection } = useRataryTabClient();
   const [query, setQuery] = useState('');
   const [traceId, setTraceId] = useState<string | null>(null);
   const [cards, setCards] = useState<RecommendationCardView[]>([]);
+  const [rerank, setRerank] = useState<RecommendationRerankView | null>(null);
   const [history, setHistory] = useState<RecommendationIntentRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [models, setModels] = useState<DecisionModelSummary[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<DecisionModelSummary | null>(null);
+
   useEffect(() => {
     setHistory(listRecommendationIntents(workspaceId));
   }, [workspaceId, cards]);
+
+  useEffect(() => {
+    if (!client) return;
+    let cancelled = false;
+    setModelsLoading(true);
+    void client
+      .listDecisionModels()
+      .then((response) => {
+        if (!cancelled) setModels(response.models);
+      })
+      .catch(() => {
+        if (!cancelled) setModels([]);
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
 
   const onFetch = useCallback(
     async (event: FormEvent) => {
@@ -33,16 +60,22 @@ export function RecommendationsPage() {
       setLoading(true);
       setError(null);
       try {
-        const result = await client.fetchRecommendations({ query: query.trim(), limit: 5 });
+        const result = await client.fetchRecommendations({
+          query: query.trim(),
+          limit: 5,
+          decisionModelId: selectedModel?.id,
+          decisionModelVersion: selectedModel?.version,
+        });
         setTraceId(result.traceId);
         setCards(result.cards);
+        setRerank(result.rerank ?? null);
       } catch (err) {
         setError(formatRataryApiError(err));
       } finally {
         setLoading(false);
       }
     },
-    [client, query],
+    [client, query, selectedModel],
   );
 
   function onVerdict(card: RecommendationCardView, verdict: 'accepted' | 'rejected') {
@@ -75,7 +108,7 @@ export function RecommendationsPage() {
     <div className="page">
       <PageHeader
         title="Recommendations"
-        description="Advisory cards from recall trace — Accept/Reject records intent only (no auto-apply)."
+        description="Advisory cards from recall trace — optional computed model re-rank (PI-P6-D1.1). Accept/Reject records intent only."
       />
 
       <Card>
@@ -88,11 +121,34 @@ export function RecommendationsPage() {
             placeholder="What should we recommend about…?"
             required
           />
+          <DecisionModelPicker
+            models={models}
+            selectedId={selectedModel?.id ?? null}
+            onSelect={setSelectedModel}
+            loading={modelsLoading}
+          />
           <Button type="submit" variant="primary" disabled={loading}>
             {loading ? 'Fetching…' : 'Get recommendations'}
           </Button>
         </form>
       </Card>
+
+      {rerank && (
+        <Card>
+          <p className="muted">
+            Re-rank: {rerank.applied ? 'applied' : 'not applied'}
+            {rerank.decisionModelId && (
+              <>
+                {' '}
+                · model {rerank.decisionModelId}@{rerank.decisionModelVersion ?? '?'}
+              </>
+            )}
+            {rerank.sandboxOutcome && <> · sandbox {rerank.sandboxOutcome}</>}
+            {rerank.pluginDigestPrefix && <> · digest {rerank.pluginDigestPrefix}</>}
+            {rerank.reason && <> · {rerank.reason}</>}
+          </p>
+        </Card>
+      )}
 
       {error && <p className="error">{error}</p>}
 
@@ -106,7 +162,14 @@ export function RecommendationsPage() {
             <h3>{card.title}</h3>
             <p className="muted">{card.reason}</p>
             <p>
-              <strong>Advisory</strong> — evidence: {card.evidenceRefs.join(', ')}
+              <strong>Advisory</strong>
+              {card.computedScore !== undefined && (
+                <>
+                  {' '}
+                  · computed score {card.computedScore.toFixed(3)}
+                </>
+              )}{' '}
+              — evidence: {card.evidenceRefs.join(', ')}
             </p>
             <div className="button-row">
               <Button type="button" variant="primary" onClick={() => onVerdict(card, 'accepted')}>

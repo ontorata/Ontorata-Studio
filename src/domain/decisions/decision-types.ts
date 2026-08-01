@@ -5,8 +5,18 @@ export type RecommendationCardView = Readonly<{
   memoryId?: string;
   sourceReference: string;
   confidence?: number;
+  computedScore?: number;
   evidenceRefs: string[];
   reason: string;
+}>;
+
+export type RecommendationRerankView = Readonly<{
+  applied: boolean;
+  decisionModelId?: string;
+  decisionModelVersion?: string;
+  sandboxOutcome?: string;
+  pluginDigestPrefix?: string;
+  reason?: string;
 }>;
 
 export type PolicyDenialEventView = Readonly<{

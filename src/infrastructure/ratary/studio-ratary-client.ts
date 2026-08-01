@@ -254,7 +254,14 @@ export class StudioRataryClient {
   fetchRecommendations(input: {
     query: string;
     limit?: number;
-  }): Promise<{ traceId: string; cards: RecommendationCardView[]; advisory: true }> {
+    decisionModelId?: string;
+    decisionModelVersion?: string;
+  }): Promise<{
+    traceId: string;
+    cards: RecommendationCardView[];
+    advisory: true;
+    rerank?: import('../../domain/decisions/decision-types.js').RecommendationRerankView;
+  }> {
     return this.sdk.transport.request({
       method: 'POST',
       path: '/decisions/recommendations',
