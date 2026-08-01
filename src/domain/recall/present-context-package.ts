@@ -1,4 +1,5 @@
 import type { WorkspaceContextPackage } from '../recall/workspace-context-package';
+import { assertContextPackageEligibleForProjection } from './context-package-eligibility';
 
 /**
  * Presentation helpers for UI consumption of immutable ContextPackage.
@@ -25,6 +26,7 @@ export function listContextSourceIds(
 
 /** Build assistant-visible text from package fields without mutating/trimming content. */
 export function presentContextPackageText(contextPackage: WorkspaceContextPackage): string {
+  assertContextPackageEligibleForProjection(contextPackage);
   const sources = listContextSourceLabels(contextPackage);
   const sourceBlock =
     sources.length > 0 ? `\n\nSources:\n${sources.map((label) => `• ${label}`).join('\n')}` : '';

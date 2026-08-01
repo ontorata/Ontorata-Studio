@@ -1,5 +1,6 @@
 import type { WorkspaceContextPackage } from '../recall/workspace-context-package';
 import { listContextSourceLabels } from '../recall/present-context-package';
+import { assertContextPackageEligibleForProjection } from '../recall/context-package-eligibility';
 
 /**
  * W4 — formatting output only. No recall, ranking, or provider coupling.
@@ -25,9 +26,11 @@ export type AssembleWorkspacePromptInput = Readonly<{
  * Allowed: system/context/user composition, workspace metadata, preserve package order.
  * Forbidden: fetch, semantic filter, re-rank, relevance judgment, trim/rebuild package body.
  * Input contract: WorkspaceContextPackage only.
+ * ADR-1013: refuses retired/archived packages for new turns.
  */
 export function assembleWorkspacePrompt(input: AssembleWorkspacePromptInput): AssembledPrompt {
   const { userPrompt, contextPackage, workspaceId } = input;
+  assertContextPackageEligibleForProjection(contextPackage);
   const sourceLabels = listContextSourceLabels(contextPackage);
   const workspaceLine = workspaceId ? `Workspace: ${workspaceId}` : 'Workspace: (unspecified)';
 
