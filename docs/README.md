@@ -8,7 +8,7 @@ Canonical Studio phases and architecture knowledge live in private **[ontorata/d
 
 - Product: `products/studio/`
 - Phases: `products/studio/phases/phase-NN/`
-- Context Package (P3): `architecture/acos/ADR-1010-…` through `ADR-1014-…` · `ADR-1016-…` · `ADR-1017-context-staleness-detection.md`
+- Context Package (P3 Area 2 closed): `architecture/acos/ADR-1010`…`ADR-1019` (skip 1015 partial) · Studio consumer of 1011 wire
 
 Org boards: `INDEX.md` · `NOW.md` · `MAP.md`
 
