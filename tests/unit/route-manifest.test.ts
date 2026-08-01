@@ -33,5 +33,11 @@ describe('route manifest', () => {
     const brief = findRouteMeta('/workspace/home/decisions/brief');
     expect(brief?.phase).toBe(22);
     expect(brief?.requiresConnection).toBe(true);
+
+    const recommendations = findRouteMeta('/workspace/home/decisions/recommendations');
+    expect(recommendations?.phase).toBe(23);
+
+    const strategic = findRouteMeta('/workspace/home/decisions/strategic-session');
+    expect(strategic?.phase).toBe(24);
   });
 });

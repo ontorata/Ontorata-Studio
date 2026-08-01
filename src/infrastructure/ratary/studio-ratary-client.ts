@@ -2,9 +2,16 @@ import { RataryClient, RestTransport } from '@ratary/sdk';
 import type { BuildContextResult, MemoryRecord, SearchMemoriesParams } from '@ratary/sdk';
 import { buildStudioTenantHeaders, type StudioTenantContext } from '../../config/tenant-context';
 import type {
+  CreateGovernanceExceptionInput,
+  GovernanceExceptionRecordView,
   MemoryGovernanceManifest,
   StewardshipRunReportView,
 } from '../../domain/governance/governance-types';
+import type {
+  PolicyDenialEventView,
+  PolicyDenialSummaryView,
+  RecommendationCardView,
+} from '../../domain/decisions/decision-types';
 
 export interface StudioClientOptions {
   baseUrl: string;
@@ -192,6 +199,80 @@ export class StudioRataryClient {
     return this.sdk.transport.request({
       method: 'GET',
       path: `/governance/stewardship/runs/${encodeURIComponent(runId)}`,
+    });
+  }
+
+  listGovernanceExceptions(limit?: number): Promise<{ exceptions: GovernanceExceptionRecordView[] }> {
+    const query = limit !== undefined ? `?limit=${limit}` : '';
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: `/governance/exceptions${query}`,
+    });
+  }
+
+  getGovernanceException(
+    exceptionId: string,
+  ): Promise<{ exception: GovernanceExceptionRecordView }> {
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: `/governance/exceptions/${encodeURIComponent(exceptionId)}`,
+    });
+  }
+
+  createGovernanceExceptionRequest(
+    input: CreateGovernanceExceptionInput,
+  ): Promise<{ exception: GovernanceExceptionRecordView }> {
+    return this.sdk.transport.request({
+      method: 'POST',
+      path: '/governance/exceptions',
+      body: input,
+    });
+  }
+
+  listPolicyDenials(
+    limit?: number,
+    since?: string,
+  ): Promise<{ denials: PolicyDenialEventView[] }> {
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.set('limit', String(limit));
+    if (since) params.set('since', since);
+    const query = params.toString();
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: `/governance/denials${query ? `?${query}` : ''}`,
+    });
+  }
+
+  getPolicyDenialSummary(since?: string): Promise<{ summary: PolicyDenialSummaryView }> {
+    const query = since ? `?since=${encodeURIComponent(since)}` : '';
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: `/governance/denials/summary${query}`,
+    });
+  }
+
+  fetchRecommendations(input: {
+    query: string;
+    limit?: number;
+  }): Promise<{ traceId: string; cards: RecommendationCardView[]; advisory: true }> {
+    return this.sdk.transport.request({
+      method: 'POST',
+      path: '/decisions/recommendations',
+      body: input,
+    });
+  }
+
+  recordDecisionProvenance(input: {
+    briefId: string;
+    packageId?: string;
+    verdict: 'accepted' | 'rejected';
+    rationale?: string;
+    sourceMemoryIds?: string[];
+  }): Promise<{ record: unknown }> {
+    return this.sdk.transport.request({
+      method: 'POST',
+      path: '/decisions/provenance',
+      body: input,
     });
   }
 }

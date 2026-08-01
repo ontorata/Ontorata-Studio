@@ -49,7 +49,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: 'decisions',
     label: 'Decisions',
-    items: [{ id: 'brief', label: 'Decision Brief', path: 'decisions/brief', icon: 'composer' }],
+    items: [
+      { id: 'brief', label: 'Decision Brief', path: 'decisions/brief', icon: 'composer' },
+      { id: 'recommendations', label: 'Recommendations', path: 'decisions/recommendations', icon: 'composer' },
+      { id: 'strategic', label: 'Strategic session', path: 'decisions/strategic-session', icon: 'composer' },
+    ],
   },
   {
     id: 'pilots',

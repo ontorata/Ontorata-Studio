@@ -29,6 +29,8 @@ import { StacksPage } from './pages/StacksPage';
 import { WorkspacesPage } from './pages/WorkspacesPage';
 import { MemoryGovernancePage } from './pages/MemoryGovernancePage';
 import { DecisionBriefPage } from './pages/DecisionBriefPage';
+import { RecommendationsPage } from './pages/RecommendationsPage';
+import { StrategicSessionPage } from './pages/StrategicSessionPage';
 
 function LegacyPathRedirect() {
   const location = useLocation();
@@ -81,6 +83,8 @@ export function App() {
               <Route path="security" element={<SecurityPage />} />
               <Route path="governance/memory" element={<MemoryGovernancePage />} />
               <Route path="decisions/brief" element={<DecisionBriefPage />} />
+              <Route path="decisions/recommendations" element={<RecommendationsPage />} />
+              <Route path="decisions/strategic-session" element={<StrategicSessionPage />} />
             </Route>
             <Route path="/" element={<Navigate to={`/workspace/${defaultWs}`} replace />} />
             <Route path="/memories/*" element={<LegacyPathRedirect />} />

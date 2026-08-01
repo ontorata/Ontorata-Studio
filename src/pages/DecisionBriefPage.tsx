@@ -22,7 +22,7 @@ import { Button, Card, Input, PageHeader } from '../presentation/design-system/p
 /** Phase 22 — PI-P6-A Decision Brief (human Accept / Reject). */
 export function DecisionBriefPage() {
   const workspaceId = useWorkspaceId();
-  const { authLoading, missingConnection } = useRataryTabClient();
+  const { client, authLoading, missingConnection } = useRataryTabClient();
   const { ready: recallReady, attachContextPackage } = useWorkspaceRecallOrchestrator();
   const { ready: aiReady, runAiInteraction } = useWorkspaceAiPipeline();
 
@@ -78,7 +78,7 @@ export function DecisionBriefPage() {
     }
   }
 
-  function finalize(verdict: DecisionBriefVerdict) {
+  async function finalize(verdict: DecisionBriefVerdict) {
     if (!artifact || verdict === 'pending') return;
     const decided: DecisionBriefArtifact = {
       ...artifact,
@@ -88,6 +88,20 @@ export function DecisionBriefPage() {
     };
     setArtifact(decided);
     saveDecisionBriefArtifact(decided);
+
+    if (client && (verdict === 'accepted' || verdict === 'rejected')) {
+      try {
+        await client.recordDecisionProvenance({
+          briefId: decided.id,
+          packageId: decided.packageId,
+          verdict: verdict === 'accepted' ? 'accepted' : 'rejected',
+          rationale: decided.rationale,
+          sourceMemoryIds: [...decided.sourceIds],
+        });
+      } catch {
+        // Flag-gated / optional — local artifact remains SoR fallback
+      }
+    }
   }
 
   if (authLoading) {
@@ -173,7 +187,7 @@ export function DecisionBriefPage() {
                 type="button"
                 variant="primary"
                 disabled={artifact.verdict !== 'pending'}
-                onClick={() => finalize('accepted')}
+                onClick={() => void finalize('accepted')}
               >
                 Accept
               </Button>
@@ -181,7 +195,7 @@ export function DecisionBriefPage() {
                 type="button"
                 variant="ghost"
                 disabled={artifact.verdict !== 'pending'}
-                onClick={() => finalize('rejected')}
+                onClick={() => void finalize('rejected')}
               >
                 Reject
               </Button>
