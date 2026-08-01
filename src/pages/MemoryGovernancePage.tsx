@@ -8,9 +8,10 @@ import type {
   MemoryGovernanceManifest,
   StewardshipRunReportView,
 } from '../domain/governance/governance-types';
+import type { PolicyDenialEventView, PolicyDenialSummaryView } from '../domain/decisions/decision-types';
 import { Button, Card, EmptyState, PageHeader } from '../presentation/design-system/primitives';
 
-type TabId = 'overview' | 'runs' | 'policy' | 'retention' | 'exceptions';
+type TabId = 'overview' | 'runs' | 'policy' | 'retention' | 'exceptions' | 'denials';
 
 const EXCEPTION_CLASS_LABELS: Record<GovernanceExceptionClass, string> = {
   decay_protection: 'Decay protection (ADR-066)',
@@ -32,6 +33,8 @@ export function MemoryGovernancePage() {
   const [exceptionClass, setExceptionClass] = useState<GovernanceExceptionClass>('ops_maintenance');
   const [exceptionRationale, setExceptionRationale] = useState('');
   const [submittingException, setSubmittingException] = useState(false);
+  const [denials, setDenials] = useState<PolicyDenialEventView[]>([]);
+  const [denialSummary, setDenialSummary] = useState<PolicyDenialSummaryView | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,14 +43,18 @@ export function MemoryGovernancePage() {
     setLoading(true);
     setError(null);
     try {
-      const [manifestRes, runsRes, exceptionsRes] = await Promise.all([
+      const [manifestRes, runsRes, exceptionsRes, denialsRes, summaryRes] = await Promise.all([
         client.getGovernanceManifest(),
         client.listStewardshipRuns(25),
         client.listGovernanceExceptions(50),
+        client.listPolicyDenials(50),
+        client.getPolicyDenialSummary(),
       ]);
       setManifest(manifestRes);
       setRuns(runsRes.runs);
       setExceptions(exceptionsRes.exceptions);
+      setDenials(denialsRes.denials);
+      setDenialSummary(summaryRes.summary);
       setSelectedRun(null);
       setSelectedException(null);
     } catch (err) {
@@ -133,6 +140,7 @@ export function MemoryGovernancePage() {
             ['overview', 'Overview'],
             ['runs', 'Stewardship runs'],
             ['exceptions', 'Exceptions'],
+            ['denials', 'Denials'],
             ['policy', 'Policy map'],
             ['retention', 'Retention / decay'],
           ] as const
@@ -337,6 +345,39 @@ export function MemoryGovernancePage() {
                   ))}
                 </ul>
               </>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {!loading && tab === 'denials' && (
+        <div className="grid two">
+          <Card>
+            <h2>Denial summary (ADR-1028 D4)</h2>
+            {denialSummary ? (
+              <ul>
+                <li>write: {denialSummary.byPoint.write}</li>
+                <li>recall: {denialSummary.byPoint.recall}</li>
+                <li>stewardship: {denialSummary.byPoint.stewardship}</li>
+                <li>total: {denialSummary.total}</li>
+              </ul>
+            ) : (
+              <p className="muted">No summary yet.</p>
+            )}
+          </Card>
+          <Card>
+            <h2>Recent denials</h2>
+            {denials.length === 0 ? (
+              <EmptyState title="No denials recorded" description="Policy hard denies appear here when enterprise policy blocks requests." />
+            ) : (
+              <ul className="list-plain">
+                {denials.map((denial) => (
+                  <li key={denial.denialId}>
+                    {denial.occurredAt} · {denial.point} · {denial.reasonCode}
+                    {denial.resource ? ` · ${denial.resource}` : ''}
+                  </li>
+                ))}
+              </ul>
             )}
           </Card>
         </div>
