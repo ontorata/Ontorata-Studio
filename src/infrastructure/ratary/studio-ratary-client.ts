@@ -268,11 +268,20 @@ export class StudioRataryClient {
     verdict: 'accepted' | 'rejected';
     rationale?: string;
     sourceMemoryIds?: string[];
+    decisionModelId?: string;
+    decisionModelVersion?: string;
   }): Promise<{ record: unknown }> {
     return this.sdk.transport.request({
       method: 'POST',
       path: '/decisions/provenance',
       body: input,
+    });
+  }
+
+  listDecisionModels(): Promise<{ models: import('../../domain/decisions/decision-model-types.js').DecisionModelSummary[] }> {
+    return this.sdk.transport.request({
+      method: 'GET',
+      path: '/decisions/models',
     });
   }
 }

@@ -68,7 +68,15 @@ export function useWorkspaceAiPipeline() {
   }, [recallOrchestrator, workspaceId]);
 
   const runAiInteraction = useCallback(
-    async (userPrompt: string, maxTokens = 2048): Promise<WorkspaceAiInteractionResult> => {
+    async (
+      userPrompt: string,
+      maxTokens = 2048,
+      options?: Readonly<{
+        executionProfileName?: string;
+        decisionModelId?: string;
+        decisionModelVersion?: string;
+      }>,
+    ): Promise<WorkspaceAiInteractionResult> => {
       if (!pipeline) {
         throw new Error('Workspace AI pipeline unavailable — Ratary client not connected');
       }
@@ -76,11 +84,24 @@ export function useWorkspaceAiPipeline() {
       if (!sessionId) {
         throw new Error('Workspace session could not be created');
       }
+
+      const metadata: Record<string, unknown> = {};
+      if (options?.executionProfileName) {
+        metadata.executionProfileName = options.executionProfileName;
+      }
+      if (options?.decisionModelId) {
+        metadata.decisionModelId = options.decisionModelId;
+      }
+      if (options?.decisionModelVersion) {
+        metadata.decisionModelVersion = options.decisionModelVersion;
+      }
+
       return pipeline.run({
         sessionId,
         userPrompt,
         workspaceId,
         maxTokens,
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       });
     },
     [ensureSessionId, pipeline, workspaceId],
