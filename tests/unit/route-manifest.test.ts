@@ -24,4 +24,14 @@ describe('route manifest', () => {
     const meta = findRouteMeta('/workspace/home/memories');
     expect(meta?.requiresAuth).toBe(true);
   });
+
+  it('includes PI-1027 and PI-P6 routes', () => {
+    const governance = findRouteMeta('/workspace/home/governance/memory');
+    expect(governance?.phase).toBe(21);
+    expect(governance?.requiresConnection).toBe(true);
+
+    const brief = findRouteMeta('/workspace/home/decisions/brief');
+    expect(brief?.phase).toBe(22);
+    expect(brief?.requiresConnection).toBe(true);
+  });
 });

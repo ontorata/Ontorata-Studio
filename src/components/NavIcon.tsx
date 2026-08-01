@@ -31,6 +31,8 @@ const paths: Record<NavIconName, string> = {
     'M12 5.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zm0 2a4.5 4.5 0 110 9 4.5 4.5 0 010-9zm-.75 2.25v2.5l2.15 1.25.75-1.25-1.4-.8V9.75h-1.5z',
   deployment:
     'M6 7.5h12v9H6v-9zm2 2v5h8v-5H8zm1.5 1.5h5v2h-5v-2z',
+  governance:
+    'M5 6.5h14v11H5v-11zm2 2v3h4V8.5H7zm6 0v3h4V8.5h-4zm-6 5v3h4v-3H7zm6 0v3h4v-3h-4z',
 };
 
 interface NavIconProps {
