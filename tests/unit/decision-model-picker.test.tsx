@@ -27,7 +27,7 @@ describe('DecisionModelPicker', () => {
       ...seedModel,
       id: 'ontorata-computed-scorer-v1',
       displayName: 'Ontorata Computed Scorer v1',
-      computedPlugin: { kind: 'worker', artifactDigestPrefix: '995fec358de55' },
+      computedPlugin: { kind: 'worker', artifactDigestPrefix: '97212904c798' },
     };
     expect(formatDecisionModelOptionLabel(computed)).toContain('(computed)');
     expect(formatDecisionModelOptionLabel(computed)).toContain('ontorata-computed-scorer-v1');

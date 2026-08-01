@@ -59,8 +59,8 @@ describe('strategic-session-artifact storage', () => {
         version: '1.0.0',
         displayName: 'Ontorata Computed Scorer v1',
         executionProfileName: 'analysis',
-        computedPlugin: { kind: 'worker', artifactDigestPrefix: '995fec358de55' },
-        pluginDigestPrefix: '995fec358de55',
+        computedPlugin: { kind: 'worker', artifactDigestPrefix: '97212904c798' },
+        pluginDigestPrefix: '97212904c798',
         sandboxOutcome: 'ok',
       },
       steps: [{ index: 1, text: 'step one', status: 'ok' }],
@@ -69,6 +69,6 @@ describe('strategic-session-artifact storage', () => {
     saveStrategicSessionArtifact(artifact);
     const listed = listStrategicSessionArtifacts('ws-a');
     expect(listed[0]?.decisionModel?.sandboxOutcome).toBe('ok');
-    expect(listed[0]?.decisionModel?.pluginDigestPrefix).toBe('995fec358de55');
+    expect(listed[0]?.decisionModel?.pluginDigestPrefix).toBe('97212904c798');
   });
 });
