@@ -40,3 +40,35 @@ export interface StewardshipRunReportView {
   totalChanged: number;
   hadErrors: boolean;
 }
+
+export type GovernanceExceptionClass =
+  | 'decay_protection'
+  | 'feature_flag_off'
+  | 'ops_maintenance';
+
+export type GovernanceExceptionStatus = 'pending' | 'approved' | 'rejected' | 'expired';
+
+export interface GovernanceExceptionAuditEntryView {
+  at: string;
+  action: string;
+  actor?: string;
+  note?: string;
+}
+
+export interface GovernanceExceptionRecordView {
+  exceptionId: string;
+  ownerId: string;
+  exceptionClass: GovernanceExceptionClass;
+  rationale: string;
+  status: GovernanceExceptionStatus;
+  requestedBy: string;
+  requestedAt: string;
+  expiresAt?: string;
+  auditLog: GovernanceExceptionAuditEntryView[];
+}
+
+export interface CreateGovernanceExceptionInput {
+  exceptionClass: GovernanceExceptionClass;
+  rationale: string;
+  expiresAt?: string;
+}

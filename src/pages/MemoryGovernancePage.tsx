@@ -1,14 +1,22 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
 import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import type {
+  GovernanceExceptionClass,
+  GovernanceExceptionRecordView,
   MemoryGovernanceManifest,
   StewardshipRunReportView,
 } from '../domain/governance/governance-types';
 import { Button, Card, EmptyState, PageHeader } from '../presentation/design-system/primitives';
 
-type TabId = 'overview' | 'runs' | 'policy' | 'retention';
+type TabId = 'overview' | 'runs' | 'policy' | 'retention' | 'exceptions';
+
+const EXCEPTION_CLASS_LABELS: Record<GovernanceExceptionClass, string> = {
+  decay_protection: 'Decay protection (ADR-066)',
+  feature_flag_off: 'Feature flag OFF (soft policy)',
+  ops_maintenance: 'Ops maintenance (stewardship)',
+};
 
 /** Phase 21 — PI-1027-A Memory Governance Dashboard (read-only). */
 export function MemoryGovernancePage() {
@@ -17,6 +25,13 @@ export function MemoryGovernancePage() {
   const [manifest, setManifest] = useState<MemoryGovernanceManifest | null>(null);
   const [runs, setRuns] = useState<StewardshipRunReportView[]>([]);
   const [selectedRun, setSelectedRun] = useState<StewardshipRunReportView | null>(null);
+  const [exceptions, setExceptions] = useState<GovernanceExceptionRecordView[]>([]);
+  const [selectedException, setSelectedException] = useState<GovernanceExceptionRecordView | null>(
+    null,
+  );
+  const [exceptionClass, setExceptionClass] = useState<GovernanceExceptionClass>('ops_maintenance');
+  const [exceptionRationale, setExceptionRationale] = useState('');
+  const [submittingException, setSubmittingException] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,13 +40,16 @@ export function MemoryGovernancePage() {
     setLoading(true);
     setError(null);
     try {
-      const [manifestRes, runsRes] = await Promise.all([
+      const [manifestRes, runsRes, exceptionsRes] = await Promise.all([
         client.getGovernanceManifest(),
         client.listStewardshipRuns(25),
+        client.listGovernanceExceptions(50),
       ]);
       setManifest(manifestRes);
       setRuns(runsRes.runs);
+      setExceptions(exceptionsRes.exceptions);
       setSelectedRun(null);
+      setSelectedException(null);
     } catch (err) {
       setError(formatRataryApiError(err));
     } finally {
@@ -50,6 +68,36 @@ export function MemoryGovernancePage() {
       setSelectedRun(detail.run);
     } catch (err) {
       setError(formatRataryApiError(err));
+    }
+  }
+
+  async function onSelectException(exceptionId: string) {
+    if (!client) return;
+    try {
+      const detail = await client.getGovernanceException(exceptionId);
+      setSelectedException(detail.exception);
+    } catch (err) {
+      setError(formatRataryApiError(err));
+    }
+  }
+
+  async function onSubmitExceptionRequest(event: FormEvent) {
+    event.preventDefault();
+    if (!client || !exceptionRationale.trim()) return;
+    setSubmittingException(true);
+    setError(null);
+    try {
+      const { exception } = await client.createGovernanceExceptionRequest({
+        exceptionClass,
+        rationale: exceptionRationale.trim(),
+      });
+      setExceptions((prev) => [exception, ...prev]);
+      setSelectedException(exception);
+      setExceptionRationale('');
+    } catch (err) {
+      setError(formatRataryApiError(err));
+    } finally {
+      setSubmittingException(false);
     }
   }
 
@@ -84,6 +132,7 @@ export function MemoryGovernancePage() {
           [
             ['overview', 'Overview'],
             ['runs', 'Stewardship runs'],
+            ['exceptions', 'Exceptions'],
             ['policy', 'Policy map'],
             ['retention', 'Retention / decay'],
           ] as const
@@ -190,6 +239,103 @@ export function MemoryGovernancePage() {
                     ))}
                   </ul>
                 )}
+              </>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {!loading && tab === 'exceptions' && (
+        <div className="grid two">
+          <Card>
+            <h2>Exception requests (ADR-1029)</h2>
+            <p className="muted">
+              Owner-initiated requests are recorded as <strong>pending</strong>. Studio does not
+              auto-approve exceptions or bypass tenancy hard fails.
+            </p>
+            {exceptions.length === 0 ? (
+              <EmptyState
+                title="No exception requests yet"
+                description="Submit a documented request below when ops maintenance or protection review is needed."
+              />
+            ) : (
+              <ul className="list-plain">
+                {exceptions.map((item) => (
+                  <li key={item.exceptionId}>
+                    <button
+                      type="button"
+                      className="link-button"
+                      onClick={() => void onSelectException(item.exceptionId)}
+                    >
+                      {item.exceptionId.slice(0, 8)}…
+                    </button>
+                    {' · '}
+                    {item.exceptionClass} · {item.status}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form className="stack" onSubmit={(e) => void onSubmitExceptionRequest(e)}>
+              <h3>New request</h3>
+              <label>
+                Class
+                <select
+                  value={exceptionClass}
+                  onChange={(e) => setExceptionClass(e.target.value as GovernanceExceptionClass)}
+                >
+                  {(Object.keys(EXCEPTION_CLASS_LABELS) as GovernanceExceptionClass[]).map(
+                    (key) => (
+                      <option key={key} value={key}>
+                        {EXCEPTION_CLASS_LABELS[key]}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
+              <label>
+                Rationale
+                <textarea
+                  required
+                  rows={3}
+                  value={exceptionRationale}
+                  onChange={(e) => setExceptionRationale(e.target.value)}
+                  placeholder="Who / why / time window (audited)"
+                />
+              </label>
+              <Button type="submit" variant="primary" disabled={submittingException}>
+                {submittingException ? 'Submitting…' : 'Submit request'}
+              </Button>
+            </form>
+          </Card>
+          <Card>
+            <h2>Audit detail</h2>
+            {!selectedException && (
+              <p className="muted">Select a request to inspect audit log entries.</p>
+            )}
+            {selectedException && (
+              <>
+                <dl className="kv">
+                  <dt>ID</dt>
+                  <dd>{selectedException.exceptionId}</dd>
+                  <dt>Status</dt>
+                  <dd>{selectedException.status}</dd>
+                  <dt>Class</dt>
+                  <dd>{selectedException.exceptionClass}</dd>
+                  <dt>Requested</dt>
+                  <dd>{selectedException.requestedAt}</dd>
+                  <dt>Rationale</dt>
+                  <dd>{selectedException.rationale}</dd>
+                </dl>
+                <h3>Audit log</h3>
+                <ul className="list-plain">
+                  {selectedException.auditLog.map((entry, index) => (
+                    <li key={`${entry.at}-${index}`}>
+                      {entry.at} · {entry.action}
+                      {entry.actor ? ` · ${entry.actor}` : ''}
+                      {entry.note ? ` — ${entry.note}` : ''}
+                    </li>
+                  ))}
+                </ul>
               </>
             )}
           </Card>
