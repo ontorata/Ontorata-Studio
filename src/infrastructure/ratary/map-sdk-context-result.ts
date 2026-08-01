@@ -34,6 +34,13 @@ function readConfidence(
   return undefined;
 }
 
+function readLifecycleState(
+  value: unknown,
+): 'active' | 'retired' | 'archived' | undefined {
+  if (value === 'active' || value === 'retired' || value === 'archived') return value;
+  return undefined;
+}
+
 /**
  * Maps canonical SDK context output to workspace consumption shape.
  * Prefers Ratary-issued ADR-1011 envelope; falls back to client UUID during rollout.
@@ -78,7 +85,9 @@ export function mapSdkContextResult(
     ownerId: readOptionalString(result.ownerId),
     createdAt: readOptionalString(result.createdAt),
     confidence: readConfidence(result.confidence),
+    confidenceModel: readOptionalString(result.confidenceModel),
     updateMechanism: readOptionalString(result.updateMechanism),
+    lifecycleState: readLifecycleState(result.lifecycleState),
     sourceLabels,
   });
 }

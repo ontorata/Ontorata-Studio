@@ -44,6 +44,7 @@ describe('WorkspaceRecallAdapter', () => {
       createdAt: '2026-07-31T00:00:00.000Z',
       confidence: 'high',
       updateMechanism: 'ratary-buildContext-v1',
+      lifecycleState: 'active',
       sourceLabels: ['ARCH-0280'],
       query: 'migration decision',
       items: [{ content: 'body', title: 'ignored-for-labels' }],
@@ -56,5 +57,6 @@ describe('WorkspaceRecallAdapter', () => {
     expect(result.ownerId).toBe('owner-1');
     expect(result.sourceLabels).toEqual(['ARCH-0280']);
     expect(result.updateMechanism).toBe('ratary-buildContext-v1');
+    expect(result.lifecycleState).toBe('active');
   });
 });

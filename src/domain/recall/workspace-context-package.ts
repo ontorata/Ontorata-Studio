@@ -29,7 +29,11 @@ export type WorkspaceContextPackage = Readonly<{
   ownerId?: string;
   createdAt?: string;
   confidence?: 'high' | 'medium' | 'low' | number;
+  /** ADR-1016 — when present (`confidence-product-v1` preferred). */
+  confidenceModel?: string;
   updateMechanism?: string;
+  /** ADR-1013 — when present; mint is `active`. */
+  lifecycleState?: 'active' | 'retired' | 'archived';
   sourceLabels?: readonly string[];
 }>;
 
@@ -52,7 +56,9 @@ export function createWorkspaceContextPackage(input: {
   ownerId?: string;
   createdAt?: string;
   confidence?: 'high' | 'medium' | 'low' | number;
+  confidenceModel?: string;
   updateMechanism?: string;
+  lifecycleState?: 'active' | 'retired' | 'archived';
   sourceLabels?: readonly string[];
 }): WorkspaceContextPackage {
   const items = input.items.map((item, index) => ({ ...item, ordinal: index }));
@@ -67,7 +73,9 @@ export function createWorkspaceContextPackage(input: {
     ...(input.ownerId !== undefined ? { ownerId: input.ownerId } : {}),
     ...(input.createdAt !== undefined ? { createdAt: input.createdAt } : {}),
     ...(input.confidence !== undefined ? { confidence: input.confidence } : {}),
+    ...(input.confidenceModel !== undefined ? { confidenceModel: input.confidenceModel } : {}),
     ...(input.updateMechanism !== undefined ? { updateMechanism: input.updateMechanism } : {}),
+    ...(input.lifecycleState !== undefined ? { lifecycleState: input.lifecycleState } : {}),
     ...(input.sourceLabels !== undefined
       ? { sourceLabels: Object.freeze([...input.sourceLabels]) }
       : {}),
