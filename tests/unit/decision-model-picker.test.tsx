@@ -22,6 +22,17 @@ describe('DecisionModelPicker', () => {
     );
   });
 
+  it('formats computed model with badge', () => {
+    const computed: DecisionModelSummary = {
+      ...seedModel,
+      id: 'ontorata-computed-scorer-v1',
+      displayName: 'Ontorata Computed Scorer v1',
+      computedPlugin: { kind: 'worker', artifactDigestPrefix: '995fec358de55' },
+    };
+    expect(formatDecisionModelOptionLabel(computed)).toContain('(computed)');
+    expect(formatDecisionModelOptionLabel(computed)).toContain('ontorata-computed-scorer-v1');
+  });
+
   it('renders authorized models from props', () => {
     const html = renderToStaticMarkup(
       <DecisionModelPicker models={[seedModel]} selectedId={seedModel.id} onSelect={() => {}} />,

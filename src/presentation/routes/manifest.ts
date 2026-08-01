@@ -35,7 +35,7 @@ export const routeManifest: RouteDefinition[] = [
   { path: '/workspace/:workspaceId/governance/memory', requiresAuth: true, requiresConnection: true, phase: 21 },
   { path: '/workspace/:workspaceId/decisions/brief', requiresAuth: true, requiresConnection: true, phase: 22 },
   { path: '/workspace/:workspaceId/decisions/recommendations', requiresAuth: true, requiresConnection: true, phase: 23 },
-  { path: '/workspace/:workspaceId/decisions/strategic-session', requiresAuth: true, requiresConnection: true, phase: 24 }, // PI-P6-D0 decision model picker
+  { path: '/workspace/:workspaceId/decisions/strategic-session', requiresAuth: true, requiresConnection: true, phase: 24 }, // PI-P6-D0 picker · PI-P6-D1 computed badge
 ];
 
 export function findRouteMeta(pathname: string): RouteDefinition | undefined {
