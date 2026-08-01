@@ -8,7 +8,7 @@ Canonical Studio phases and architecture knowledge live in private **[ontorata/d
 
 - Product: `products/studio/`
 - Phases: `products/studio/phases/phase-NN/`
-- Context Package (P3): `architecture/acos/ADR-1010-context-manager-architecture.md` · `architecture/acos/ADR-1011-context-assembly-strategy.md`
+- Context Package (P3): `architecture/acos/ADR-1010-context-manager-architecture.md` · `ADR-1011-…` · `ADR-1012-…` · `ADR-1013-…` · `ADR-1014-…` · `ADR-1016-context-confidence-tracking.md`
 
 Org boards: `INDEX.md` · `NOW.md` · `MAP.md`
 
