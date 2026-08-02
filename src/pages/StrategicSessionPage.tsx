@@ -14,7 +14,8 @@ import { useOptionalStudioClient } from '../hooks/useStudioClient';
 import { useWorkspaceAiPipeline } from '../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceRecallOrchestrator } from '../hooks/useWorkspaceRecallOrchestrator';
 import { useWorkspaceId } from '../hooks/useWorkspacePath';
-import { DecisionModelPicker } from '../presentation/decisions/DecisionModelPicker';
+import { DecisionModelPicker, decisionModelRefKey } from '../presentation/decisions/DecisionModelPicker';
+import { DecisionModelAttribution } from '../presentation/decisions/DecisionModelAttribution';
 import { Button, Card, Input, PageHeader } from '../presentation/design-system/primitives';
 
 type SessionStep = Readonly<{
@@ -174,7 +175,7 @@ export function StrategicSessionPage() {
         <form onSubmit={(e) => void onStart(e)}>
           <DecisionModelPicker
             models={models}
-            selectedId={selectedModel?.id ?? null}
+            selectedRef={selectedModel ? decisionModelRefKey(selectedModel) : null}
             onSelect={setSelectedModel}
             loading={modelsLoading}
           />
@@ -204,17 +205,10 @@ export function StrategicSessionPage() {
       {error && <p className="error">{error}</p>}
 
       {selectedModel && (
-        <p className="muted">
-          Decision model: <code>{selectedModel.id}@{selectedModel.version}</code> · profile{' '}
-          <code>{selectedModel.executionProfileName}</code> · {selectedModel.stability}
-          {selectedModel.computedPlugin && (
-            <>
-              {' '}
-              · Computed plugin (digest prefix{' '}
-              <code>{selectedModel.computedPlugin.artifactDigestPrefix}</code>)
-            </>
-          )}
-        </p>
+        <DecisionModelAttribution
+          model={selectedModel}
+          sandboxOutcome={lastArtifact?.decisionModel?.sandboxOutcome}
+        />
       )}
 
       {packageId && (
