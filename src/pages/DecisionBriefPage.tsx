@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { RataryConnectionNotice } from '../components/RataryConnectionNotice';
+import type { DecisionModelSummary } from '../domain/decisions/decision-model-types';
 import {
   createDecisionBriefId,
   listDecisionBriefArtifacts,
@@ -17,9 +18,11 @@ import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceAiPipeline } from '../hooks/useWorkspaceAiPipeline';
 import { useWorkspaceRecallOrchestrator } from '../hooks/useWorkspaceRecallOrchestrator';
 import { useWorkspaceId } from '../hooks/useWorkspacePath';
+import { DecisionModelPicker, decisionModelRefKey } from '../presentation/decisions/DecisionModelPicker';
+import { DecisionModelAttribution } from '../presentation/decisions/DecisionModelAttribution';
 import { Button, Card, Input, PageHeader } from '../presentation/design-system/primitives';
 
-/** Phase 22 — PI-P6-A Decision Brief (human Accept / Reject). */
+/** Phase 22 — PI-P6-A Decision Brief · PI-P6-D2 model attribution. */
 export function DecisionBriefPage() {
   const workspaceId = useWorkspaceId();
   const { client, authLoading, missingConnection } = useRataryTabClient();
@@ -34,9 +37,33 @@ export function DecisionBriefPage() {
   const [artifact, setArtifact] = useState<DecisionBriefArtifact | null>(null);
   const [history, setHistory] = useState<DecisionBriefArtifact[]>([]);
 
+  const [models, setModels] = useState<DecisionModelSummary[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<DecisionModelSummary | null>(null);
+
   useEffect(() => {
     setHistory(listDecisionBriefArtifacts(workspaceId));
   }, [workspaceId, artifact]);
+
+  useEffect(() => {
+    if (!client) return;
+    let cancelled = false;
+    setModelsLoading(true);
+    void client
+      .listDecisionModels()
+      .then((response) => {
+        if (!cancelled) setModels([...response.models]);
+      })
+      .catch(() => {
+        if (!cancelled) setModels([]);
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
 
   async function onBuildEvidence(event: FormEvent) {
     event.preventDefault();
@@ -97,6 +124,12 @@ export function DecisionBriefPage() {
           verdict: verdict === 'accepted' ? 'accepted' : 'rejected',
           rationale: decided.rationale,
           sourceMemoryIds: [...decided.sourceIds],
+          ...(selectedModel
+            ? {
+                decisionModelId: selectedModel.id,
+                decisionModelVersion: selectedModel.version,
+              }
+            : {}),
         });
       } catch {
         // Flag-gated / optional — local artifact remains SoR fallback
@@ -125,6 +158,12 @@ export function DecisionBriefPage() {
 
       <Card>
         <form onSubmit={(event) => void onBuildEvidence(event)}>
+          <DecisionModelPicker
+            models={models}
+            selectedRef={selectedModel ? decisionModelRefKey(selectedModel) : null}
+            onSelect={setSelectedModel}
+            loading={modelsLoading}
+          />
           <Input
             id="decision-question"
             label="Decision question"
@@ -146,6 +185,7 @@ export function DecisionBriefPage() {
           </Button>
         </form>
         {error && <p className="error">{error}</p>}
+        {selectedModel && <DecisionModelAttribution model={selectedModel} />}
       </Card>
 
       {artifact && (

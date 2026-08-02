@@ -10,7 +10,8 @@ import type { RecommendationCardView, RecommendationRerankView } from '../domain
 import { formatRataryApiError } from '../infrastructure/ratary/format-ratary-api-error';
 import { useRataryTabClient } from '../hooks/useRataryTabClient';
 import { useWorkspaceId } from '../hooks/useWorkspacePath';
-import { DecisionModelPicker } from '../presentation/decisions/DecisionModelPicker';
+import { DecisionModelPicker, decisionModelRefKey } from '../presentation/decisions/DecisionModelPicker';
+import { DecisionModelAttribution } from '../presentation/decisions/DecisionModelAttribution';
 import { Button, Card, EmptyState, Input, PageHeader } from '../presentation/design-system/primitives';
 
 /** Phase 23 — PI-P6-B advisory recommendations · PI-P6-D1.1 computed re-rank. */
@@ -123,7 +124,7 @@ export function RecommendationsPage() {
           />
           <DecisionModelPicker
             models={models}
-            selectedId={selectedModel?.id ?? null}
+            selectedRef={selectedModel ? decisionModelRefKey(selectedModel) : null}
             onSelect={setSelectedModel}
             loading={modelsLoading}
           />
@@ -132,6 +133,16 @@ export function RecommendationsPage() {
           </Button>
         </form>
       </Card>
+
+      {selectedModel && (
+        <Card>
+          <DecisionModelAttribution
+            model={selectedModel}
+            sandboxOutcome={rerank?.sandboxOutcome}
+            pluginDigestPrefix={rerank?.pluginDigestPrefix}
+          />
+        </Card>
+      )}
 
       {rerank && (
         <Card>
